@@ -183,6 +183,21 @@ field = local.field_force_new_trigger  # null = no replacement, non-null = trigg
 3. Assign directly: `field = condition ? meaningful_value : null`
 4. Key remains stable, only non-null values trigger replacement
 
+**Directional Update Constraints:**
+If Update method blocks specific transitions (e.g., `false` → `true` errors, but `true` → `false` allowed), use conditional ForceNew instead of accepting errors:
+```hcl
+data "azapi_resource" "existing" {
+  type = "..."; name = var.name; parent_id = var.parent_id
+  ignore_not_found = true; response_export_values = ["*"]
+}
+locals {
+  existing_value = data.azapi_resource.existing.exists ? try(jsondecode(data.azapi_resource.existing.output).properties.field, null) : null
+  # Trigger ForceNew ONLY on blocked transition
+  field_force_new = (local.existing_value == old_state && var.field == new_state) ? "trigger" : null
+}
+```
+Result: Blocked transitions trigger rebuild (allowed), permitted transitions update normally.
+
 ### 5. `post_creation_updates` - Two-Phase
 Field set in Update phase (after Create in Create method):
 ```hcl

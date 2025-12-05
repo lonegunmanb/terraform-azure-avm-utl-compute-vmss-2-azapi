@@ -29,3 +29,7 @@ output "post_creation_updates" {
 output "locks" {
   value = local.locks
 }
+
+output "ignore_changes" {
+  value = local.ignore_changes
+}

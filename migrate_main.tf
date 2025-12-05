@@ -2,6 +2,7 @@ data "azapi_resource" "existing" {
   type                   = "Microsoft.Compute/virtualMachineScaleSets@2024-11-01"
   name                   = var.orchestrated_virtual_machine_scale_set_name
   parent_id              = var.orchestrated_virtual_machine_scale_set_resource_group_id
+  ignore_not_found       = true
   response_export_values = ["*"]
 }
 
@@ -13,10 +14,33 @@ locals {
     parent_id = var.orchestrated_virtual_machine_scale_set_resource_group_id
   }
 
-  existing_single_placement_group = try(
-    data.azapi_resource.existing.output.properties.singlePlacementGroup,
-    null
+  existing_single_placement_group = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).properties.singlePlacementGroup, null) : null
+  single_placement_group_force_new_trigger = (
+    local.existing_single_placement_group == false &&
+    var.orchestrated_virtual_machine_scale_set_single_placement_group == true
+  ) ? "trigger_replacement" : null
+
+  existing_zones = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).zones, null) : null
+  zones_force_new_trigger = (
+    local.existing_zones != null &&
+    var.orchestrated_virtual_machine_scale_set_zones != null &&
+    length(setsubtract(local.existing_zones, var.orchestrated_virtual_machine_scale_set_zones)) > 0
+  ) ? "trigger_replacement" : null
+
+  existing_network_api_version = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).properties.virtualMachineProfile.networkProfile.networkApiVersion, "") : ""
+  new_network_api_version = coalesce(
+    var.orchestrated_virtual_machine_scale_set_network_api_version,
+    "2020-11-01"
   )
+  network_api_version_should_suppress = (
+    var.orchestrated_virtual_machine_scale_set_sku_name == null &&
+    local.existing_network_api_version == "" &&
+    local.new_network_api_version == "2020-11-01"
+  )
+  network_api_version_update_trigger = (
+    !local.network_api_version_should_suppress &&
+    local.existing_network_api_version != local.new_network_api_version
+  ) ? local.new_network_api_version : null
 
   replace_triggers_external_values = {
     location                      = { value = var.orchestrated_virtual_machine_scale_set_location }
@@ -28,6 +52,8 @@ locals {
     priority                      = { value = var.orchestrated_virtual_machine_scale_set_priority }
     proximity_placement_group_id  = { value = var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id }
     network_interface_name        = { value = var.orchestrated_virtual_machine_scale_set_network_interface != null ? jsonencode([for nic in var.orchestrated_virtual_machine_scale_set_network_interface : nic.name]) : "" }
+    single_placement_group        = local.single_placement_group_force_new_trigger
+    zones                         = local.zones_force_new_trigger
   }
 
   body = merge(
@@ -46,6 +72,9 @@ locals {
           proximityPlacementGroup = {
             id = var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id
           }
+        } : {},
+        var.orchestrated_virtual_machine_scale_set_single_placement_group != null ? {
+          singlePlacementGroup = var.orchestrated_virtual_machine_scale_set_single_placement_group
         } : {},
         var.orchestrated_virtual_machine_scale_set_sku_name != null ? {
           virtualMachineProfile = merge(
@@ -70,8 +99,11 @@ locals {
             var.orchestrated_virtual_machine_scale_set_license_type != null && var.orchestrated_virtual_machine_scale_set_license_type != "None" ? {
               licenseType = var.orchestrated_virtual_machine_scale_set_license_type
             } : {},
-            var.orchestrated_virtual_machine_scale_set_network_interface != null ? {
+            var.orchestrated_virtual_machine_scale_set_network_interface != null || var.orchestrated_virtual_machine_scale_set_sku_name != null ? {
               networkProfile = merge(
+                {
+                  networkApiVersion = local.new_network_api_version
+                },
                 var.orchestrated_virtual_machine_scale_set_network_interface != null ? {
                   networkInterfaceConfigurations = [
                     for nic in var.orchestrated_virtual_machine_scale_set_network_interface : {
@@ -198,6 +230,9 @@ locals {
         capacity = var.orchestrated_virtual_machine_scale_set_instances
         tier     = var.orchestrated_virtual_machine_scale_set_sku_name != "Mix" ? "Standard" : null
       }
+    } : {},
+    var.orchestrated_virtual_machine_scale_set_zones != null && length(var.orchestrated_virtual_machine_scale_set_zones) > 0 ? {
+      zones = tolist(var.orchestrated_virtual_machine_scale_set_zones)
     } : {}
   )
 
@@ -209,7 +244,34 @@ locals {
     "properties.virtualMachineProfile.osProfile.customData" = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_custom_data_version
   }
 
-  post_creation_updates = compact([])
+  post_creation_updates = compact([
+    var.orchestrated_virtual_machine_scale_set_sku_name != null ? {
+      azapi_header = {
+        type      = "Microsoft.Compute/virtualMachineScaleSets@2024-11-01"
+        name      = var.orchestrated_virtual_machine_scale_set_name
+        parent_id = var.orchestrated_virtual_machine_scale_set_resource_group_id
+      }
+      body = {
+        properties = {
+          virtualMachineProfile = {
+            networkProfile = {
+              networkApiVersion = local.new_network_api_version
+            }
+          }
+        }
+      }
+      sensitive_body = {
+        properties = {}
+      }
+      replace_triggers_external_values = {
+        network_api_version = local.network_api_version_update_trigger
+      }
+    } : null
+  ])
 
   locks = []
+  
+  ignore_changes = [
+    "properties.virtualMachineProfile.networkProfile.networkApiVersion"
+  ]
 }

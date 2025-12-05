@@ -54,12 +54,12 @@ func resourceOrchestratedVirtualMachineScaleSetCreate(d *pluginsdk.ResourceData,
 | 10 | instances | Argument | No | ✅ Completed | [10.instances.md](10.instances.md) |
 | 11 | license_type | Argument | No | ✅ Completed | [11.license_type.md](11.license_type.md) |
 | 12 | max_bid_price | Argument | No | ✅ Completed | [12.max_bid_price.md](12.max_bid_price.md) |
-| 13 | network_api_version | Argument | No | In Progress | |
+| 13 | network_api_version | Argument | No | ✅ Completed | [13.network_api_version.md](13.network_api_version.md) |
 | 14 | priority | Argument | No | ✅ Completed | [14.priority.md](14.priority.md) |
 | 15 | proximity_placement_group_id | Argument | No | ✅ Completed | [15.proximity_placement_group_id.md](15.proximity_placement_group_id.md) |
 | 16 | single_placement_group | Argument | No | ✅ Completed | [16.single_placement_group.md](16.single_placement_group.md) |
 | 17 | sku_name | Argument | No | ✅ Completed | [17.sku_name.md](17.sku_name.md) |
-| 18 | source_image_id | Argument | No | In Progress | |
+| 18 | source_image_id | Argument | No | Pending | |
 | 19 | tags | Argument | No | Pending | |
 | 20 | upgrade_mode | Argument | No | Pending | |
 | 21 | user_data_base64 | Argument | No | Pending | |
