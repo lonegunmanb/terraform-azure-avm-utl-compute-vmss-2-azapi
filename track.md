@@ -59,10 +59,10 @@ func resourceOrchestratedVirtualMachineScaleSetCreate(d *pluginsdk.ResourceData,
 | 15 | proximity_placement_group_id | Argument | No | ✅ Completed | [15.proximity_placement_group_id.md](15.proximity_placement_group_id.md) |
 | 16 | single_placement_group | Argument | No | ✅ Completed | [16.single_placement_group.md](16.single_placement_group.md) |
 | 17 | sku_name | Argument | No | ✅ Completed | [17.sku_name.md](17.sku_name.md) |
-| 18 | source_image_id | Argument | No | Pending | |
-| 19 | tags | Argument | No | Pending | |
-| 20 | upgrade_mode | Argument | No | Pending | |
-| 21 | user_data_base64 | Argument | No | Pending | |
+| 18 | source_image_id | Argument | No | ✅ Completed | [18.source_image_id.md](18.source_image_id.md) |
+| 19 | tags | Argument | No | ✅ Completed | [19.tags.md](19.tags.md) |
+| 20 | upgrade_mode | Argument | No | ✅ Completed | [20.upgrade_mode.md](20.upgrade_mode.md) |
+| 21 | user_data_base64 | Argument | No | ✅ Completed | [21.user_data_base64.md](21.user_data_base64.md) |
 | 22 | zone_balance | Argument | No | ✅ Completed | [22.zone_balance.md](22.zone_balance.md) |
 | 23 | zones | Argument | No | ✅ Completed | [23.zones.md](23.zones.md) |
 | 24 | __check_root_hidden_fields__ | HiddenFieldsCheck | Yes | ✅ Completed | [24.__check_root_hidden_fields__.md](24.__check_root_hidden_fields__.md) |

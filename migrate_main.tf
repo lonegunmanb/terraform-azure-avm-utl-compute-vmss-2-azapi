@@ -165,9 +165,6 @@ locals {
                 {
                   allowExtensionOperations = var.orchestrated_virtual_machine_scale_set_extension_operations_enabled
                 },
-                var.migrate_orchestrated_virtual_machine_scale_set_os_profile_custom_data != null ? {
-                  customData = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_custom_data
-                } : {},
                 var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null ? {
                   linuxConfiguration = {
                     # adminUsername = ... # Task #99
@@ -237,11 +234,25 @@ locals {
   )
 
   sensitive_body = {
-    properties = {}
+    properties = var.orchestrated_virtual_machine_scale_set_sku_name != null ? {
+      virtualMachineProfile = merge(
+        var.orchestrated_virtual_machine_scale_set_user_data_base64 != null ? {
+          userData = var.orchestrated_virtual_machine_scale_set_user_data_base64
+        } : {},
+        var.orchestrated_virtual_machine_scale_set_os_profile != null ? {
+          osProfile = merge(
+            var.migrate_orchestrated_virtual_machine_scale_set_os_profile_custom_data != null ? {
+              customData = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_custom_data
+            } : {}
+          )
+        } : {}
+      )
+    } : {}
   }
 
   sensitive_body_version = {
-    "properties.virtualMachineProfile.osProfile.customData" = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_custom_data_version
+    "properties.virtualMachineProfile.osProfile.customData" = try(tostring(var.migrate_orchestrated_virtual_machine_scale_set_os_profile_custom_data_version), "null")
+    "properties.virtualMachineProfile.userData"             = try(tostring(var.orchestrated_virtual_machine_scale_set_user_data_base64_version), "null")
   }
 
   post_creation_updates = compact([

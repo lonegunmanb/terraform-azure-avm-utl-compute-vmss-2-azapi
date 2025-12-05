@@ -468,7 +468,7 @@ EOT
 
 variable "orchestrated_virtual_machine_scale_set_os_profile" {
   type = object({
-    custom_data = optional(string) # TODO: consider remove this - migrated to independent ephemeral variable (Task #97)
+    custom_data = optional(string) # TODO: delete later - migrated to independent ephemeral variable (Task #97)
     linux_configuration = optional(object({
       admin_password                  = optional(string)
       admin_username                  = string
@@ -748,7 +748,12 @@ variable "orchestrated_virtual_machine_scale_set_user_data_base64" {
   type        = string
   default     = null
   description = "(Optional) The Base64-Encoded User Data which should be used for this Virtual Machine Scale Set."
-  sensitive   = true
+  ephemeral   = true
+
+  validation {
+    condition     = var.orchestrated_virtual_machine_scale_set_user_data_base64 == null || can(base64decode(var.orchestrated_virtual_machine_scale_set_user_data_base64))
+    error_message = "The user_data_base64 must be a valid base64 encoded string."
+  }
 }
 
 variable "orchestrated_virtual_machine_scale_set_zone_balance" {

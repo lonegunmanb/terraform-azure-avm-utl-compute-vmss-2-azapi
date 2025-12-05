@@ -94,6 +94,65 @@ Verify executor queried ALL locations for field-related logic:
 - **Would Terraform accept this syntax?** Verify parameters actually exist in Terraform/AzAPI
 - **Does the value design match the trigger condition?** Is it tracking the right thing?
 
+**Sensitive/WriteOnly Field Placement Check:**
+
+- [ ] All Sensitive fields (`Sensitive: true` in provider schema) are in `sensitive_body`, NOT `body`
+- [ ] All WriteOnly fields (from Azure API schema) are in `sensitive_body`, NOT `body`
+- [ ] Field path is tracked in `sensitive_body_version` using format: `"path.to.field" = try(tostring(var.field_version), "null")`
+- **Critical:** Sensitive/WriteOnly values MUST NOT appear in `local.body` - executor.md mandates `sensitive_body`
+
+**🚨 CRITICAL: Shared Path Merge Check (executor.md Line 132)**
+
+From `executor.md`:
+> ⚠️ `merge()` is SHALLOW! Use nested `merge()` for shared paths
+
+**MANDATORY Check for BOTH `local.body` AND `local.sensitive_body`:**
+
+Check for **duplicate parent keys** in merge statements that would cause overwrites:
+
+❌ **VIOLATION - Multiple occurrences of same parent key:**
+```hcl
+properties = merge(
+  condition1 ? { virtualMachineProfile = { field1 = ... } } : {},
+  condition2 ? { virtualMachineProfile = { field2 = ... } } : {}
+  # ^^^ virtualMachineProfile appears TWICE - second overwrites first!
+)
+```
+
+✅ **CORRECT - Nested merge for shared paths:**
+```hcl
+properties = condition_for_parent ? {
+  virtualMachineProfile = merge(
+    condition1 ? { field1 = ... } : {},
+    condition2 ? { field2 = ... } : {}
+  )
+} : {}
+# virtualMachineProfile appears ONCE, children merged inside
+```
+
+**How to Check:**
+1. Scan all `merge()` calls in `local.body` and `local.sensitive_body`
+2. Identify all keys at each level of the merge
+3. If ANY key appears more than once at the same level → **CRITICAL VIOLATION**
+4. Fix by restructuring to use nested merge for the shared parent path
+
+**Common Patterns to Watch:**
+- `virtualMachineProfile` appearing multiple times (for userData, osProfile, storageProfile, etc.)
+- `properties` appearing multiple times at root level
+- `osProfile` appearing multiple times (for different nested fields)
+- Any nested block path appearing multiple times
+
+**Why This is Critical:**
+- Terraform's `merge()` is **SHALLOW** - later keys overwrite earlier keys
+- Multiple occurrences = data loss (only the last value survives)
+- Can cause silent failures where fields are "implemented" but don't actually work
+- Violates executor.md's explicit requirement for nested merge on shared paths
+
+**If Found:**
+1. Restructure the merge to use nested merge for the shared parent
+2. Document the fix in the checker validation section
+3. Mark as CRITICAL VIOLATION in the proof document
+
 #### 4.1 ForceNew Logic Compliance
 
 **Simple ForceNew (schema `ForceNew: true`):**
@@ -208,6 +267,40 @@ From `executor.md`:
 - ConflictsWith must be replicated
 - ValidateFunc must be replicated
 - Custom validation errors must match provider
+
+#### 4.6 Sensitive Field Version Variables
+
+**For ANY Sensitive or WriteOnly field with version variable:**
+
+**Root-Level Sensitive:**
+- [ ] Version variable exists in `migrate_variables.tf`
+- [ ] Version variable has `type = number`
+- [ ] **Version variable has `default = null`** (NOT `default = 1`)
+- [ ] Version variable has validation:
+  ```hcl
+  validation {
+    condition     = var.{field} == null || var.{field}_version != null
+    error_message = "When {field} is set, {field}_version must also be set."
+  }
+  ```
+- [ ] Field value is in `sensitive_body` (NOT `body`)
+- [ ] Field path is in `sensitive_body_version` using format: `"path.to.field" = try(tostring(var.field_version), "null")`
+
+**Nested Block Sensitive:**
+- [ ] Independent ephemeral variable exists in `migrate_variables.tf`
+- [ ] Version variable exists with `type = number`
+- [ ] **Version variable has `default = null`** (NOT `default = 1`)
+- [ ] Version variable has validation ensuring both field and version set together
+- [ ] Original field in `variables.tf` has TODO comment on same line
+- [ ] Field value is in `sensitive_body` (NOT `body`)
+- [ ] Field path is in `sensitive_body_version` using format: `"path.to.field" = try(tostring(var.field_version), "null")`
+
+**Critical:** `default = 1` defeats the purpose of forcing users to explicitly manage sensitive field versions.
+
+**`sensitive_body_version` Structure:**
+- Must be a fixed `map(string)` with all possible sensitive field paths as keys
+- All values must use `try(tostring(var.xxx_version), "null")` format
+- Keys never change across applies (stability requirement)
 
 ### Step 5: Decision
 

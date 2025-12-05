@@ -122,9 +122,11 @@ locals {
     # ONLY these 5 fields allowed: type, name, location, parent_id, identity
     # identity = ... (if resource supports managed identity at root level)
   }
+  
+  tags = var.{prefix}_tags  # Top-level field, NOT in body
 }
 ```
-**Note:** Root-level API fields like `zones`, `tags`, `sku` go in `body`, NOT `azapi_header`.
+**Note:** Root-level API fields like `zones`, `sku` go in `body`. `tags` is a top-level `azapi_resource` parameter.
 
 ### 2. `body` - Non-Sensitive
 ⚠️ `merge()` is SHALLOW! Use nested `merge()` for shared paths:
@@ -137,16 +139,27 @@ locals {
     )
     sku = var.sku_name != null ? { name = var.sku_name } : null
     zones = var.zones  # Root-level API fields go in body
-    tags = var.tags    # Root-level API fields go in body
   }
 }
 ```
 
 ### 3. `sensitive_body` & `sensitive_body_version`
+
+**MANDATORY:** All Sensitive or WriteOnly fields MUST be declared in `sensitive_body` (not `body`) and tracked in `sensitive_body_version`.
+
+**`sensitive_body_version` Structure:**
+- **Type:** `map(string)` - fixed map, keys NEVER change across applies
+- **Keys:** JSON path to each sensitive field (e.g., `"properties.virtualMachineProfile.userData"`)
+- **Values:** Always use `try(tostring(var.xxx_version), "null")` - converts version to string or "null" if absent
+- **Stability:** All keys for ALL possible sensitive fields must be present, even when field is unused
+
 ```hcl
 locals {
-  sensitive_body = { properties = { ... } }
-  sensitive_body_version = { "path.to.field" = var.field_version }
+  sensitive_body = { properties = { ... } }  # Sensitive/WriteOnly field values here
+  sensitive_body_version = {
+    "properties.virtualMachineProfile.userData" = try(tostring(var.field_version), "null")
+    # All possible sensitive field paths listed here, even if field is null
+  }
 }
 ```
 
@@ -221,40 +234,54 @@ locals {
 
 ## Sensitive Fields
 
-**⚠️ CRITICAL: Nested block sensitive fields MUST use independent ephemeral variables** (Terraform can't mix `ephemeral` with `optional()` in objects)
+**⚠️ CRITICAL:** 
+- All Sensitive or WriteOnly fields MUST be in `sensitive_body`, NOT `body`
+- Nested block sensitive fields MUST use independent ephemeral variables (Terraform can't mix `ephemeral` with `optional()`)
+- WriteOnly fields are treated as Sensitive
 
 ### Root-Level Sensitive
-Modify variable in `variables.tf`: add `ephemeral = true`, remove `sensitive = true`. Create version var in `migrate_variables.tf`.
+**DO NOT** create new `migrate_*` variables for root-level sensitive/writeonly fields. Instead, reuse the existing variable:
+1. Modify the existing variable in `variables.tf`: add `ephemeral = true`, remove `sensitive = true` if present
+2. Create version var in `migrate_variables.tf` with `default = null` and validation
+3. Place field value in `sensitive_body` referencing the existing variable
 
 ### Nested Block Sensitive (MANDATORY)
-**ANY sensitive field inside nested block** (e.g., `os_profile.custom_data`, `*.admin_password`) requires:
+**ANY sensitive field inside nested block** (e.g., `os_profile.custom_data`, `*.admin_password`) requires **independent ephemeral variables** (unlike root-level sensitive fields which reuse existing variables):
 
 1. **Independent ephemeral var** in `migrate_variables.tf`:
    ```hcl
    variable "migrate_{prefix}_{nested_path}_{field}" {
      type = string; nullable = <false if Required, true if Optional>; ephemeral = true
    }
-   variable "migrate_{prefix}_{nested_path}_{field}_version" { type = number; default = 1 }
+   variable "migrate_{prefix}_{nested_path}_{field}_version" {
+     type = number; default = null
+     validation {
+       condition = var.migrate_{prefix}_{nested_path}_{field} == null || var.migrate_{prefix}_{nested_path}_{field}_version != null
+       error_message = "When {field} is set, {field}_version must also be set."
+     }
+   }
    ```
 
 2. **Mark original field in `variables.tf`** (for code review):
    ```hcl
    variable "orchestrated_virtual_machine_scale_set_os_profile" {
      type = object({
-       custom_data = optional(string)  # TODO: consider remove this - migrated to independent ephemeral variable (Task #97)
+       custom_data = optional(string)  # TODO: delete later - migrated to independent ephemeral variable (Task #97)
        # ...
      })
    }
    ```
-   Add comment `# TODO: consider remove this - migrated to independent ephemeral variable (Task #X)` on the SAME LINE as the field definition.
+   Add comment `# TODO: delete later - migrated to independent ephemeral variable (Task #X)` on the SAME LINE.
 
-3. **Use in locals** (`migrate_main.tf`):
+3. **Use in locals** (`migrate_main.tf`) - MUST use `sensitive_body`, NOT `body`:
    ```hcl
    sensitive_body = { properties = var.parent ? { path = { to = { field = var.migrate_var } } } : {} }
-   sensitive_body_version = { "path.to.field" = var.migrate_var_version }
+   sensitive_body_version = {
+     "path.to.field" = try(tostring(var.migrate_var_version), "null")
+   }
    ```
 
-**Proof must show:** `Sensitive: true`, `Required/Optional`, independent var, version var, TODO comment added to variables.tf, usage in both locals.
+**Proof must show:** `Sensitive: true`, `Required/Optional`, independent var, version var with validation, TODO comment in variables.tf, usage in both locals.
 
 ## Task Types
 
@@ -391,8 +418,12 @@ locals {
   replace_triggers_external_values = {}
   body = { properties = {} }
   sensitive_body = { properties = {} }
-  sensitive_body_version = {}
+  sensitive_body_version = {
+    # All possible sensitive field paths with try(tostring(...), \"null\")
+    # Example: \"properties.virtualMachineProfile.userData\" = try(tostring(var.user_data_version), \"null\")
+  }
   azapi_header = {}  # type from track.md Task #1
+  tags = null  # Top-level field, set when implementing tags task
   post_creation_updates = compact([])
   locks = []  # Populated by Type 2 task
   ignore_changes = []  # JSON paths for fields with DiffSuppressFunc
@@ -402,6 +433,7 @@ locals {
 **migrate_outputs.tf:**
 ```hcl
 output "azapi_header" { value = local.azapi_header; depends_on = [] }
+output "tags" { value = local.tags }
 output "body" { value = local.body }
 output "sensitive_body" { value = local.sensitive_body; sensitive = true; ephemeral = true }
 output "sensitive_body_version" { value = local.sensitive_body_version }
@@ -486,7 +518,9 @@ Your locals feed root module's `azapi_resource`:
 ```hcl
 resource "azapi_resource" "this" {
   type = local.azapi_header.type; name = local.azapi_header.name; location = local.azapi_header.location
-  parent_id = local.azapi_header.parent_id; body = jsonencode(merge(local.body, local.sensitive_body))
+  parent_id = local.azapi_header.parent_id; tags = local.tags
+  body = local.body
+  sensitive_body = local.sensitive_body
   replace_triggers_external_values = local.replace_triggers_external_values
   dynamic "timeouts" { for_each = local.sensitive_body_version; content {} }
 }
