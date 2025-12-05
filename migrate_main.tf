@@ -13,33 +13,15 @@ locals {
     parent_id = var.orchestrated_virtual_machine_scale_set_resource_group_id
   }
 
-  existing_zones = try(
-    data.azapi_resource.existing.output.zones != null ? toset(data.azapi_resource.existing.output.zones) : toset([]),
-    toset([])
-  )
-  new_zones = var.orchestrated_virtual_machine_scale_set_zones != null ? var.orchestrated_virtual_machine_scale_set_zones : toset([])
-
-  zones_force_new_trigger = anytrue([
-    for zone in local.existing_zones : !contains(local.new_zones, zone)
-  ])
-
   existing_single_placement_group = try(
     data.azapi_resource.existing.output.properties.singlePlacementGroup,
     null
-  )
-  new_single_placement_group = var.orchestrated_virtual_machine_scale_set_single_placement_group
-
-  single_placement_group_force_new_trigger = (
-    local.existing_single_placement_group == false &&
-    local.new_single_placement_group == true
   )
 
   replace_triggers_external_values = {
     location                      = { value = var.orchestrated_virtual_machine_scale_set_location }
     platform_fault_domain_count   = { value = var.orchestrated_virtual_machine_scale_set_platform_fault_domain_count }
     zone_balance                  = { value = var.orchestrated_virtual_machine_scale_set_zone_balance }
-    zones                         = { value = local.zones_force_new_trigger }
-    single_placement_group        = { value = local.single_placement_group_force_new_trigger }
     capacity_reservation_group_id = { value = var.orchestrated_virtual_machine_scale_set_capacity_reservation_group_id }
     eviction_policy               = { value = var.orchestrated_virtual_machine_scale_set_eviction_policy }
     extension_operations_enabled  = { value = var.orchestrated_virtual_machine_scale_set_extension_operations_enabled }
@@ -57,9 +39,6 @@ locals {
         {
           platformFaultDomainCount = var.orchestrated_virtual_machine_scale_set_platform_fault_domain_count
         },
-        var.orchestrated_virtual_machine_scale_set_single_placement_group != null ? {
-          singlePlacementGroup = var.orchestrated_virtual_machine_scale_set_single_placement_group
-        } : {},
         var.orchestrated_virtual_machine_scale_set_zone_balance != null ? {
           zoneBalance = var.orchestrated_virtual_machine_scale_set_zone_balance
         } : {},
@@ -213,9 +192,6 @@ locals {
         } : {}
       )
     },
-    var.orchestrated_virtual_machine_scale_set_zones != null ? {
-      zones = tolist(var.orchestrated_virtual_machine_scale_set_zones)
-    } : {},
     var.orchestrated_virtual_machine_scale_set_sku_name != null ? {
       sku = {
         name     = var.orchestrated_virtual_machine_scale_set_sku_name

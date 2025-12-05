@@ -58,10 +58,14 @@ query_terraform_block_implementation_source_code(entrypoint_name="schema")  # Re
 **Both:** Error messages mentioning field name
 
 **Identify logic type and implement:**
+- **DiffSuppressFunc** → **READ `diffsuppressfunc.md` and follow its rules** (overrides standard ForceNew handling)
 - **Validation** (returns error) → `variables.tf` validation block
 - **ForceNew** (old/new comparison) → `replace_triggers_external_values` + `data "azapi_resource"`
 - **Update restriction** (Update returns error) → conditional ForceNew
 - **Computed/conditional** → `locals.body` or defer
+
+**⚠️ CRITICAL: DiffSuppressFunc Detection**
+If schema shows `DiffSuppressFunc` for current field, STOP and read `diffsuppressfunc.md` FIRST. That document's rules take priority over standard ForceNew handling documented here.
 
 **Trigger condition rule:** If error mentions current field AND trigger condition involves current field → implement in current task. If referenced variables don't exist → mark `BLOCKED: Task #X`.
 
@@ -155,67 +159,29 @@ locals {
 ❌ `merge({ a = {...} }, cond ? { b = {...} } : {})` ← Key `b` unstable
 ✅ `{ a = {...}, b = { value = cond ? val : "" } }` ← Key `b` always present
 
-**Understanding `value` in replace_triggers_external_values:**
+**Two Modes for `replace_triggers_external_values`:**
 
-The `value` field serves as a **change detector**. When Terraform detects that `value` has changed between applies, it triggers resource replacement. You must carefully design what `value` contains:
-
-- **Key Principle**: The `value` should change **if and only if** the condition that requires replacement is met
-- **When the expected change occurs** → `value` should reflect that change
-- **When the expected change does NOT occur** → `value` should remain stable (often `null` or empty)
-
-**Simple ForceNew (schema `ForceNew: true`):**
+**Mode 1 - Direct Value Tracking (schema `ForceNew: true`):**
+Wrap in object to keep key stable. Track actual field value changes.
 ```hcl
-# The field value itself is the condition - any change triggers replacement
-field = { value = var.field }
+field = { value = var.field }  # Key always present, value changes trigger replacement
 ```
 
-**Conditional ForceNew (CustomizeDiff with logic):**
-
-Think carefully: What change should trigger replacement?
-
+**Mode 2 - Conditional Trigger (CustomizeDiff logic):**
+Direct assignment, no wrapping. Key always present, value switches between null and non-null.
 ```hcl
-# Example 1: Only trigger replacement when removing items
-# value = boolean flag that becomes true only when removal detected
-field = { value = local.field_removal_detected }  # true/false based on comparison
-
-# Example 2: Only trigger replacement when specific conditions met
-# value = the condition result itself, not the data
-field = { value = local.should_replace_due_to_field }  # Computed boolean
+field = local.field_force_new_trigger  # null = no replacement, non-null = trigger replacement
 ```
 
-**Common Mistake - Don't do this:**
-```hcl
-# ❌ WRONG: Putting the actual data in value when you need conditional logic
-# This triggers replacement on ANY change, not just the specific condition
-field = { value = var.field_list }
+**Why the difference:**
+- Mode 1: Ensures key exists even when value is null, so null ↔ non-null transitions are detected
+- Mode 2: Avoids false triggers - if wrapped, object existence change would trigger replacement even when condition becomes false after first trigger
 
-# ❌ WRONG: Inventing non-existent parameters
-field = {
-  value = var.field
-  force_new_on_value = some_condition  # This parameter doesn't exist!
-}
-```
-
-**Correct Approach:**
-```hcl
-# ✅ RIGHT: Value is the trigger condition, not the data itself
-field = { value = local.field_should_trigger_replacement }
-
-# Where local.field_should_trigger_replacement is computed from:
-# - Reading existing state via data "azapi_resource"
-# - Comparing old vs new values
-# - Returning boolean: true = should replace, false = should not replace
-```
-
-**CustomizeDiff - EXACT Replication Steps:**
-1. Quote FULL Go code in proof document
-2. Translate EXACTLY to Terraform - NO simplifications
-3. Use `data "azapi_resource"` to read existing state if needed for old/new comparison
-4. Implement the SAME conditional logic
-5. **Design `value` thoughtfully** - it should represent "should I trigger replacement?" not "what is the data?"
-6. **Keep all keys stable** - use empty values instead of conditionally adding keys
-
-If exact replication impossible, FAIL the task and document why in error.md.
+**CustomizeDiff Replication:**
+1. Read existing state via `data "azapi_resource"`
+2. Compute trigger value: Does CustomizeDiff require ForceNew?
+3. Assign directly: `field = condition ? meaningful_value : null`
+4. Key remains stable, only non-null values trigger replacement
 
 ### 5. `post_creation_updates` - Two-Phase
 Field set in Update phase (after Create in Create method):
@@ -414,6 +380,7 @@ locals {
   azapi_header = {}  # type from track.md Task #1
   post_creation_updates = compact([])
   locks = []  # Populated by Type 2 task
+  ignore_changes = []  # JSON paths for fields with DiffSuppressFunc
 }
 ```
 
@@ -426,6 +393,7 @@ output "sensitive_body_version" { value = local.sensitive_body_version }
 output "replace_triggers_external_values" { value = local.replace_triggers_external_values }
 output "post_creation_updates" { value = local.post_creation_updates; sensitive = true }
 output "locks" { value = local.locks }
+output "ignore_changes" { value = local.ignore_changes }
 ```
 
 **migrate_validation.tf:** `# Complex runtime validations only. Most in variables.tf`
