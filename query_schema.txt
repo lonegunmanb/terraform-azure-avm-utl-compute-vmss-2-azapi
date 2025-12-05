@@ -1,0 +1,1 @@
+I need to query the Terraform provider schema for the sku_name field in azurerm_orchestrated_virtual_machine_scale_set resource.
