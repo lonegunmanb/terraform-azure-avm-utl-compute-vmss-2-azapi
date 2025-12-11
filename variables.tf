@@ -1,53 +1,53 @@
-variable "orchestrated_virtual_machine_scale_set_location" {
+variable "location" {
   type        = string
   description = "(Required) The Azure location where the Virtual Machine Scale Set should exist. Changing this forces a new resource to be created."
   nullable    = false
 }
 
-variable "orchestrated_virtual_machine_scale_set_name" {
+variable "name" {
   type        = string
   description = "(Required) The name of the Virtual Machine Scale Set. Changing this forces a new resource to be created."
   nullable    = false
 
   validation {
-    condition     = length(var.orchestrated_virtual_machine_scale_set_name) <= 80
+    condition     = length(var.name) <= 80
     error_message = "The name can be at most 80 characters."
   }
 
   validation {
-    condition     = can(regex("^[a-zA-Z0-9._-]+$", var.orchestrated_virtual_machine_scale_set_name))
+    condition     = can(regex("^[a-zA-Z0-9._-]+$", var.name))
     error_message = "The name may only contain alphanumeric characters, dots, dashes and underscores."
   }
 
   validation {
-    condition     = can(regex("^[a-zA-Z0-9]", var.orchestrated_virtual_machine_scale_set_name))
+    condition     = can(regex("^[a-zA-Z0-9]", var.name))
     error_message = "The name must begin with an alphanumeric character."
   }
 
   validation {
-    condition     = can(regex("\\w$", var.orchestrated_virtual_machine_scale_set_name))
+    condition     = can(regex("\\w$", var.name))
     error_message = "The name must end with an alphanumeric character or underscore."
   }
 
   validation {
-    condition     = !can(regex("^\\d+$", var.orchestrated_virtual_machine_scale_set_name))
+    condition     = !can(regex("^\\d+$", var.name))
     error_message = "The name cannot contain only numbers."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_platform_fault_domain_count" {
+variable "platform_fault_domain_count" {
   type        = number
   description = "(Required) Specifies the number of fault domains that are used by this Virtual Machine Scale Set. Changing this forces a new resource to be created."
   nullable    = false
 }
 
-variable "orchestrated_virtual_machine_scale_set_resource_group_name" {
+variable "resource_group_name" {
   type        = string
   description = "(Required) The name of the Resource Group in which the Virtual Machine Scale Set should exist. Changing this forces a new resource to be created."
   nullable    = false
 }
 
-variable "orchestrated_virtual_machine_scale_set_additional_capabilities" {
+variable "additional_capabilities" {
   type = object({
     ultra_ssd_enabled = optional(bool, false)
   })
@@ -57,7 +57,7 @@ variable "orchestrated_virtual_machine_scale_set_additional_capabilities" {
 EOT
 }
 
-variable "orchestrated_virtual_machine_scale_set_automatic_instance_repair" {
+variable "automatic_instance_repair" {
   type = object({
     action       = optional(string)
     enabled      = bool
@@ -72,24 +72,24 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_automatic_instance_repair == null ||
-      var.orchestrated_virtual_machine_scale_set_automatic_instance_repair.action == null ||
-      contains(["Replace", "Restart", "Reimage"], var.orchestrated_virtual_machine_scale_set_automatic_instance_repair.action)
+      var.automatic_instance_repair == null ||
+      var.automatic_instance_repair.action == null ||
+      contains(["Replace", "Restart", "Reimage"], var.automatic_instance_repair.action)
     )
     error_message = "The action must be one of: Replace, Restart, Reimage."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_automatic_instance_repair == null ||
-      var.orchestrated_virtual_machine_scale_set_automatic_instance_repair.grace_period == null ||
-      can(regex("^PT([1-8]?[0-9]|90)M$", var.orchestrated_virtual_machine_scale_set_automatic_instance_repair.grace_period))
+      var.automatic_instance_repair == null ||
+      var.automatic_instance_repair.grace_period == null ||
+      can(regex("^PT([1-8]?[0-9]|90)M$", var.automatic_instance_repair.grace_period))
     )
     error_message = "The grace_period must be between PT10M and PT90M in ISO 8601 format."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_boot_diagnostics" {
+variable "boot_diagnostics" {
   type = object({
     storage_account_uri = optional(string)
   })
@@ -99,29 +99,29 @@ variable "orchestrated_virtual_machine_scale_set_boot_diagnostics" {
 EOT
 }
 
-variable "orchestrated_virtual_machine_scale_set_capacity_reservation_group_id" {
+variable "capacity_reservation_group_id" {
   type        = string
   default     = null
   description = "(Optional) Specifies the ID of the Capacity Reservation Group which the Virtual Machine Scale Set should be allocated to. Changing this forces a new resource to be created."
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_capacity_reservation_group_id == null ||
-      can(regex("^/subscriptions/[a-fA-F0-9]{8}-([a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}/resourceGroups/[^/]+/providers/Microsoft\\.Compute/capacityReservationGroups/[^/]+$", var.orchestrated_virtual_machine_scale_set_capacity_reservation_group_id))
+      var.capacity_reservation_group_id == null ||
+      can(regex("^/subscriptions/[a-fA-F0-9]{8}-([a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}/resourceGroups/[^/]+/providers/Microsoft\\.Compute/capacityReservationGroups/[^/]+$", var.capacity_reservation_group_id))
     )
     error_message = "The capacity_reservation_group_id must be a valid Capacity Reservation Group ID."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_capacity_reservation_group_id == null ||
-      var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id == null
+      var.capacity_reservation_group_id == null ||
+      var.proximity_placement_group_id == null
     )
     error_message = "The capacity_reservation_group_id cannot be specified when proximity_placement_group_id is set (ConflictsWith)."
   }
 }
 
-  variable "orchestrated_virtual_machine_scale_set_data_disk" {
+  variable "data_disk" {
     type = list(object({
       caching                        = string
       create_option                  = optional(string, "Empty")
@@ -148,9 +148,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_data_disk == null ||
+      var.data_disk == null ||
       alltrue([
-        for disk in var.orchestrated_virtual_machine_scale_set_data_disk :
+        for disk in var.data_disk :
         contains(["None", "ReadOnly", "ReadWrite"], disk.caching)
       ])
     )
@@ -159,9 +159,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_data_disk == null ||
+      var.data_disk == null ||
       alltrue([
-        for disk in var.orchestrated_virtual_machine_scale_set_data_disk :
+        for disk in var.data_disk :
         contains(["Premium_LRS", "PremiumV2_LRS", "Premium_ZRS", "Standard_LRS", "StandardSSD_LRS", "StandardSSD_ZRS", "UltraSSD_LRS"], disk.storage_account_type)
       ])
     )
@@ -170,9 +170,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_data_disk == null ||
+      var.data_disk == null ||
       alltrue([
-        for disk in var.orchestrated_virtual_machine_scale_set_data_disk :
+        for disk in var.data_disk :
         disk.ultra_ssd_disk_iops_read_write == null || disk.ultra_ssd_disk_iops_read_write >= 1
       ])
     )
@@ -181,13 +181,13 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_data_disk == null ||
-      var.orchestrated_virtual_machine_scale_set_additional_capabilities == null ||
+      var.data_disk == null ||
+      var.additional_capabilities == null ||
       alltrue([
-        for disk in var.orchestrated_virtual_machine_scale_set_data_disk :
+        for disk in var.data_disk :
         disk.ultra_ssd_disk_iops_read_write == null ||
         disk.ultra_ssd_disk_iops_read_write <= 0 ||
-        coalesce(var.orchestrated_virtual_machine_scale_set_additional_capabilities.ultra_ssd_enabled, false) ||
+        coalesce(var.additional_capabilities.ultra_ssd_enabled, false) ||
         disk.storage_account_type == "PremiumV2_LRS"
       ])
     )
@@ -196,9 +196,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_data_disk == null ||
+      var.data_disk == null ||
       alltrue([
-        for disk in var.orchestrated_virtual_machine_scale_set_data_disk :
+        for disk in var.data_disk :
         disk.ultra_ssd_disk_mbps_read_write == null || disk.ultra_ssd_disk_mbps_read_write >= 1
       ])
     )
@@ -207,13 +207,13 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_data_disk == null ||
-      var.orchestrated_virtual_machine_scale_set_additional_capabilities == null ||
+      var.data_disk == null ||
+      var.additional_capabilities == null ||
       alltrue([
-        for disk in var.orchestrated_virtual_machine_scale_set_data_disk :
+        for disk in var.data_disk :
         disk.ultra_ssd_disk_mbps_read_write == null ||
         disk.ultra_ssd_disk_mbps_read_write <= 0 ||
-        coalesce(var.orchestrated_virtual_machine_scale_set_additional_capabilities.ultra_ssd_enabled, false) ||
+        coalesce(var.additional_capabilities.ultra_ssd_enabled, false) ||
         disk.storage_account_type == "PremiumV2_LRS"
       ])
     )
@@ -222,9 +222,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_data_disk == null ||
+      var.data_disk == null ||
       alltrue([
-        for disk in var.orchestrated_virtual_machine_scale_set_data_disk :
+        for disk in var.data_disk :
         contains(["Empty", "FromImage"], disk.create_option)
       ])
     )
@@ -233,9 +233,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_data_disk == null ||
+      var.data_disk == null ||
       alltrue([
-        for disk in var.orchestrated_virtual_machine_scale_set_data_disk :
+        for disk in var.data_disk :
         disk.disk_size_gb == null || (disk.disk_size_gb >= 1 && disk.disk_size_gb <= 32767)
       ])
     )
@@ -244,9 +244,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_data_disk == null ||
+      var.data_disk == null ||
       alltrue([
-        for disk in var.orchestrated_virtual_machine_scale_set_data_disk :
+        for disk in var.data_disk :
         disk.lun == null || (disk.lun >= 0 && disk.lun <= 2000)
       ])
     )
@@ -254,35 +254,35 @@ EOT
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_encryption_at_host_enabled" {
+variable "encryption_at_host_enabled" {
   type        = bool
   default     = null
   description = "(Optional) Should disks attached to this Virtual Machine Scale Set be encrypted by enabling Encryption at Host?"
 }
 
-variable "orchestrated_virtual_machine_scale_set_eviction_policy" {
+variable "eviction_policy" {
   type        = string
   default     = null
   description = "(Optional) The Policy which should be used by Spot Virtual Machines that are Evicted from the Scale Set. Possible values are `Deallocate` and `Delete`. Changing this forces a new resource to be created."
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_eviction_policy == null ||
-      contains(["Deallocate", "Delete"], var.orchestrated_virtual_machine_scale_set_eviction_policy)
+      var.eviction_policy == null ||
+      contains(["Deallocate", "Delete"], var.eviction_policy)
     )
     error_message = "The eviction_policy must be either 'Deallocate' or 'Delete'."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_eviction_policy == null ||
-      var.orchestrated_virtual_machine_scale_set_priority == "Spot"
+      var.eviction_policy == null ||
+      var.priority == "Spot"
     )
     error_message = "`eviction_policy` can only be specified when `priority` is set to `Spot`."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_extension" {
+variable "extension" {
   type = set(object({
     auto_upgrade_minor_version_enabled        = optional(bool, true)
     extensions_to_provision_after_vm_creation = optional(list(string))
@@ -320,41 +320,41 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_extension == null ||
-      alltrue([for ext in var.orchestrated_virtual_machine_scale_set_extension : ext.name != ""])
+      var.extension == null ||
+      alltrue([for ext in var.extension : ext.name != ""])
     )
     error_message = "The extension name must not be empty."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_extension == null ||
-      alltrue([for ext in var.orchestrated_virtual_machine_scale_set_extension : ext.type_handler_version != ""])
+      var.extension == null ||
+      alltrue([for ext in var.extension : ext.type_handler_version != ""])
     )
     error_message = "The extension type_handler_version must not be empty."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_extension == null ||
-      alltrue([for ext in var.orchestrated_virtual_machine_scale_set_extension : ext.publisher != ""])
+      var.extension == null ||
+      alltrue([for ext in var.extension : ext.publisher != ""])
     )
     error_message = "The extension publisher must not be empty."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_extension == null ||
-      alltrue([for ext in var.orchestrated_virtual_machine_scale_set_extension : ext.type != ""])
+      var.extension == null ||
+      alltrue([for ext in var.extension : ext.type != ""])
     )
     error_message = "The extension type must not be empty."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_extension == null ||
+      var.extension == null ||
       alltrue([
-        for ext in var.orchestrated_virtual_machine_scale_set_extension :
+        for ext in var.extension :
         ext.extensions_to_provision_after_vm_creation == null ||
         alltrue([for name in ext.extensions_to_provision_after_vm_creation : name != ""])
       ])
@@ -364,9 +364,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_extension == null ||
+      var.extension == null ||
       alltrue([
-        for ext in var.orchestrated_virtual_machine_scale_set_extension :
+        for ext in var.extension :
         ext.settings == null || ext.settings == "" || can(jsondecode(ext.settings))
       ])
     )
@@ -375,9 +375,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_extension == null ||
+      var.extension == null ||
       alltrue([
-        for ext in var.orchestrated_virtual_machine_scale_set_extension :
+        for ext in var.extension :
         !(ext.protected_settings != null && ext.protected_settings != "" && ext.protected_settings_from_key_vault != null)
       ])
     )
@@ -386,67 +386,67 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_extension == null ||
-      var.migrate_orchestrated_virtual_machine_scale_set_extension_protected_settings == null ||
+      var.extension == null ||
+      var.extension_protected_settings == null ||
       alltrue([
-        for ext in var.orchestrated_virtual_machine_scale_set_extension :
+        for ext in var.extension :
         ext.protected_settings_from_key_vault == null ||
-        !contains([for ps_ext in var.migrate_orchestrated_virtual_machine_scale_set_extension_protected_settings : ps_ext.name], ext.name)
+        !contains([for ps_ext in var.extension_protected_settings : ps_ext.name], ext.name)
       ])
     )
     error_message = "protected_settings_from_key_vault cannot be used with protected_settings (via migrate variable) for the same extension."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_extension_operations_enabled" {
+variable "extension_operations_enabled" {
   type        = bool
   default     = true
   description = "(Optional) Should extension operations be allowed on the Virtual Machine Scale Set? Possible values are `true` or `false`. Defaults to `true`. Changing this forces a new Virtual Machine Scale Set to be created."
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_extension_operations_enabled == false ||
-      (var.orchestrated_virtual_machine_scale_set_os_profile != null &&
-        var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null &&
-      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.provision_vm_agent == false) == false
+      var.extension_operations_enabled == false ||
+      (var.os_profile != null &&
+        var.os_profile.windows_configuration != null &&
+      var.os_profile.windows_configuration.provision_vm_agent == false) == false
     )
     error_message = "`extension_operations_enabled` cannot be set to `true` when `provision_vm_agent` is set to `false` in windows_configuration."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_extension_operations_enabled == false ||
-      (var.orchestrated_virtual_machine_scale_set_os_profile != null &&
-        var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null &&
-      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.provision_vm_agent == false) == false
+      var.extension_operations_enabled == false ||
+      (var.os_profile != null &&
+        var.os_profile.linux_configuration != null &&
+      var.os_profile.linux_configuration.provision_vm_agent == false) == false
     )
     error_message = "`extension_operations_enabled` cannot be set to `true` when `provision_vm_agent` is set to `false` in linux_configuration."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_extensions_time_budget" {
+variable "extensions_time_budget" {
   type        = string
   default     = "PT1H30M"
   description = "(Optional) Specifies the time alloted for all extensions to start. The time duration should be between 15 minutes and 120 minutes (inclusive) and should be specified in ISO 8601 format. Defaults to `PT1H30M`."
 
   validation {
-    condition = var.orchestrated_virtual_machine_scale_set_extensions_time_budget == null || can(regex("^PT([0-9]+H)?([0-9]+M)?$", var.orchestrated_virtual_machine_scale_set_extensions_time_budget)) && (
-      can(regex("^PT([0-9]+)H([0-9]+)M$", var.orchestrated_virtual_machine_scale_set_extensions_time_budget)) ? (
-        tonumber(regex("^PT([0-9]+)H([0-9]+)M$", var.orchestrated_virtual_machine_scale_set_extensions_time_budget)[0]) * 60 + tonumber(regex("^PT([0-9]+)H([0-9]+)M$", var.orchestrated_virtual_machine_scale_set_extensions_time_budget)[1]) >= 15 &&
-        tonumber(regex("^PT([0-9]+)H([0-9]+)M$", var.orchestrated_virtual_machine_scale_set_extensions_time_budget)[0]) * 60 + tonumber(regex("^PT([0-9]+)H([0-9]+)M$", var.orchestrated_virtual_machine_scale_set_extensions_time_budget)[1]) <= 120
-        ) : can(regex("^PT([0-9]+)H$", var.orchestrated_virtual_machine_scale_set_extensions_time_budget)) ? (
-        tonumber(regex("^PT([0-9]+)H$", var.orchestrated_virtual_machine_scale_set_extensions_time_budget)[0]) * 60 >= 15 &&
-        tonumber(regex("^PT([0-9]+)H$", var.orchestrated_virtual_machine_scale_set_extensions_time_budget)[0]) * 60 <= 120
-        ) : can(regex("^PT([0-9]+)M$", var.orchestrated_virtual_machine_scale_set_extensions_time_budget)) ? (
-        tonumber(regex("^PT([0-9]+)M$", var.orchestrated_virtual_machine_scale_set_extensions_time_budget)[0]) >= 15 &&
-        tonumber(regex("^PT([0-9]+)M$", var.orchestrated_virtual_machine_scale_set_extensions_time_budget)[0]) <= 120
+    condition = var.extensions_time_budget == null || can(regex("^PT([0-9]+H)?([0-9]+M)?$", var.extensions_time_budget)) && (
+      can(regex("^PT([0-9]+)H([0-9]+)M$", var.extensions_time_budget)) ? (
+        tonumber(regex("^PT([0-9]+)H([0-9]+)M$", var.extensions_time_budget)[0]) * 60 + tonumber(regex("^PT([0-9]+)H([0-9]+)M$", var.extensions_time_budget)[1]) >= 15 &&
+        tonumber(regex("^PT([0-9]+)H([0-9]+)M$", var.extensions_time_budget)[0]) * 60 + tonumber(regex("^PT([0-9]+)H([0-9]+)M$", var.extensions_time_budget)[1]) <= 120
+        ) : can(regex("^PT([0-9]+)H$", var.extensions_time_budget)) ? (
+        tonumber(regex("^PT([0-9]+)H$", var.extensions_time_budget)[0]) * 60 >= 15 &&
+        tonumber(regex("^PT([0-9]+)H$", var.extensions_time_budget)[0]) * 60 <= 120
+        ) : can(regex("^PT([0-9]+)M$", var.extensions_time_budget)) ? (
+        tonumber(regex("^PT([0-9]+)M$", var.extensions_time_budget)[0]) >= 15 &&
+        tonumber(regex("^PT([0-9]+)M$", var.extensions_time_budget)[0]) <= 120
       ) : false
     )
     error_message = "The extensions_time_budget must be between PT15M and PT2H (15 minutes to 120 minutes) in ISO 8601 format."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_identity" {
+variable "identity" {
   type = object({
     identity_ids = set(string)
     type         = string
@@ -459,76 +459,76 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_identity == null ||
-      var.orchestrated_virtual_machine_scale_set_identity.type == "UserAssigned"
+      var.identity == null ||
+      var.identity.type == "UserAssigned"
     )
     error_message = "The type must be 'UserAssigned'."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_identity == null ||
-      (length(var.orchestrated_virtual_machine_scale_set_identity.identity_ids) > 0 &&
-        alltrue([for id in var.orchestrated_virtual_machine_scale_set_identity.identity_ids : can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.ManagedIdentity/userAssignedIdentities/[^/]+$", id))]))
+      var.identity == null ||
+      (length(var.identity.identity_ids) > 0 &&
+        alltrue([for id in var.identity.identity_ids : can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.ManagedIdentity/userAssignedIdentities/[^/]+$", id))]))
     )
     error_message = "All identity_ids must be valid User Assigned Identity resource IDs in the format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_instances" {
+variable "instances" {
   type        = number
   default     = null
   description = "(Optional) The number of Virtual Machines in the Virtual Machine Scale Set."
 
   validation {
-    condition     = var.orchestrated_virtual_machine_scale_set_instances == null || (var.orchestrated_virtual_machine_scale_set_instances >= 0 && var.orchestrated_virtual_machine_scale_set_instances <= 1000)
+    condition     = var.instances == null || (var.instances >= 0 && var.instances <= 1000)
     error_message = "The instances must be between 0 and 1000."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_license_type" {
+variable "license_type" {
   type        = string
   default     = null
   description = "(Optional) Specifies the type of on-premise license (also known as Azure Hybrid Use Benefit) which should be used for this Virtual Machine Scale Set. Possible values are `None`, `Windows_Client` and `Windows_Server`."
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_license_type == null ||
-      contains(["None", "Windows_Client", "Windows_Server"], var.orchestrated_virtual_machine_scale_set_license_type)
+      var.license_type == null ||
+      contains(["None", "Windows_Client", "Windows_Server"], var.license_type)
     )
     error_message = "The license_type must be one of 'None', 'Windows_Client', or 'Windows_Server'."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_max_bid_price" {
+variable "max_bid_price" {
   type        = number
   default     = -1
   description = "(Optional) The maximum price you're willing to pay for each Virtual Machine in this Scale Set, in US Dollars; which must be greater than the current spot price. If this bid price falls below the current spot price the Virtual Machines in the Scale Set will be evicted using the eviction_policy. Defaults to `-1`, which means that each Virtual Machine in the Scale Set should not be evicted for price reasons."
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_max_bid_price == -1 ||
-      var.orchestrated_virtual_machine_scale_set_max_bid_price >= 0.00001
+      var.max_bid_price == -1 ||
+      var.max_bid_price >= 0.00001
     )
     error_message = "The max_bid_price must be either -1 (to use current VM price) or greater than or equal to 0.00001."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_network_api_version" {
+variable "network_api_version" {
   type        = string
   default     = null
   description = "(Optional) Specifies the Microsoft.Network API version used when creating networking resources in the Network Interface Configurations for Virtual Machine Scale Set. Possible values are `2020-11-01` and `2022-11-01`. Defaults to `2020-11-01`."
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_api_version == null ||
-      contains(["2020-11-01", "2022-11-01"], var.orchestrated_virtual_machine_scale_set_network_api_version)
+      var.network_api_version == null ||
+      contains(["2020-11-01", "2022-11-01"], var.network_api_version)
     )
     error_message = "The network_api_version must be either '2020-11-01' or '2022-11-01'."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_network_interface" {
+variable "network_interface" {
   type = list(object({
     auxiliary_mode                = optional(string)
     auxiliary_sku                 = optional(string)
@@ -598,17 +598,17 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
-      alltrue([for nic in var.orchestrated_virtual_machine_scale_set_network_interface : nic.name != ""])
+      var.network_interface == null ||
+      alltrue([for nic in var.network_interface : nic.name != ""])
     )
     error_message = "The network_interface name must not be empty."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface :
+        for nic in var.network_interface :
         nic.auxiliary_mode == null || contains(["AcceleratedConnections", "Floating"], nic.auxiliary_mode)
       ])
     )
@@ -617,9 +617,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface :
+        for nic in var.network_interface :
         (nic.auxiliary_mode != null && nic.auxiliary_sku != null) || (nic.auxiliary_mode == null && nic.auxiliary_sku == null)
       ])
     )
@@ -628,10 +628,10 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface :
-        nic.auxiliary_mode == null || (var.orchestrated_virtual_machine_scale_set_network_api_version != null && var.orchestrated_virtual_machine_scale_set_network_api_version != "2020-11-01")
+        for nic in var.network_interface :
+        nic.auxiliary_mode == null || (var.network_api_version != null && var.network_api_version != "2020-11-01")
       ])
     )
     error_message = "auxiliary_mode and auxiliary_sku can be set only when network_api_version is later than '2020-11-01'."
@@ -639,9 +639,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface :
+        for nic in var.network_interface :
         nic.auxiliary_sku == null || contains(["A1", "A2", "A4", "A8"], nic.auxiliary_sku)
       ])
     )
@@ -650,9 +650,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface :
+        for nic in var.network_interface :
         nic.dns_servers == null || alltrue([for dns in nic.dns_servers : dns != ""])
       ])
     )
@@ -661,9 +661,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : alltrue([
+        for nic in var.network_interface : alltrue([
           for ip_config in nic.ip_configuration :
           ip_config.name != null && ip_config.name != ""
         ])
@@ -674,9 +674,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : alltrue([
+        for nic in var.network_interface : alltrue([
           for ip_config in nic.ip_configuration :
           ip_config.application_security_group_ids == null || length(ip_config.application_security_group_ids) <= 20
         ])
@@ -687,9 +687,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : alltrue([
+        for nic in var.network_interface : alltrue([
           for ip_config in nic.ip_configuration :
           ip_config.version == null || contains(["IPv4", "IPv6"], ip_config.version)
         ])
@@ -700,9 +700,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : alltrue([
+        for nic in var.network_interface : alltrue([
           for ip_config in nic.ip_configuration :
           !(ip_config.primary == true && ip_config.version == "IPv6")
         ])
@@ -713,9 +713,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : alltrue([
+        for nic in var.network_interface : alltrue([
           for ip_config in nic.ip_configuration :
           ip_config.public_ip_address == null || alltrue([
             for pub_ip in ip_config.public_ip_address :
@@ -729,9 +729,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : alltrue([
+        for nic in var.network_interface : alltrue([
           for ip_config in nic.ip_configuration :
           ip_config.public_ip_address == null || alltrue([
             for pub_ip in ip_config.public_ip_address :
@@ -749,9 +749,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : alltrue([
+        for nic in var.network_interface : alltrue([
           for ip_config in nic.ip_configuration :
           ip_config.public_ip_address == null || alltrue([
             for pub_ip in ip_config.public_ip_address :
@@ -765,9 +765,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : alltrue([
+        for nic in var.network_interface : alltrue([
           for ip_config in nic.ip_configuration :
           ip_config.public_ip_address == null || alltrue([
             for pub_ip in ip_config.public_ip_address :
@@ -781,9 +781,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : alltrue([
+        for nic in var.network_interface : alltrue([
           for ip_config in nic.ip_configuration :
           ip_config.public_ip_address == null || alltrue([
             for pub_ip in ip_config.public_ip_address :
@@ -800,9 +800,9 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_network_interface == null ||
+      var.network_interface == null ||
       alltrue([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : alltrue([
+        for nic in var.network_interface : alltrue([
           for ip_config in nic.ip_configuration :
           ip_config.public_ip_address == null || alltrue([
             for pub_ip in ip_config.public_ip_address :
@@ -818,7 +818,7 @@ EOT
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_os_disk" {
+variable "os_disk" {
   type = object({
     caching                   = string
     disk_encryption_set_id    = optional(string)
@@ -845,50 +845,50 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_disk == null ||
-      contains(["None", "ReadOnly", "ReadWrite"], var.orchestrated_virtual_machine_scale_set_os_disk.caching)
+      var.os_disk == null ||
+      contains(["None", "ReadOnly", "ReadWrite"], var.os_disk.caching)
     )
     error_message = "The caching type must be one of: None, ReadOnly, ReadWrite."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_disk == null ||
-      contains(["Standard_LRS", "Premium_LRS", "StandardSSD_LRS", "Premium_ZRS", "StandardSSD_ZRS"], var.orchestrated_virtual_machine_scale_set_os_disk.storage_account_type)
+      var.os_disk == null ||
+      contains(["Standard_LRS", "Premium_LRS", "StandardSSD_LRS", "Premium_ZRS", "StandardSSD_ZRS"], var.os_disk.storage_account_type)
     )
     error_message = "The storage_account_type must be one of: Standard_LRS, Premium_LRS, StandardSSD_LRS, Premium_ZRS, StandardSSD_ZRS. Note: UltraSSD_LRS and PremiumV2_LRS are not supported for OS Disks."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_disk == null ||
-      var.orchestrated_virtual_machine_scale_set_os_disk.disk_size_gb == null ||
-      (var.orchestrated_virtual_machine_scale_set_os_disk.disk_size_gb >= 0 && var.orchestrated_virtual_machine_scale_set_os_disk.disk_size_gb <= 4095)
+      var.os_disk == null ||
+      var.os_disk.disk_size_gb == null ||
+      (var.os_disk.disk_size_gb >= 0 && var.os_disk.disk_size_gb <= 4095)
     )
     error_message = "The disk_size_gb must be between 0 and 4095."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_disk == null ||
-      var.orchestrated_virtual_machine_scale_set_os_disk.diff_disk_settings == null ||
-      var.orchestrated_virtual_machine_scale_set_os_disk.diff_disk_settings.option == "Local"
+      var.os_disk == null ||
+      var.os_disk.diff_disk_settings == null ||
+      var.os_disk.diff_disk_settings.option == "Local"
     )
     error_message = "The diff_disk_settings.option must be 'Local'."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_disk == null ||
-      var.orchestrated_virtual_machine_scale_set_os_disk.diff_disk_settings == null ||
-      var.orchestrated_virtual_machine_scale_set_os_disk.diff_disk_settings.placement == null ||
-      contains(["CacheDisk", "ResourceDisk"], var.orchestrated_virtual_machine_scale_set_os_disk.diff_disk_settings.placement)
+      var.os_disk == null ||
+      var.os_disk.diff_disk_settings == null ||
+      var.os_disk.diff_disk_settings.placement == null ||
+      contains(["CacheDisk", "ResourceDisk"], var.os_disk.diff_disk_settings.placement)
     )
     error_message = "The diff_disk_settings.placement must be either 'CacheDisk' or 'ResourceDisk'."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_os_profile" {
+variable "os_profile" {
   type = object({
     custom_data = optional(string) # TODO: delete later - migrated to independent ephemeral variable (Task #97)
     linux_configuration = optional(object({
@@ -921,7 +921,7 @@ variable "orchestrated_virtual_machine_scale_set_os_profile" {
       provision_vm_agent       = optional(bool, true)
       timezone                 = optional(string)
       additional_unattend_content = optional(list(object({
-        content = string
+        content = string # TODO: delete later - migrated to independent ephemeral variable (Task #124)
         setting = string
       })))
       secret = optional(list(object({
@@ -941,41 +941,41 @@ variable "orchestrated_virtual_machine_scale_set_os_profile" {
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null ||
-      !var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.disable_password_authentication ||
-      var.migrate_orchestrated_virtual_machine_scale_set_os_profile_linux_configuration_admin_password == null
+      var.os_profile == null ||
+      var.os_profile.linux_configuration == null ||
+      !var.os_profile.linux_configuration.disable_password_authentication ||
+      var.os_profile_linux_configuration_admin_password == null
     )
     error_message = "When disable_password_authentication is true (the default), admin_password must not be specified."
   }
 
   validation {
-    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.patch_assessment_mode == null || contains(["AutomaticByPlatform", "ImageDefault"], var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.patch_assessment_mode)
+    condition = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_assessment_mode == null || contains(["AutomaticByPlatform", "ImageDefault"], var.os_profile.linux_configuration.patch_assessment_mode)
     error_message = "The patch_assessment_mode must be either 'AutomaticByPlatform' or 'ImageDefault'."
   }
 
   validation {
-    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.patch_assessment_mode != "AutomaticByPlatform" || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.provision_vm_agent == true
+    condition = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_assessment_mode != "AutomaticByPlatform" || var.os_profile.linux_configuration.provision_vm_agent == true
     error_message = "When patch_assessment_mode is set to 'AutomaticByPlatform', provision_vm_agent must be set to true."
   }
 
   validation {
-    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.patch_mode == null || contains(["ImageDefault", "AutomaticByPlatform"], var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.patch_mode)
+    condition = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_mode == null || contains(["ImageDefault", "AutomaticByPlatform"], var.os_profile.linux_configuration.patch_mode)
     error_message = "The patch_mode must be either 'ImageDefault' or 'AutomaticByPlatform'."
   }
 
   validation {
-    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.patch_mode != "AutomaticByPlatform" || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.provision_vm_agent == true
+    condition = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_mode != "AutomaticByPlatform" || var.os_profile.linux_configuration.provision_vm_agent == true
     error_message = "When patch_mode is set to 'AutomaticByPlatform', provision_vm_agent must be set to true."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.secret == null ||
+      var.os_profile == null ||
+      var.os_profile.linux_configuration == null ||
+      var.os_profile.linux_configuration.secret == null ||
       alltrue([
-        for secret in var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.secret :
+        for secret in var.os_profile.linux_configuration.secret :
         can(regex("^/subscriptions/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/resourceGroups/[^/]+/providers/Microsoft.KeyVault/vaults/[^/]+$", secret.key_vault_id))
       ])
     )
@@ -984,44 +984,73 @@ variable "orchestrated_virtual_machine_scale_set_os_profile" {
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null ||
-      length(var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.admin_username) >= 1 &&
-      length(var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.admin_username) <= 20
+      var.os_profile == null ||
+      var.os_profile.linux_configuration == null ||
+      var.os_profile.linux_configuration.secret == null ||
+      alltrue([
+        for secret in var.os_profile.linux_configuration.secret :
+        alltrue([
+          for cert in secret.certificate :
+          can(regex("^https://[a-zA-Z0-9-]{3,24}\\.vault\\.azure\\.net/(secrets|certificates)/[^/]+(/[a-fA-F0-9]{32})?$", cert.url))
+        ])
+      ])
+    )
+    error_message = "Each certificate URL must be a valid Key Vault secret or certificate URL in the format: https://{vaultName}.vault.azure.net/secrets/{secretName}/{version} or https://{vaultName}.vault.azure.net/certificates/{certName}/{version}. The vault name must be 3-24 characters (alphanumeric and hyphens)."
+  }
+
+  validation {
+    condition = (
+      var.os_profile == null ||
+      var.os_profile.windows_configuration == null ||
+      var.os_profile.windows_configuration.secret == null ||
+      alltrue([
+        for secret in var.os_profile.windows_configuration.secret :
+        can(regex("^/subscriptions/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/resourceGroups/[^/]+/providers/Microsoft.KeyVault/vaults/[^/]+$", secret.key_vault_id))
+      ])
+    )
+    error_message = "Each key_vault_id must be a valid Key Vault resource ID in the format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}."
+  }
+
+  validation {
+    condition = (
+      var.os_profile == null ||
+      var.os_profile.windows_configuration == null ||
+      length(var.os_profile.windows_configuration.admin_username) >= 1 &&
+      length(var.os_profile.windows_configuration.admin_username) <= 20
     )
     error_message = "The admin_username must be between 1 and 20 characters in length."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null ||
-      !endswith(var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.admin_username, ".")
+      var.os_profile == null ||
+      var.os_profile.windows_configuration == null ||
+      !endswith(var.os_profile.windows_configuration.admin_username, ".")
     )
     error_message = "The admin_username cannot end with a '.'."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null ||
+      var.os_profile == null ||
+      var.os_profile.windows_configuration == null ||
       !contains([
         " ", "administrator", "admin", "user", "user1", "test", "user2", "test1", "user3", "admin1", "1", "123", "a",
         "actuser", "adm", "admin2", "aspnet", "backup", "console", "david", "guest", "john", "owner", "root", "server",
         "sql", "support", "support_388945a0", "sys", "test2", "test3", "user4", "user5"
-      ], lower(var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.admin_username))
+      ], lower(var.os_profile.windows_configuration.admin_username))
     )
     error_message = "The admin_username cannot be one of the disallowed values: administrator, admin, user, user1, test, user2, test1, user3, admin1, 1, 123, a, actuser, adm, admin2, aspnet, backup, console, david, guest, john, owner, root, server, sql, support, support_388945a0, sys, test2, test3, user4, user5."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix == null ||
+      var.os_profile == null ||
+      var.os_profile.windows_configuration == null ||
+      var.os_profile.windows_configuration.computer_name_prefix == null ||
       (
-        length(var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix) >= 1 &&
-        length(var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix) <= 9
+        length(var.os_profile.windows_configuration.computer_name_prefix) >= 1 &&
+        length(var.os_profile.windows_configuration.computer_name_prefix) <= 9
       )
     )
     error_message = "The computer_name_prefix can be at most 9 characters."
@@ -1029,47 +1058,75 @@ variable "orchestrated_virtual_machine_scale_set_os_profile" {
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix == null ||
-      can(regex("^[a-zA-Z0-9-]+$", var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix))
+      var.os_profile == null ||
+      var.os_profile.windows_configuration == null ||
+      var.os_profile.windows_configuration.computer_name_prefix == null ||
+      can(regex("^[a-zA-Z0-9-]+$", var.os_profile.windows_configuration.computer_name_prefix))
     )
     error_message = "The computer_name_prefix may only contain alphanumeric characters and dashes."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix == null ||
-      !can(regex("^\\d+$", var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix))
+      var.os_profile == null ||
+      var.os_profile.windows_configuration == null ||
+      var.os_profile.windows_configuration.computer_name_prefix == null ||
+      !can(regex("^\\d+$", var.os_profile.windows_configuration.computer_name_prefix))
     )
     error_message = "The computer_name_prefix cannot contain only numbers."
   }
 
   validation {
-    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_assessment_mode == null || contains(["AutomaticByPlatform", "ImageDefault"], var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_assessment_mode)
+    condition = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.patch_assessment_mode == null || contains(["AutomaticByPlatform", "ImageDefault"], var.os_profile.windows_configuration.patch_assessment_mode)
     error_message = "The patch_assessment_mode must be either 'AutomaticByPlatform' or 'ImageDefault'."
   }
 
   validation {
-    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_assessment_mode != "AutomaticByPlatform" || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.provision_vm_agent != false
+    condition = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.patch_assessment_mode != "AutomaticByPlatform" || var.os_profile.windows_configuration.provision_vm_agent != false
     error_message = "When patch_assessment_mode is set to 'AutomaticByPlatform', provision_vm_agent must be set to true."
   }
 
   validation {
-    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_mode == null || contains(["AutomaticByOS", "AutomaticByPlatform", "Manual"], var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_mode)
+    condition = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.patch_mode == null || contains(["AutomaticByOS", "AutomaticByPlatform", "Manual"], var.os_profile.windows_configuration.patch_mode)
     error_message = "The patch_mode must be one of 'AutomaticByOS', 'AutomaticByPlatform', or 'Manual'."
   }
 
   validation {
-    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_mode != "AutomaticByPlatform" || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.provision_vm_agent != false
+    condition = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.patch_mode != "AutomaticByPlatform" || var.os_profile.windows_configuration.provision_vm_agent != false
     error_message = "When patch_mode is set to 'AutomaticByPlatform', provision_vm_agent must be set to true."
   }
 
   validation {
-    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.timezone == null || contains(["", "Afghanistan Standard Time", "Alaskan Standard Time", "Arab Standard Time", "Arabian Standard Time", "Arabic Standard Time", "Argentina Standard Time", "Atlantic Standard Time", "AUS Central Standard Time", "AUS Eastern Standard Time", "Azerbaijan Standard Time", "Azores Standard Time", "Bahia Standard Time", "Bangladesh Standard Time", "Belarus Standard Time", "Canada Central Standard Time", "Cape Verde Standard Time", "Caucasus Standard Time", "Cen. Australia Standard Time", "Central America Standard Time", "Central Asia Standard Time", "Central Brazilian Standard Time", "Central Europe Standard Time", "Central European Standard Time", "Central Pacific Standard Time", "Central Standard Time (Mexico)", "Central Standard Time", "China Standard Time", "Dateline Standard Time", "E. Africa Standard Time", "E. Australia Standard Time", "E. Europe Standard Time", "E. South America Standard Time", "Eastern Standard Time (Mexico)", "Eastern Standard Time", "Egypt Standard Time", "Ekaterinburg Standard Time", "Fiji Standard Time", "FLE Standard Time", "Georgian Standard Time", "GMT Standard Time", "Greenland Standard Time", "Greenwich Standard Time", "GTB Standard Time", "Hawaiian Standard Time", "India Standard Time", "Iran Standard Time", "Israel Standard Time", "Jordan Standard Time", "Kaliningrad Standard Time", "Korea Standard Time", "Libya Standard Time", "Line Islands Standard Time", "Magadan Standard Time", "Mauritius Standard Time", "Middle East Standard Time", "Montevideo Standard Time", "Morocco Standard Time", "Mountain Standard Time (Mexico)", "Mountain Standard Time", "Myanmar Standard Time", "N. Central Asia Standard Time", "Namibia Standard Time", "Nepal Standard Time", "New Zealand Standard Time", "Newfoundland Standard Time", "North Asia East Standard Time", "North Asia Standard Time", "Pacific SA Standard Time", "Pacific Standard Time (Mexico)", "Pacific Standard Time", "Pakistan Standard Time", "Paraguay Standard Time", "Romance Standard Time", "Russia Time Zone 10", "Russia Time Zone 11", "Russia Time Zone 3", "Russian Standard Time", "SA Eastern Standard Time", "SA Pacific Standard Time", "SA Western Standard Time", "Samoa Standard Time", "SE Asia Standard Time", "Singapore Standard Time", "South Africa Standard Time", "Sri Lanka Standard Time", "Syria Standard Time", "Taipei Standard Time", "Tasmania Standard Time", "Tokyo Standard Time", "Tonga Standard Time", "Turkey Standard Time", "Ulaanbaatar Standard Time", "US Eastern Standard Time", "US Mountain Standard Time", "UTC", "UTC+12", "UTC-02", "UTC-11", "Venezuela Standard Time", "Vladivostok Standard Time", "W. Australia Standard Time", "W. Central Africa Standard Time", "W. Europe Standard Time", "West Asia Standard Time", "West Pacific Standard Time", "Yakutsk Standard Time"], var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.timezone)
+    condition = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.timezone == null || contains(["", "Afghanistan Standard Time", "Alaskan Standard Time", "Arab Standard Time", "Arabian Standard Time", "Arabic Standard Time", "Argentina Standard Time", "Atlantic Standard Time", "AUS Central Standard Time", "AUS Eastern Standard Time", "Azerbaijan Standard Time", "Azores Standard Time", "Bahia Standard Time", "Bangladesh Standard Time", "Belarus Standard Time", "Canada Central Standard Time", "Cape Verde Standard Time", "Caucasus Standard Time", "Cen. Australia Standard Time", "Central America Standard Time", "Central Asia Standard Time", "Central Brazilian Standard Time", "Central Europe Standard Time", "Central European Standard Time", "Central Pacific Standard Time", "Central Standard Time (Mexico)", "Central Standard Time", "China Standard Time", "Dateline Standard Time", "E. Africa Standard Time", "E. Australia Standard Time", "E. Europe Standard Time", "E. South America Standard Time", "Eastern Standard Time (Mexico)", "Eastern Standard Time", "Egypt Standard Time", "Ekaterinburg Standard Time", "Fiji Standard Time", "FLE Standard Time", "Georgian Standard Time", "GMT Standard Time", "Greenland Standard Time", "Greenwich Standard Time", "GTB Standard Time", "Hawaiian Standard Time", "India Standard Time", "Iran Standard Time", "Israel Standard Time", "Jordan Standard Time", "Kaliningrad Standard Time", "Korea Standard Time", "Libya Standard Time", "Line Islands Standard Time", "Magadan Standard Time", "Mauritius Standard Time", "Middle East Standard Time", "Montevideo Standard Time", "Morocco Standard Time", "Mountain Standard Time (Mexico)", "Mountain Standard Time", "Myanmar Standard Time", "N. Central Asia Standard Time", "Namibia Standard Time", "Nepal Standard Time", "New Zealand Standard Time", "Newfoundland Standard Time", "North Asia East Standard Time", "North Asia Standard Time", "Pacific SA Standard Time", "Pacific Standard Time (Mexico)", "Pacific Standard Time", "Pakistan Standard Time", "Paraguay Standard Time", "Romance Standard Time", "Russia Time Zone 10", "Russia Time Zone 11", "Russia Time Zone 3", "Russian Standard Time", "SA Eastern Standard Time", "SA Pacific Standard Time", "SA Western Standard Time", "Samoa Standard Time", "SE Asia Standard Time", "Singapore Standard Time", "South Africa Standard Time", "Sri Lanka Standard Time", "Syria Standard Time", "Taipei Standard Time", "Tasmania Standard Time", "Tokyo Standard Time", "Tonga Standard Time", "Turkey Standard Time", "Ulaanbaatar Standard Time", "US Eastern Standard Time", "US Mountain Standard Time", "UTC", "UTC+12", "UTC-02", "UTC-11", "Venezuela Standard Time", "Vladivostok Standard Time", "W. Australia Standard Time", "W. Central Africa Standard Time", "W. Europe Standard Time", "West Asia Standard Time", "West Pacific Standard Time", "Yakutsk Standard Time"], var.os_profile.windows_configuration.timezone)
     error_message = "The timezone must be a valid Windows timezone string. See: https://jackstromberg.com/2017/01/list-of-time-zones-consumed-by-azure/"
+  }
+
+  validation {
+    condition = (
+      var.os_profile == null ||
+      var.os_profile.windows_configuration == null ||
+      var.os_profile.windows_configuration.additional_unattend_content == null ||
+      alltrue([
+        for item in var.os_profile.windows_configuration.additional_unattend_content : contains(["AutoLogon", "FirstLogonCommands"], item.setting)
+      ])
+    )
+    error_message = "Each additional_unattend_content setting must be either 'AutoLogon' or 'FirstLogonCommands'."
+  }
+
+  validation {
+    condition = (
+      var.os_profile == null ||
+      var.os_profile.windows_configuration == null ||
+      var.os_profile.windows_configuration.secret == null ||
+      alltrue([
+        for secret in var.os_profile.windows_configuration.secret :
+        alltrue([
+          for cert in secret.certificate :
+          can(regex("^https://[a-zA-Z0-9-]{3,24}\\.vault\\.azure\\.net/(secrets|certificates)/[^/]+(/[a-fA-F0-9]{32})?$", cert.url))
+        ])
+      ])
+    )
+    error_message = "Each certificate URL must be a valid Key Vault secret or certificate URL in the format: https://{vaultName}.vault.azure.net/secrets/{secretName}/{version} or https://{vaultName}.vault.azure.net/certificates/{certName}/{version}. The vault name must be 3-24 characters (alphanumeric and hyphens)."
   }
 
   description = <<-EOT
@@ -1132,11 +1189,11 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null ||
+      var.os_profile == null ||
+      var.os_profile.linux_configuration == null ||
       (
-        length(var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_username) >= 1 &&
-        length(var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_username) <= 64
+        length(var.os_profile.linux_configuration.admin_username) >= 1 &&
+        length(var.os_profile.linux_configuration.admin_username) <= 64
       )
     )
     error_message = "linux_configuration.admin_username must be between 1 and 64 characters in length."
@@ -1144,8 +1201,8 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null ||
+      var.os_profile == null ||
+      var.os_profile.linux_configuration == null ||
       !contains([
         " ", "abrt", "adm", "admin", "audio", "backup", "bin", "cdrom", "cgred", "console", "crontab", "daemon", "dbus", "dialout", "dip",
         "disk", "fax", "floppy", "ftp", "fuse", "games", "gnats", "gopher", "haldaemon", "halt", "irc", "kmem", "landscape", "libuuid", "list",
@@ -1154,21 +1211,21 @@ EOT
         "sasl", "saslauth", "shadow", "shutdown", "slocate", "src", "ssh", "sshd", "staff", "stapdev", "stapusr", "sudo", "sync", "sys", "syslog",
         "tape", "tcpdump", "test", "trusted", "tty", "users", "utempter", "utmp", "uucp", "uuidd", "vcsa", "video", "voice", "wheel", "whoopsie",
         "www", "www-data", "wwwrun", "xok"
-      ], lower(var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_username))
+      ], lower(var.os_profile.linux_configuration.admin_username))
     )
     error_message = "linux_configuration.admin_username cannot be one of the following reserved names (case-insensitive): ' ', 'abrt', 'adm', 'admin', 'audio', 'backup', 'bin', 'cdrom', 'cgred', 'console', 'crontab', 'daemon', 'dbus', 'dialout', 'dip', 'disk', 'fax', 'floppy', 'ftp', 'fuse', 'games', 'gnats', 'gopher', 'haldaemon', 'halt', 'irc', 'kmem', 'landscape', 'libuuid', 'list', 'lock', 'lp', 'mail', 'maildrop', 'man', 'mem', 'messagebus', 'mlocate', 'modem', 'netdev', 'news', 'nfsnobody', 'nobody', 'nogroup', 'ntp', 'operator', 'oprofile', 'plugdev', 'polkituser', 'postdrop', 'postfix', 'proxy', 'public', 'qpidd', 'root', 'rpc', 'rpcuser', 'sasl', 'saslauth', 'shadow', 'shutdown', 'slocate', 'src', 'ssh', 'sshd', 'staff', 'stapdev', 'stapusr', 'sudo', 'sync', 'sys', 'syslog', 'tape', 'tcpdump', 'test', 'trusted', 'tty', 'users', 'utempter', 'utmp', 'uucp', 'uuidd', 'vcsa', 'video', 'voice', 'wheel', 'whoopsie', 'www', 'www-data', 'wwwrun', 'xok'."
   }
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.computer_name_prefix == null ||
+      var.os_profile == null ||
+      var.os_profile.linux_configuration == null ||
+      var.os_profile.linux_configuration.computer_name_prefix == null ||
       (
-        length(var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.computer_name_prefix) <= 58 &&
-        !can(regex("^_", var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.computer_name_prefix)) &&
-        !can(regex("\\.$", var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.computer_name_prefix)) &&
-        !can(regex("[\\\\\"\\[\\]:|<>+=;,?*@&~!#$%^()_{}']", var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.computer_name_prefix))
+        length(var.os_profile.linux_configuration.computer_name_prefix) <= 58 &&
+        !can(regex("^_", var.os_profile.linux_configuration.computer_name_prefix)) &&
+        !can(regex("\\.$", var.os_profile.linux_configuration.computer_name_prefix)) &&
+        !can(regex("[\\\\\"\\[\\]:|<>+=;,?*@&~!#$%^()_{}']", var.os_profile.linux_configuration.computer_name_prefix))
       )
     )
     error_message = "linux_configuration.computer_name_prefix must be at most 58 characters, cannot begin with an underscore, cannot end with a period, and cannot contain the special characters: \\\"[]:|<>+=;,?*@&~!#$%^()_{}'"
@@ -1176,11 +1233,11 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key == null ||
+      var.os_profile == null ||
+      var.os_profile.linux_configuration == null ||
+      var.os_profile.linux_configuration.admin_ssh_key == null ||
       alltrue([
-        for ssh_key in var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key :
+        for ssh_key in var.os_profile.linux_configuration.admin_ssh_key :
         trimspace(ssh_key.public_key) != "" &&
         length(split(" ", ssh_key.public_key)) >= 2 &&
         contains(["ssh-rsa", "ssh-ed25519"], split(" ", ssh_key.public_key)[0])
@@ -1191,19 +1248,47 @@ EOT
 
   validation {
     condition = (
-      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null ||
-      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key == null ||
+      var.os_profile == null ||
+      var.os_profile.linux_configuration == null ||
+      var.os_profile.linux_configuration.admin_ssh_key == null ||
       alltrue([
-        for ssh_key in var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key :
+        for ssh_key in var.os_profile.linux_configuration.admin_ssh_key :
         trimspace(ssh_key.username) != ""
       ])
     )
     error_message = "Each admin_ssh_key.username must not be empty."
   }
+
+  validation {
+    condition = (
+      var.os_profile == null ||
+      var.os_profile.windows_configuration == null ||
+      var.os_profile.windows_configuration.winrm_listener == null ||
+      alltrue([
+        for listener in var.os_profile.windows_configuration.winrm_listener :
+        contains(["Http", "Https"], listener.protocol)
+      ])
+    )
+    error_message = "Each winrm_listener.protocol must be either 'Http' or 'Https'."
+  }
+
+  validation {
+    condition = (
+      var.os_profile == null ||
+      var.os_profile.windows_configuration == null ||
+      var.os_profile.windows_configuration.winrm_listener == null ||
+      alltrue([
+        for listener in var.os_profile.windows_configuration.winrm_listener :
+        listener.certificate_url == null || (
+          can(regex("^https://[a-zA-Z0-9-]+\\.vault(?:\\.azure\\.net|\\.azure\\.cn|\\.azure\\.us|\\.microsoftonline\\.de)/(?:secrets|certificates)/[a-zA-Z0-9-]+(?:/[a-zA-Z0-9-]+)?$", listener.certificate_url))
+        )
+      ])
+    )
+    error_message = "Each winrm_listener.certificate_url must be a valid Key Vault secret or certificate URL (format: https://<vault-name>.vault.azure.net/secrets/<secret-name> or https://<vault-name>.vault.azure.net/certificates/<cert-name>)."
+  }
 }
 
-variable "orchestrated_virtual_machine_scale_set_plan" {
+variable "plan" {
   type = object({
     name      = string
     product   = string
@@ -1217,7 +1302,7 @@ variable "orchestrated_virtual_machine_scale_set_plan" {
 EOT
 }
 
-variable "orchestrated_virtual_machine_scale_set_priority" {
+variable "priority" {
   type        = string
   default     = "Regular"
   description = "(Optional) The Priority of this Virtual Machine Scale Set. Possible values are `Regular` and `Spot`. Defaults to `Regular`. Changing this value forces a new resource."
@@ -1226,46 +1311,69 @@ variable "orchestrated_virtual_machine_scale_set_priority" {
     condition = contains([
       "Regular",
       "Spot"
-    ], var.orchestrated_virtual_machine_scale_set_priority)
+    ], var.priority)
     error_message = "The priority must be either 'Regular' or 'Spot'."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_proximity_placement_group_id" {
+variable "proximity_placement_group_id" {
   type        = string
   default     = null
   description = "(Optional) The ID of the Proximity Placement Group which the Virtual Machine should be assigned to. Changing this forces a new resource to be created."
 
   validation {
-    condition = var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id == null || can(regex("^/subscriptions/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/resourceGroups/.+/providers/Microsoft.Compute/proximityPlacementGroups/.+$", var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id))
+    condition = var.proximity_placement_group_id == null || can(regex("^/subscriptions/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/resourceGroups/.+/providers/Microsoft.Compute/proximityPlacementGroups/.+$", var.proximity_placement_group_id))
     error_message = "The proximity_placement_group_id must be a valid Proximity Placement Group Resource ID."
   }
 
   validation {
-    condition = var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id == null || var.orchestrated_virtual_machine_scale_set_capacity_reservation_group_id == null
+    condition = var.proximity_placement_group_id == null || var.capacity_reservation_group_id == null
     error_message = "The proximity_placement_group_id cannot be specified when capacity_reservation_group_id is set (ConflictsWith)."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_priority_mix" {
+variable "priority_mix" {
   type = object({
-    base_regular_count            = optional(number)
-    regular_percentage_above_base = optional(number)
+    base_regular_count            = optional(number, 0)
+    regular_percentage_above_base = optional(number, 0)
   })
   default     = null
   description = <<-EOT
  - `base_regular_count` - (Optional) Specifies the base number of VMs of `Regular` priority that will be created before any VMs of priority `Spot` are created. Possible values are integers between `0` and `1000`. Defaults to `0`.
  - `regular_percentage_above_base` - (Optional) Specifies the desired percentage of VM instances that are of `Regular` priority after the base count has been reached. Possible values are integers between `0` and `100`. Defaults to `0`.
 EOT
+
+  validation {
+    condition     = var.priority_mix == null || var.priority == "Spot"
+    error_message = "priority_mix can only be specified when priority is set to 'Spot'."
+  }
+
+  validation {
+    condition = (
+      var.priority_mix == null ||
+      var.priority_mix.base_regular_count == null ||
+      (var.priority_mix.base_regular_count >= 0 && var.priority_mix.base_regular_count <= 1000)
+    )
+    error_message = "base_regular_count must be between 0 and 1000."
+  }
+
+  validation {
+    condition = (
+      var.priority_mix == null ||
+      var.priority_mix.regular_percentage_above_base == null ||
+      (var.priority_mix.regular_percentage_above_base >= 0 && var.priority_mix.regular_percentage_above_base <= 100)
+    )
+    error_message = "regular_percentage_above_base must be between 0 and 100."
+  }
 }
 
-variable "orchestrated_virtual_machine_scale_set_rolling_upgrade_policy" {
+variable "rolling_upgrade_policy" {
   type = object({
     cross_zone_upgrades_enabled             = optional(bool)
     max_batch_instance_percent              = number
     max_unhealthy_instance_percent          = number
     max_unhealthy_upgraded_instance_percent = number
-    maximum_surge_instances_enabled         = optional(bool)
+    maximum_surge_instances_enabled         = optional(bool, false)
     pause_time_between_batches              = string
     prioritize_unhealthy_instances_enabled  = optional(bool)
   })
@@ -1279,36 +1387,65 @@ variable "orchestrated_virtual_machine_scale_set_rolling_upgrade_policy" {
  - `pause_time_between_batches` - (Required) The wait time between completing the update for all virtual machines in one batch and starting the next batch. The time duration should be specified in ISO 8601 duration format.
  - `prioritize_unhealthy_instances_enabled` - (Optional) Upgrade all unhealthy instances in a scale set before any healthy instances. Possible values are `true` or `false`.
 EOT
+
+  validation {
+    condition = (
+      (var.upgrade_mode == null || var.upgrade_mode == "Manual") && var.rolling_upgrade_policy == null ||
+      var.upgrade_mode == "Rolling" && var.rolling_upgrade_policy != null ||
+      var.upgrade_mode == "Automatic"
+    )
+    error_message = "rolling_upgrade_policy cannot be specified when upgrade_mode is 'Manual' (or null/default) and is required when upgrade_mode is 'Rolling'."
+  }
+
+  validation {
+    condition = (
+      var.rolling_upgrade_policy == null ||
+      can(regex("^P(?:\\d+Y)?(?:\\d+M)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+(?:\\.\\d+)?S)?)?$", var.rolling_upgrade_policy.pause_time_between_batches))
+    )
+    error_message = "pause_time_between_batches must be a valid ISO 8601 duration format (e.g., 'PT5M' for 5 minutes, 'PT1H30M' for 1 hour 30 minutes)."
+  }
+
+  validation {
+    condition = (
+      var.rolling_upgrade_policy == null ||
+      var.rolling_upgrade_policy.cross_zone_upgrades_enabled == null ||
+      var.rolling_upgrade_policy.cross_zone_upgrades_enabled == false ||
+      (var.rolling_upgrade_policy.cross_zone_upgrades_enabled == true &&
+       var.zones != null &&
+       length(var.zones) > 0)
+    )
+    error_message = "cross_zone_upgrades_enabled can only be set to true when zones is specified."
+  }
 }
 
-variable "orchestrated_virtual_machine_scale_set_single_placement_group" {
+variable "single_placement_group" {
   type        = bool
   default     = null
   description = "(Optional) Should this Virtual Machine Scale Set be limited to a Single Placement Group, which means the number of instances will be capped at 100 Virtual Machines. Possible values are `true` or `false`."
 
   validation {
-    condition     = var.orchestrated_virtual_machine_scale_set_single_placement_group != true || var.orchestrated_virtual_machine_scale_set_capacity_reservation_group_id == null
+    condition     = var.single_placement_group != true || var.capacity_reservation_group_id == null
     error_message = "`single_placement_group` must be set to `false` when `capacity_reservation_group_id` is specified."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_sku_name" {
+variable "sku_name" {
   type        = string
   default     = null
   description = "(Optional) The `name` of the SKU to be used by this Virtual Machine Scale Set. Valid values include: any of the [General purpose](https://docs.microsoft.com/azure/virtual-machines/sizes-general), [Compute optimized](https://docs.microsoft.com/azure/virtual-machines/sizes-compute), [Memory optimized](https://docs.microsoft.com/azure/virtual-machines/sizes-memory), [Storage optimized](https://docs.microsoft.com/azure/virtual-machines/sizes-storage), [GPU optimized](https://docs.microsoft.com/azure/virtual-machines/sizes-gpu), [FPGA optimized](https://docs.microsoft.com/azure/virtual-machines/sizes-field-programmable-gate-arrays), [High performance](https://docs.microsoft.com/azure/virtual-machines/sizes-hpc), or [Previous generation](https://docs.microsoft.com/azure/virtual-machines/sizes-previous-gen) virtual machine SKUs."
 
   validation {
-    condition     = var.orchestrated_virtual_machine_scale_set_sku_name != "Mix" || var.orchestrated_virtual_machine_scale_set_sku_profile != null
+    condition     = var.sku_name != "Mix" || var.sku_profile != null
     error_message = "`sku_profile` must be configured when `sku_name` is set to `Mix`."
   }
 
   validation {
-    condition     = var.orchestrated_virtual_machine_scale_set_sku_profile == null || var.orchestrated_virtual_machine_scale_set_sku_name == "Mix"
+    condition     = var.sku_profile == null || var.sku_name == "Mix"
     error_message = "`sku_profile` can only be configured when `sku_name` is set to `Mix`."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_sku_profile" {
+variable "sku_profile" {
   type = object({
     allocation_strategy = string
     vm_sizes            = set(string)
@@ -1318,15 +1455,32 @@ variable "orchestrated_virtual_machine_scale_set_sku_profile" {
  - `allocation_strategy` - (Required) Specifies the allocation strategy for the virtual machine scale set based on which the VMs will be allocated. Possible values are `CapacityOptimized`, `LowestPrice` and `Prioritized`.
  - `vm_sizes` - (Required) Specifies the VM sizes for the virtual machine scale set.
 EOT
+
+  validation {
+    condition     = var.sku_profile == null || contains(["LowestPrice", "CapacityOptimized", "Prioritized"], var.sku_profile.allocation_strategy)
+    error_message = "The `allocation_strategy` must be one of: `LowestPrice`, `CapacityOptimized`, or `Prioritized`."
+  }
+
+  validation {
+    condition     = var.sku_profile == null || length(var.sku_profile.vm_sizes) > 0
+    error_message = "The `vm_sizes` set must contain at least one VM size when `sku_profile` is configured."
+  }
+
+  validation {
+    condition = var.sku_profile == null || alltrue([
+      for size in var.sku_profile.vm_sizes : size != null && size != ""
+    ])
+    error_message = "All VM sizes in `vm_sizes` must be non-empty strings."
+  }
 }
 
-variable "orchestrated_virtual_machine_scale_set_source_image_id" {
+variable "source_image_id" {
   type        = string
   default     = null
   description = "(Optional) The ID of an Image which each Virtual Machine in this Scale Set should be based on. Possible Image ID types include `Image ID`s, `Shared Image ID`s, `Shared Image Version ID`s, `Community Gallery Image ID`s, `Community Gallery Image Version ID`s, `Shared Gallery Image ID`s and `Shared Gallery Image Version ID`s."
 }
 
-variable "orchestrated_virtual_machine_scale_set_source_image_reference" {
+variable "source_image_reference" {
   type = object({
     offer     = string
     publisher = string
@@ -1340,27 +1494,56 @@ variable "orchestrated_virtual_machine_scale_set_source_image_reference" {
  - `sku` - (Required) Specifies the SKU of the image used to create the virtual machines.
  - `version` - (Required) Specifies the version of the image used to create the virtual machines.
 EOT
+
+  validation {
+    condition     = var.source_image_reference == null || (var.source_image_reference.offer != null && var.source_image_reference.offer != "")
+    error_message = "The `offer` field in `source_image_reference` must not be empty."
+  }
+
+  validation {
+    condition     = var.source_image_reference == null || (var.source_image_reference.publisher != null && var.source_image_reference.publisher != "")
+    error_message = "The `publisher` field in `source_image_reference` must not be empty."
+  }
+
+  validation {
+    condition     = var.source_image_reference == null || (var.source_image_reference.sku != null && var.source_image_reference.sku != "")
+    error_message = "The `sku` field in `source_image_reference` must not be empty."
+  }
+
+  validation {
+    condition     = var.source_image_reference == null || (var.source_image_reference.version != null && var.source_image_reference.version != "")
+    error_message = "The `version` field in `source_image_reference` must not be empty."
+  }
 }
 
-variable "orchestrated_virtual_machine_scale_set_tags" {
+variable "tags" {
   type        = map(string)
   default     = null
   description = "(Optional) A mapping of tags which should be assigned to this Virtual Machine Scale Set."
 }
 
-variable "orchestrated_virtual_machine_scale_set_termination_notification" {
+variable "termination_notification" {
   type = object({
     enabled = bool
-    timeout = optional(string)
+    timeout = optional(string, "PT5M")
   })
   default     = null
   description = <<-EOT
  - `enabled` - (Required) Should the termination notification be enabled on this Virtual Machine Scale Set? Possible values `true` or `false`.
  - `timeout` - (Optional) Length of time (in minutes, between `5` and `15`) a notification to be sent to the VM on the instance metadata server till the VM gets deleted. The time duration should be specified in `ISO 8601` format. Defaults to `PT5M`.
 EOT
+
+  validation {
+    condition = (
+      var.termination_notification == null ||
+      var.termination_notification.timeout == null ||
+      can(regex("^PT([5-9]|1[0-5])M$", var.termination_notification.timeout))
+    )
+    error_message = "The timeout must be an ISO 8601 duration between PT5M and PT15M."
+  }
 }
 
-variable "orchestrated_virtual_machine_scale_set_timeouts" {
+variable "timeouts" {
   type = object({
     create = optional(string)
     delete = optional(string)
@@ -1369,43 +1552,43 @@ variable "orchestrated_virtual_machine_scale_set_timeouts" {
   })
   default     = null
   description = <<-EOT
- - `create` -
- - `delete` -
- - `read` -
- - `update` -
+ - `create` - (Optional) Specifies the timeout for create operations. Defaults to 60 minutes.
+ - `delete` - (Optional) Specifies the timeout for delete operations. Defaults to 60 minutes.
+ - `read` - (Optional) Specifies the timeout for read operations. Defaults to 5 minutes.
+ - `update` - (Optional) Specifies the timeout for update operations. Defaults to 60 minutes.
 EOT
 }
 
-variable "orchestrated_virtual_machine_scale_set_upgrade_mode" {
+variable "upgrade_mode" {
   type        = string
   default     = null
   description = "(Optional) Specifies how upgrades (e.g. changing the Image/SKU) should be performed to Virtual Machine Instances. Possible values are `Automatic`, `Manual` and `Rolling`. Defaults to `Manual`. Changing this forces a new resource to be created."
 }
 
-variable "orchestrated_virtual_machine_scale_set_user_data_base64" {
+variable "data_base64" {
   type        = string
   default     = null
   description = "(Optional) The Base64-Encoded User Data which should be used for this Virtual Machine Scale Set."
   ephemeral   = true
 
   validation {
-    condition     = var.orchestrated_virtual_machine_scale_set_user_data_base64 == null || can(base64decode(var.orchestrated_virtual_machine_scale_set_user_data_base64))
+    condition     = var.data_base64 == null || can(base64decode(var.data_base64))
     error_message = "The user_data_base64 must be a valid base64 encoded string."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_zone_balance" {
+variable "zone_balance" {
   type        = bool
   default     = null
   description = "(Optional) Should the Virtual Machines in this Scale Set be strictly evenly distributed across Availability Zones? Defaults to `false`. Changing this forces a new resource to be created."
 
   validation {
-    condition     = var.orchestrated_virtual_machine_scale_set_zone_balance != true || var.orchestrated_virtual_machine_scale_set_zones != null
+    condition     = var.zone_balance != true || var.zones != null
     error_message = "`zone_balance` can only be set to `true` when availability zones are specified."
   }
 }
 
-variable "orchestrated_virtual_machine_scale_set_zones" {
+variable "zones" {
   type        = set(string)
   default     = null
   description = "(Optional) Specifies a list of Availability Zones across which the Virtual Machine Scale Set will create instances."

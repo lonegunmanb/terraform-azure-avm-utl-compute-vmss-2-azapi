@@ -164,48 +164,48 @@ func resourceOrchestratedVirtualMachineScaleSetCreate(d *pluginsdk.ResourceData,
 | 120 | os_profile.windows_configuration.patch_mode | Argument | No | ✅ Completed | [120.os_profile.windows_configuration.patch_mode.md](120.os_profile.windows_configuration.patch_mode.md) |
 | 121 | os_profile.windows_configuration.provision_vm_agent | Argument | No | ✅ Completed | [121.os_profile.windows_configuration.provision_vm_agent.md](121.os_profile.windows_configuration.provision_vm_agent.md) |
 | 122 | os_profile.windows_configuration.timezone | Argument | No | ✅ Completed | [122.os_profile.windows_configuration.timezone.md](122.os_profile.windows_configuration.timezone.md) |
-| 123 | os_profile.windows_configuration.additional_unattend_content | Block | No | Pending | |
-| 124 | os_profile.windows_configuration.additional_unattend_content.content | Argument | Yes | Pending | |
-| 125 | os_profile.windows_configuration.additional_unattend_content.setting | Argument | Yes | Pending | |
-| 126 | os_profile.windows_configuration.secret | Block | No | Pending | |
-| 127 | os_profile.windows_configuration.secret.key_vault_id | Argument | Yes | Pending | |
-| 128 | os_profile.windows_configuration.secret.certificate | Block | Yes | Pending | |
-| 129 | os_profile.windows_configuration.secret.certificate.store | Argument | Yes | Pending | |
-| 130 | os_profile.windows_configuration.secret.certificate.url | Argument | Yes | Pending | |
-| 131 | os_profile.windows_configuration.winrm_listener | Block | No | Pending | |
-| 132 | os_profile.windows_configuration.winrm_listener.protocol | Argument | Yes | Pending | |
-| 133 | os_profile.windows_configuration.winrm_listener.certificate_url | Argument | No | Pending | |
-| 134 | plan | Block | No | Pending | |
-| 135 | plan.name | Argument | Yes | Pending | |
-| 136 | plan.product | Argument | Yes | Pending | |
-| 137 | plan.publisher | Argument | Yes | Pending | |
-| 138 | priority_mix | Block | No | Pending | |
-| 139 | priority_mix.base_regular_count | Argument | No | Pending | |
-| 140 | priority_mix.regular_percentage_above_base | Argument | No | Pending | |
-| 141 | rolling_upgrade_policy | Block | No | Pending | |
-| 142 | rolling_upgrade_policy.max_batch_instance_percent | Argument | Yes | Pending | |
-| 143 | rolling_upgrade_policy.max_unhealthy_instance_percent | Argument | Yes | Pending | |
-| 144 | rolling_upgrade_policy.max_unhealthy_upgraded_instance_percent | Argument | Yes | Pending | |
-| 145 | rolling_upgrade_policy.pause_time_between_batches | Argument | Yes | Pending | |
-| 146 | rolling_upgrade_policy.cross_zone_upgrades_enabled | Argument | No | Pending | |
-| 147 | rolling_upgrade_policy.maximum_surge_instances_enabled | Argument | No | Pending | |
-| 148 | rolling_upgrade_policy.prioritize_unhealthy_instances_enabled | Argument | No | Pending | |
-| 149 | sku_profile | Block | No | Pending | |
-| 150 | sku_profile.allocation_strategy | Argument | Yes | Pending | |
-| 151 | sku_profile.vm_sizes | Argument | Yes | Pending | |
-| 152 | source_image_reference | Block | No | Pending | |
-| 153 | source_image_reference.offer | Argument | Yes | Pending | |
-| 154 | source_image_reference.publisher | Argument | Yes | Pending | |
-| 155 | source_image_reference.sku | Argument | Yes | Pending | |
-| 156 | source_image_reference.version | Argument | Yes | Pending | |
-| 157 | termination_notification | Block | No | Pending | |
-| 158 | termination_notification.enabled | Argument | Yes | Pending | |
-| 159 | termination_notification.timeout | Argument | No | Pending | |
-| 160 | timeouts | Block | No | Pending | |
-| 161 | timeouts.create | Argument | No | Pending | |
-| 162 | timeouts.delete | Argument | No | Pending | |
-| 163 | timeouts.read | Argument | No | Pending | |
-| 164 | timeouts.update | Argument | No | Pending | |
+| 123 | os_profile.windows_configuration.additional_unattend_content | Block | No | ✅ Completed | [123.os_profile.windows_configuration.additional_unattend_content.md](123.os_profile.windows_configuration.additional_unattend_content.md) |
+| 124 | os_profile.windows_configuration.additional_unattend_content.content | Argument | Yes | ✅ Completed | [124.os_profile.windows_configuration.additional_unattend_content.content.md](124.os_profile.windows_configuration.additional_unattend_content.content.md) |
+| 125 | os_profile.windows_configuration.additional_unattend_content.setting | Argument | Yes | ✅ Completed | [125.os_profile.windows_configuration.additional_unattend_content.setting.md](125.os_profile.windows_configuration.additional_unattend_content.setting.md) |
+| 126 | os_profile.windows_configuration.secret | Block | No | ✅ Completed | [126.os_profile.windows_configuration.secret.md](126.os_profile.windows_configuration.secret.md) |
+| 127 | os_profile.windows_configuration.secret.key_vault_id | Argument | Yes | ✅ Completed | [127.os_profile.windows_configuration.secret.key_vault_id.md](127.os_profile.windows_configuration.secret.key_vault_id.md) |
+| 128 | os_profile.windows_configuration.secret.certificate | Block | Yes | ✅ Completed | [128.os_profile.windows_configuration.secret.certificate.md](128.os_profile.windows_configuration.secret.certificate.md) |
+| 129 | os_profile.windows_configuration.secret.certificate.store | Argument | Yes | ✅ Completed | [129.os_profile.windows_configuration.secret.certificate.store.md](129.os_profile.windows_configuration.secret.certificate.store.md) |
+| 130 | os_profile.windows_configuration.secret.certificate.url | Argument | Yes | ✅ Completed | [130.os_profile.windows_configuration.secret.certificate.url.md](130.os_profile.windows_configuration.secret.certificate.url.md) |
+| 131 | os_profile.windows_configuration.winrm_listener | Block | No | ✅ Completed | [131.os_profile.windows_configuration.winrm_listener.md](131.os_profile.windows_configuration.winrm_listener.md) |
+| 132 | os_profile.windows_configuration.winrm_listener.protocol | Argument | Yes | ✅ Completed | [132.os_profile.windows_configuration.winrm_listener.protocol.md](132.os_profile.windows_configuration.winrm_listener.protocol.md) |
+| 133 | os_profile.windows_configuration.winrm_listener.certificate_url | Argument | No | ✅ Completed | [133.os_profile.windows_configuration.winrm_listener.certificate_url.md](133.os_profile.windows_configuration.winrm_listener.certificate_url.md) |
+| 134 | plan | Block | No | ✅ Completed | [134.plan.md](134.plan.md) |
+| 135 | plan.name | Argument | Yes | ✅ Completed | [135.plan.name.md](135.plan.name.md) |
+| 136 | plan.product | Argument | Yes | ✅ Completed | [136.plan.product.md](136.plan.product.md) |
+| 137 | plan.publisher | Argument | Yes | ✅ Completed | [137.plan.publisher.md](137.plan.publisher.md) |
+| 138 | priority_mix | Block | No | ✅ Completed | [138.priority_mix.md](138.priority_mix.md) |
+| 139 | priority_mix.base_regular_count | Argument | No | ✅ Completed | [139.priority_mix.base_regular_count.md](139.priority_mix.base_regular_count.md) |
+| 140 | priority_mix.regular_percentage_above_base | Argument | No | ✅ Completed | [140.priority_mix.regular_percentage_above_base.md](140.priority_mix.regular_percentage_above_base.md) |
+| 141 | rolling_upgrade_policy | Block | No | ✅ Completed | [141.rolling_upgrade_policy.md](141.rolling_upgrade_policy.md) |
+| 142 | rolling_upgrade_policy.max_batch_instance_percent | Argument | Yes | ✅ Completed | [142.rolling_upgrade_policy.max_batch_instance_percent.md](142.rolling_upgrade_policy.max_batch_instance_percent.md) |
+| 143 | rolling_upgrade_policy.max_unhealthy_instance_percent | Argument | Yes | ✅ Completed | [143.rolling_upgrade_policy.max_unhealthy_instance_percent.md](143.rolling_upgrade_policy.max_unhealthy_instance_percent.md) |
+| 144 | rolling_upgrade_policy.max_unhealthy_upgraded_instance_percent | Argument | Yes | ✅ Completed | [144.rolling_upgrade_policy.max_unhealthy_upgraded_instance_percent.md](144.rolling_upgrade_policy.max_unhealthy_upgraded_instance_percent.md) |
+| 145 | rolling_upgrade_policy.pause_time_between_batches | Argument | Yes | ✅ Completed | [145.rolling_upgrade_policy.pause_time_between_batches.md](145.rolling_upgrade_policy.pause_time_between_batches.md) |
+| 146 | rolling_upgrade_policy.cross_zone_upgrades_enabled | Argument | No | ✅ Completed | [146.rolling_upgrade_policy.cross_zone_upgrades_enabled.md](146.rolling_upgrade_policy.cross_zone_upgrades_enabled.md) |
+| 147 | rolling_upgrade_policy.maximum_surge_instances_enabled | Argument | No | ✅ Completed | [147.rolling_upgrade_policy.maximum_surge_instances_enabled.md](147.rolling_upgrade_policy.maximum_surge_instances_enabled.md) |
+| 148 | rolling_upgrade_policy.prioritize_unhealthy_instances_enabled | Argument | No | ✅ Completed | [148.rolling_upgrade_policy.prioritize_unhealthy_instances_enabled.md](148.rolling_upgrade_policy.prioritize_unhealthy_instances_enabled.md) |
+| 149 | sku_profile | Block | No | ✅ Completed | [149.sku_profile.md](149.sku_profile.md) |
+| 150 | sku_profile.allocation_strategy | Argument | Yes | ✅ Completed | [150.sku_profile.allocation_strategy.md](150.sku_profile.allocation_strategy.md) |
+| 151 | sku_profile.vm_sizes | Argument | Yes | ✅ Completed | [151.sku_profile.vm_sizes.md](151.sku_profile.vm_sizes.md) |
+| 152 | source_image_reference | Block | No | ✅ Completed | [152.source_image_reference.md](152.source_image_reference.md) |
+| 153 | source_image_reference.offer | Argument | Yes | ✅ Completed | [153.source_image_reference.offer.md](153.source_image_reference.offer.md) |
+| 154 | source_image_reference.publisher | Argument | Yes | ✅ Completed | [154.source_image_reference.publisher.md](154.source_image_reference.publisher.md) |
+| 155 | source_image_reference.sku | Argument | Yes | ✅ Completed | [155.source_image_reference.sku.md](155.source_image_reference.sku.md) |
+| 156 | source_image_reference.version | Argument | Yes | ✅ Completed | [156.source_image_reference.version.md](156.source_image_reference.version.md) |
+| 157 | termination_notification | Block | No | ✅ Completed | [157.termination_notification.md](157.termination_notification.md) |
+| 158 | termination_notification.enabled | Argument | Yes | ✅ Completed | [158.termination_notification.enabled.md](158.termination_notification.enabled.md) |
+| 159 | termination_notification.timeout | Argument | No | ✅ Completed | [159.termination_notification.timeout.md](159.termination_notification.timeout.md) |
+| 160 | timeouts | Block | No | ✅ Completed | [160.timeouts.md](160.timeouts.md) |
+| 161 | timeouts.create | Argument | No | ✅ Completed | [161.timeouts.create.md](161.timeouts.create.md) |
+| 162 | timeouts.delete | Argument | No | ✅ Completed | [162.timeouts.delete.md](162.timeouts.delete.md) |
+| 163 | timeouts.read | Argument | No | ✅ Completed | [163.timeouts.read.md](163.timeouts.read.md) |
+| 164 | timeouts.update | Argument | No | ✅ Completed | [164.timeouts.update.md](164.timeouts.update.md) |
 
 ## Notes
 

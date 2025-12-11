@@ -1,37 +1,37 @@
 resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
-  location                      = var.orchestrated_virtual_machine_scale_set_location
-  name                          = var.orchestrated_virtual_machine_scale_set_name
-  platform_fault_domain_count   = var.orchestrated_virtual_machine_scale_set_platform_fault_domain_count
-  resource_group_name           = var.orchestrated_virtual_machine_scale_set_resource_group_name
-  capacity_reservation_group_id = var.orchestrated_virtual_machine_scale_set_capacity_reservation_group_id
-  encryption_at_host_enabled    = var.orchestrated_virtual_machine_scale_set_encryption_at_host_enabled
-  eviction_policy               = var.orchestrated_virtual_machine_scale_set_eviction_policy
-  extension_operations_enabled  = var.orchestrated_virtual_machine_scale_set_extension_operations_enabled
-  extensions_time_budget        = var.orchestrated_virtual_machine_scale_set_extensions_time_budget
-  instances                     = var.orchestrated_virtual_machine_scale_set_instances
-  license_type                  = var.orchestrated_virtual_machine_scale_set_license_type
-  max_bid_price                 = var.orchestrated_virtual_machine_scale_set_max_bid_price
-  network_api_version           = var.orchestrated_virtual_machine_scale_set_network_api_version
-  priority                      = var.orchestrated_virtual_machine_scale_set_priority
-  proximity_placement_group_id  = var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id
-  single_placement_group        = var.orchestrated_virtual_machine_scale_set_single_placement_group
-  sku_name                      = var.orchestrated_virtual_machine_scale_set_sku_name
-  source_image_id               = var.orchestrated_virtual_machine_scale_set_source_image_id
-  tags                          = var.orchestrated_virtual_machine_scale_set_tags
-  upgrade_mode                  = var.orchestrated_virtual_machine_scale_set_upgrade_mode
-  user_data_base64              = var.orchestrated_virtual_machine_scale_set_user_data_base64
-  zone_balance                  = var.orchestrated_virtual_machine_scale_set_zone_balance
-  zones                         = var.orchestrated_virtual_machine_scale_set_zones
+  location                      = var.location
+  name                          = var.name
+  platform_fault_domain_count   = var.platform_fault_domain_count
+  resource_group_name           = var.resource_group_name
+  capacity_reservation_group_id = var.capacity_reservation_group_id
+  encryption_at_host_enabled    = var.encryption_at_host_enabled
+  eviction_policy               = var.eviction_policy
+  extension_operations_enabled  = var.extension_operations_enabled
+  extensions_time_budget        = var.extensions_time_budget
+  instances                     = var.instances
+  license_type                  = var.license_type
+  max_bid_price                 = var.max_bid_price
+  network_api_version           = var.network_api_version
+  priority                      = var.priority
+  proximity_placement_group_id  = var.proximity_placement_group_id
+  single_placement_group        = var.single_placement_group
+  sku_name                      = var.sku_name
+  source_image_id               = var.source_image_id
+  tags                          = var.tags
+  upgrade_mode                  = var.upgrade_mode
+  user_data_base64              = var.data_base64
+  zone_balance                  = var.zone_balance
+  zones                         = var.zones
 
   dynamic "additional_capabilities" {
-    for_each = var.orchestrated_virtual_machine_scale_set_additional_capabilities == null ? [] : [var.orchestrated_virtual_machine_scale_set_additional_capabilities]
+    for_each = var.additional_capabilities == null ? [] : [var.additional_capabilities]
 
     content {
       ultra_ssd_enabled = additional_capabilities.value.ultra_ssd_enabled
     }
   }
   dynamic "automatic_instance_repair" {
-    for_each = var.orchestrated_virtual_machine_scale_set_automatic_instance_repair == null ? [] : [var.orchestrated_virtual_machine_scale_set_automatic_instance_repair]
+    for_each = var.automatic_instance_repair == null ? [] : [var.automatic_instance_repair]
 
     content {
       enabled      = automatic_instance_repair.value.enabled
@@ -40,14 +40,14 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "boot_diagnostics" {
-    for_each = var.orchestrated_virtual_machine_scale_set_boot_diagnostics == null ? [] : [var.orchestrated_virtual_machine_scale_set_boot_diagnostics]
+    for_each = var.boot_diagnostics == null ? [] : [var.boot_diagnostics]
 
     content {
       storage_account_uri = boot_diagnostics.value.storage_account_uri
     }
   }
   dynamic "data_disk" {
-    for_each = var.orchestrated_virtual_machine_scale_set_data_disk == null ? [] : var.orchestrated_virtual_machine_scale_set_data_disk
+    for_each = var.data_disk == null ? [] : var.data_disk
 
     content {
       caching                        = data_disk.value.caching
@@ -62,7 +62,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "extension" {
-    for_each = var.orchestrated_virtual_machine_scale_set_extension == null ? [] : var.orchestrated_virtual_machine_scale_set_extension
+    for_each = var.extension == null ? [] : var.extension
 
     content {
       name                                      = extension.value.name
@@ -87,7 +87,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "identity" {
-    for_each = var.orchestrated_virtual_machine_scale_set_identity == null ? [] : [var.orchestrated_virtual_machine_scale_set_identity]
+    for_each = var.identity == null ? [] : [var.identity]
 
     content {
       identity_ids = identity.value.identity_ids
@@ -95,7 +95,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "network_interface" {
-    for_each = var.orchestrated_virtual_machine_scale_set_network_interface == null ? [] : var.orchestrated_virtual_machine_scale_set_network_interface
+    for_each = var.network_interface == null ? [] : var.network_interface
 
     content {
       name                          = network_interface.value.name
@@ -145,7 +145,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "os_disk" {
-    for_each = var.orchestrated_virtual_machine_scale_set_os_disk == null ? [] : [var.orchestrated_virtual_machine_scale_set_os_disk]
+    for_each = var.os_disk == null ? [] : [var.os_disk]
 
     content {
       caching                   = os_disk.value.caching
@@ -165,7 +165,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "os_profile" {
-    for_each = var.orchestrated_virtual_machine_scale_set_os_profile == null ? [] : [var.orchestrated_virtual_machine_scale_set_os_profile]
+    for_each = var.os_profile == null ? [] : [var.os_profile]
 
     content {
       custom_data = os_profile.value.custom_data
@@ -258,7 +258,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "plan" {
-    for_each = var.orchestrated_virtual_machine_scale_set_plan == null ? [] : [var.orchestrated_virtual_machine_scale_set_plan]
+    for_each = var.plan == null ? [] : [var.plan]
 
     content {
       name      = plan.value.name
@@ -267,7 +267,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "priority_mix" {
-    for_each = var.orchestrated_virtual_machine_scale_set_priority_mix == null ? [] : [var.orchestrated_virtual_machine_scale_set_priority_mix]
+    for_each = var.priority_mix == null ? [] : [var.priority_mix]
 
     content {
       base_regular_count            = priority_mix.value.base_regular_count
@@ -275,7 +275,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "rolling_upgrade_policy" {
-    for_each = var.orchestrated_virtual_machine_scale_set_rolling_upgrade_policy == null ? [] : [var.orchestrated_virtual_machine_scale_set_rolling_upgrade_policy]
+    for_each = var.rolling_upgrade_policy == null ? [] : [var.rolling_upgrade_policy]
 
     content {
       max_batch_instance_percent              = rolling_upgrade_policy.value.max_batch_instance_percent
@@ -288,7 +288,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "sku_profile" {
-    for_each = var.orchestrated_virtual_machine_scale_set_sku_profile == null ? [] : [var.orchestrated_virtual_machine_scale_set_sku_profile]
+    for_each = var.sku_profile == null ? [] : [var.sku_profile]
 
     content {
       allocation_strategy = sku_profile.value.allocation_strategy
@@ -296,7 +296,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "source_image_reference" {
-    for_each = var.orchestrated_virtual_machine_scale_set_source_image_reference == null ? [] : [var.orchestrated_virtual_machine_scale_set_source_image_reference]
+    for_each = var.source_image_reference == null ? [] : [var.source_image_reference]
 
     content {
       offer     = source_image_reference.value.offer
@@ -306,7 +306,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "termination_notification" {
-    for_each = var.orchestrated_virtual_machine_scale_set_termination_notification == null ? [] : [var.orchestrated_virtual_machine_scale_set_termination_notification]
+    for_each = var.termination_notification == null ? [] : [var.termination_notification]
 
     content {
       enabled = termination_notification.value.enabled
@@ -314,7 +314,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "this" {
     }
   }
   dynamic "timeouts" {
-    for_each = var.orchestrated_virtual_machine_scale_set_timeouts == null ? [] : [var.orchestrated_virtual_machine_scale_set_timeouts]
+    for_each = var.timeouts == null ? [] : [var.timeouts]
 
     content {
       create = timeouts.value.create

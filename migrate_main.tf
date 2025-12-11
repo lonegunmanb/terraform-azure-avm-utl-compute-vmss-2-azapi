@@ -1,7 +1,7 @@
 data "azapi_resource" "existing" {
   type                   = "Microsoft.Compute/virtualMachineScaleSets@2024-11-01"
-  name                   = var.orchestrated_virtual_machine_scale_set_name
-  parent_id              = var.orchestrated_virtual_machine_scale_set_resource_group_id
+  name                   = var.name
+  parent_id              = var.resource_group_id
   ignore_not_found       = true
   response_export_values = ["*"]
 }
@@ -10,14 +10,14 @@ locals {
   azapi_header = merge(
     {
       type      = "Microsoft.Compute/virtualMachineScaleSets@2024-11-01"
-      name      = var.orchestrated_virtual_machine_scale_set_name
-      location  = var.orchestrated_virtual_machine_scale_set_location
-      parent_id = var.orchestrated_virtual_machine_scale_set_resource_group_id
+      name      = var.name
+      location  = var.location
+      parent_id = var.resource_group_id
     },
-    var.orchestrated_virtual_machine_scale_set_identity != null ? {
+    var.identity != null ? {
       identity = {
-        type         = var.orchestrated_virtual_machine_scale_set_identity.type
-        identity_ids = tolist(var.orchestrated_virtual_machine_scale_set_identity.identity_ids)
+        type         = var.identity.type
+        identity_ids = tolist(var.identity.identity_ids)
       }
     } : {}
   )
@@ -25,24 +25,24 @@ locals {
   existing_single_placement_group = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).properties.singlePlacementGroup, null) : null
   single_placement_group_force_new_trigger = (
     local.existing_single_placement_group == false &&
-    var.orchestrated_virtual_machine_scale_set_single_placement_group == true
+    var.single_placement_group == true
   ) ? "trigger_replacement" : null
 
   existing_zones = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).zones, null) : null
   zones_force_new_trigger = (
     local.existing_zones != null &&
-    var.orchestrated_virtual_machine_scale_set_zones != null &&
-    length(setsubtract(local.existing_zones, var.orchestrated_virtual_machine_scale_set_zones)) > 0
+    var.zones != null &&
+    length(setsubtract(local.existing_zones, var.zones)) > 0
   ) ? "trigger_replacement" : null
 
   # Task #11: license_type - DiffSuppressFunc handling
   existing_license_type       = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).properties.virtualMachineProfile.licenseType, null) : null
-  normalized_license_type     = var.orchestrated_virtual_machine_scale_set_license_type == "None" ? null : var.orchestrated_virtual_machine_scale_set_license_type
+  normalized_license_type     = var.license_type == "None" ? null : var.license_type
   license_type_should_suppress = (
     (local.existing_license_type == "None" && local.normalized_license_type == null) ||
     (local.existing_license_type == null && local.normalized_license_type == null) ||
-    (local.existing_license_type == null && var.orchestrated_virtual_machine_scale_set_license_type == "None") ||
-    (local.existing_license_type == "None" && var.orchestrated_virtual_machine_scale_set_license_type == null)
+    (local.existing_license_type == null && var.license_type == "None") ||
+    (local.existing_license_type == "None" && var.license_type == null)
   )
   license_type_update_trigger = (
     !local.license_type_should_suppress &&
@@ -52,11 +52,11 @@ locals {
   # Task #13: network_api_version - DiffSuppressFunc handling
   existing_network_api_version = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).properties.virtualMachineProfile.networkProfile.networkApiVersion, "") : ""
   new_network_api_version = coalesce(
-    var.orchestrated_virtual_machine_scale_set_network_api_version,
+    var.network_api_version,
     "2020-11-01"
   )
   network_api_version_should_suppress = (
-    var.orchestrated_virtual_machine_scale_set_sku_name == null &&
+    var.sku_name == null &&
     local.existing_network_api_version == "" &&
     local.new_network_api_version == "2020-11-01"
   )
@@ -69,88 +69,109 @@ locals {
   existing_proximity_placement_group_id = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).properties.proximityPlacementGroup.id, null) : null
   proximity_placement_group_id_should_suppress = (
     local.existing_proximity_placement_group_id != null &&
-    var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id != null &&
-    lower(local.existing_proximity_placement_group_id) == lower(var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id)
+    var.proximity_placement_group_id != null &&
+    lower(local.existing_proximity_placement_group_id) == lower(var.proximity_placement_group_id)
   )
   proximity_placement_group_id_update_trigger = (
     !local.proximity_placement_group_id_should_suppress &&
-    local.existing_proximity_placement_group_id != var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id
-  ) ? var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id : null
+    local.existing_proximity_placement_group_id != var.proximity_placement_group_id
+  ) ? var.proximity_placement_group_id : null
 
   # Task #52: Map protected_settings by extension name
-  extension_protected_settings_map = var.migrate_orchestrated_virtual_machine_scale_set_extension_protected_settings != null ? {
-    for ext in var.migrate_orchestrated_virtual_machine_scale_set_extension_protected_settings : ext.name => jsondecode(ext.protected_settings)
+  extension_protected_settings_map = var.extension_protected_settings != null ? {
+    for ext in var.extension_protected_settings : ext.name => jsondecode(ext.protected_settings)
   } : {}
 
   linux_configuration_computer_name_prefix = (
-    var.orchestrated_virtual_machine_scale_set_os_profile != null &&
-    var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null
+    var.os_profile != null &&
+    var.os_profile.linux_configuration != null
   ) ? coalesce(
-    var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.computer_name_prefix,
-    var.orchestrated_virtual_machine_scale_set_name
+    var.os_profile.linux_configuration.computer_name_prefix,
+    var.name
   ) : ""
 
   windows_configuration_computer_name_prefix = (
-    var.orchestrated_virtual_machine_scale_set_os_profile != null &&
-    var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null
+    var.os_profile != null &&
+    var.os_profile.windows_configuration != null
   ) ? coalesce(
-    var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix,
-    var.orchestrated_virtual_machine_scale_set_name
+    var.os_profile.windows_configuration.computer_name_prefix,
+    var.name
   ) : ""
 
+  # Task #124: Map content by index for additional_unattend_content
+  additional_unattend_content_map = var.os_profile_windows_configuration_additional_unattend_content_content != null ? {
+    for item in var.os_profile_windows_configuration_additional_unattend_content_content : item.index => item.content
+  } : {}
+
   replace_triggers_external_values = {
-    location                      = { value = var.orchestrated_virtual_machine_scale_set_location }
-    platform_fault_domain_count   = { value = var.orchestrated_virtual_machine_scale_set_platform_fault_domain_count }
-    zone_balance                  = { value = var.orchestrated_virtual_machine_scale_set_zone_balance }
-    capacity_reservation_group_id = { value = var.orchestrated_virtual_machine_scale_set_capacity_reservation_group_id }
-    eviction_policy               = { value = var.orchestrated_virtual_machine_scale_set_eviction_policy }
-    extension_operations_enabled  = { value = var.orchestrated_virtual_machine_scale_set_extension_operations_enabled }
-    priority                      = { value = var.orchestrated_virtual_machine_scale_set_priority }
-    network_interface_name        = { value = var.orchestrated_virtual_machine_scale_set_network_interface != null ? jsonencode([for nic in var.orchestrated_virtual_machine_scale_set_network_interface : nic.name]) : "" }
+    location                      = { value = var.location }
+    platform_fault_domain_count   = { value = var.platform_fault_domain_count }
+    zone_balance                  = { value = var.zone_balance }
+    capacity_reservation_group_id = { value = var.capacity_reservation_group_id }
+    eviction_policy               = { value = var.eviction_policy }
+    extension_operations_enabled  = { value = var.extension_operations_enabled }
+    priority                      = { value = var.priority }
+    network_interface_name        = { value = var.network_interface != null ? jsonencode([for nic in var.network_interface : nic.name]) : "" }
     single_placement_group        = local.single_placement_group_force_new_trigger
     zones                         = local.zones_force_new_trigger
-    ultra_ssd_enabled             = { value = var.orchestrated_virtual_machine_scale_set_additional_capabilities != null ? coalesce(var.orchestrated_virtual_machine_scale_set_additional_capabilities.ultra_ssd_enabled, false) : false }
-    data_disk_disk_encryption_set_id = { value = var.orchestrated_virtual_machine_scale_set_data_disk != null ? jsonencode([for disk in var.orchestrated_virtual_machine_scale_set_data_disk : disk.disk_encryption_set_id]) : "" }
+    ultra_ssd_enabled             = { value = var.additional_capabilities != null ? coalesce(var.additional_capabilities.ultra_ssd_enabled, false) : false }
+    data_disk_disk_encryption_set_id = { value = var.data_disk != null ? jsonencode([for disk in var.data_disk : disk.disk_encryption_set_id]) : "" }
     public_ip_prefix_id = {
-      value = var.orchestrated_virtual_machine_scale_set_network_interface != null ? jsonencode([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : [
+      value = var.network_interface != null ? jsonencode([
+        for nic in var.network_interface : [
           for ip_config in nic.ip_configuration : ip_config.public_ip_address != null && length(ip_config.public_ip_address) > 0 ? ip_config.public_ip_address[0].public_ip_prefix_id : null
         ]
       ]) : ""
     }
     public_ip_sku_name = {
-      value = var.orchestrated_virtual_machine_scale_set_network_interface != null ? jsonencode([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : [
+      value = var.network_interface != null ? jsonencode([
+        for nic in var.network_interface : [
           for ip_config in nic.ip_configuration : ip_config.public_ip_address != null && length(ip_config.public_ip_address) > 0 ? ip_config.public_ip_address[0].sku_name : null
         ]
       ]) : ""
     }
     public_ip_version = {
-      value = var.orchestrated_virtual_machine_scale_set_network_interface != null ? jsonencode([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : [
+      value = var.network_interface != null ? jsonencode([
+        for nic in var.network_interface : [
           for ip_config in nic.ip_configuration : ip_config.public_ip_address != null && length(ip_config.public_ip_address) > 0 ? ip_config.public_ip_address[0].version : null
         ]
       ]) : ""
     }
     public_ip_ip_tag = {
-      value = var.orchestrated_virtual_machine_scale_set_network_interface != null ? jsonencode([
-        for nic in var.orchestrated_virtual_machine_scale_set_network_interface : [
+      value = var.network_interface != null ? jsonencode([
+        for nic in var.network_interface : [
           for ip_config in nic.ip_configuration : ip_config.public_ip_address != null && length(ip_config.public_ip_address) > 0 ? ip_config.public_ip_address[0].ip_tag : null
         ]
       ]) : ""
     }
-    os_disk_storage_account_type = { value = var.orchestrated_virtual_machine_scale_set_os_disk != null ? var.orchestrated_virtual_machine_scale_set_os_disk.storage_account_type : "" }
-    os_disk_disk_encryption_set_id = { value = var.orchestrated_virtual_machine_scale_set_os_disk != null ? var.orchestrated_virtual_machine_scale_set_os_disk.disk_encryption_set_id : "" }
-    os_disk_diff_disk_settings_option = { value = var.orchestrated_virtual_machine_scale_set_os_disk != null && var.orchestrated_virtual_machine_scale_set_os_disk.diff_disk_settings != null ? var.orchestrated_virtual_machine_scale_set_os_disk.diff_disk_settings.option : "" }
-    os_disk_diff_disk_settings_placement = { value = var.orchestrated_virtual_machine_scale_set_os_disk != null && var.orchestrated_virtual_machine_scale_set_os_disk.diff_disk_settings != null ? var.orchestrated_virtual_machine_scale_set_os_disk.diff_disk_settings.placement : "" }
-    linux_configuration_admin_username   = { value = var.orchestrated_virtual_machine_scale_set_os_profile != null && var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null ? var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_username : "" }
-    linux_configuration_admin_password = { value = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_linux_configuration_admin_password }
+    os_disk_storage_account_type = { value = var.os_disk != null ? var.os_disk.storage_account_type : "" }
+    os_disk_disk_encryption_set_id = { value = var.os_disk != null ? var.os_disk.disk_encryption_set_id : "" }
+    os_disk_diff_disk_settings_option = { value = var.os_disk != null && var.os_disk.diff_disk_settings != null ? var.os_disk.diff_disk_settings.option : "" }
+    os_disk_diff_disk_settings_placement = { value = var.os_disk != null && var.os_disk.diff_disk_settings != null ? var.os_disk.diff_disk_settings.placement : "" }
+    linux_configuration_admin_username   = { value = var.os_profile != null && var.os_profile.linux_configuration != null ? var.os_profile.linux_configuration.admin_username : "" }
+    linux_configuration_admin_password = { value = var.os_profile_linux_configuration_admin_password }
     linux_configuration_computer_name_prefix = { value = local.linux_configuration_computer_name_prefix }
-    linux_configuration_provision_vm_agent = { value = var.orchestrated_virtual_machine_scale_set_os_profile != null && var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null ? coalesce(var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.provision_vm_agent, true) : true }
-    windows_configuration_admin_password = { value = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password }
-    windows_configuration_admin_username = { value = var.orchestrated_virtual_machine_scale_set_os_profile != null && var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.admin_username : "" }
+    linux_configuration_provision_vm_agent = { value = var.os_profile != null && var.os_profile.linux_configuration != null ? coalesce(var.os_profile.linux_configuration.provision_vm_agent, true) : true }
+    windows_configuration_admin_password = { value = var.os_profile_windows_configuration_admin_password }
+    windows_configuration_admin_username = { value = var.os_profile != null && var.os_profile.windows_configuration != null ? var.os_profile.windows_configuration.admin_username : "" }
     windows_configuration_computer_name_prefix = { value = local.windows_configuration_computer_name_prefix }
-    windows_configuration_provision_vm_agent = { value = var.orchestrated_virtual_machine_scale_set_os_profile != null && var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.provision_vm_agent : true }
+    windows_configuration_provision_vm_agent = { value = var.os_profile != null && var.os_profile.windows_configuration != null ? var.os_profile.windows_configuration.provision_vm_agent : true }
+    windows_configuration_winrm_listener_protocol = {
+      value = var.os_profile != null && var.os_profile.windows_configuration != null && var.os_profile.windows_configuration.winrm_listener != null ? jsonencode([for listener in var.os_profile.windows_configuration.winrm_listener : listener.protocol]) : ""
+    }
+    windows_configuration_winrm_listener_certificate_url = {
+      value = var.os_profile != null && var.os_profile.windows_configuration != null && var.os_profile.windows_configuration.winrm_listener != null ? jsonencode([for listener in var.os_profile.windows_configuration.winrm_listener : listener.certificate_url]) : ""
+    }
+    plan_name = { value = var.plan != null ? var.plan.name : "" }
+    plan_product = { value = var.plan != null ? var.plan.product : "" }
+    plan_publisher = { value = var.plan != null ? var.plan.publisher : "" }
+    priority_mix_base_regular_count = { value = var.priority_mix != null ? var.priority_mix.base_regular_count : 0 }
+    priority_mix_regular_percentage_above_base = { value = var.priority_mix != null ? var.priority_mix.regular_percentage_above_base : 0 }
+    rolling_upgrade_policy = { value = var.rolling_upgrade_policy != null ? jsonencode(var.rolling_upgrade_policy) : "" }
+    sku_profile_allocation_strategy     = { value = var.sku_profile != null ? var.sku_profile.allocation_strategy : "" }
+    sku_profile_vm_sizes                = { value = var.sku_profile != null ? jsonencode(var.sku_profile.vm_sizes) : "" }
+    source_image_reference_offer        = { value = var.source_image_reference != null ? var.source_image_reference.offer : "" }
+    source_image_reference_publisher    = { value = var.source_image_reference != null ? var.source_image_reference.publisher : "" }
   }
 
   body = merge(
@@ -160,56 +181,93 @@ locals {
           orchestrationMode = "Flexible"
         },
         {
-          platformFaultDomainCount = var.orchestrated_virtual_machine_scale_set_platform_fault_domain_count
+          platformFaultDomainCount = var.platform_fault_domain_count
         },
-        var.orchestrated_virtual_machine_scale_set_zone_balance != null ? {
-          zoneBalance = var.orchestrated_virtual_machine_scale_set_zone_balance
+        var.zone_balance != null ? {
+          zoneBalance = var.zone_balance
         } : {},
-        var.orchestrated_virtual_machine_scale_set_single_placement_group != null ? {
-          singlePlacementGroup = var.orchestrated_virtual_machine_scale_set_single_placement_group
+        var.single_placement_group != null ? {
+          singlePlacementGroup = var.single_placement_group
         } : {},
-        var.orchestrated_virtual_machine_scale_set_additional_capabilities != null ? {
+        var.additional_capabilities != null ? {
           additionalCapabilities = {
-            ultraSSDEnabled = var.orchestrated_virtual_machine_scale_set_additional_capabilities.ultra_ssd_enabled
+            ultraSSDEnabled = var.additional_capabilities.ultra_ssd_enabled
           }
         } : {},
-        var.orchestrated_virtual_machine_scale_set_automatic_instance_repair != null ? {
+        var.automatic_instance_repair != null ? {
           automaticRepairsPolicy = merge(
             {
-              enabled = var.orchestrated_virtual_machine_scale_set_automatic_instance_repair.enabled
+              enabled = var.automatic_instance_repair.enabled
             },
-            var.orchestrated_virtual_machine_scale_set_automatic_instance_repair.action != null && var.orchestrated_virtual_machine_scale_set_automatic_instance_repair.action != "" ? {
-              repairAction = var.orchestrated_virtual_machine_scale_set_automatic_instance_repair.action
+            var.automatic_instance_repair.action != null && var.automatic_instance_repair.action != "" ? {
+              repairAction = var.automatic_instance_repair.action
             } : {},
-            var.orchestrated_virtual_machine_scale_set_automatic_instance_repair.grace_period != null ? {
-              gracePeriod = var.orchestrated_virtual_machine_scale_set_automatic_instance_repair.grace_period
+            var.automatic_instance_repair.grace_period != null ? {
+              gracePeriod = var.automatic_instance_repair.grace_period
             } : {}
           )
         } : {},
-        var.orchestrated_virtual_machine_scale_set_sku_name != null ? {
+        var.priority_mix != null ? {
+          priorityMixPolicy = {
+            baseRegularPriorityCount = var.priority_mix.base_regular_count
+            regularPriorityPercentageAboveBase = var.priority_mix.regular_percentage_above_base
+          }
+        } : {},
+        var.rolling_upgrade_policy != null ? {
+          upgradePolicy = {
+            rollingUpgradePolicy = merge(
+              {
+                maxBatchInstancePercent = var.rolling_upgrade_policy.max_batch_instance_percent
+                maxUnhealthyInstancePercent = var.rolling_upgrade_policy.max_unhealthy_instance_percent
+                maxUnhealthyUpgradedInstancePercent = var.rolling_upgrade_policy.max_unhealthy_upgraded_instance_percent
+                pauseTimeBetweenBatches = var.rolling_upgrade_policy.pause_time_between_batches
+              },
+              (var.zones != null && length(var.zones) > 0) ? {
+                enableCrossZoneUpgrade = coalesce(var.rolling_upgrade_policy.cross_zone_upgrades_enabled, false)
+              } : {},
+              {
+                maxSurge = var.rolling_upgrade_policy.maximum_surge_instances_enabled
+              },
+              var.rolling_upgrade_policy.prioritize_unhealthy_instances_enabled != null ? {
+                prioritizeUnhealthyInstances = var.rolling_upgrade_policy.prioritize_unhealthy_instances_enabled
+              } : {}
+            )
+          }
+        } : {},
+        var.sku_profile != null ? {
+          skuProfile = {
+            allocationStrategy = var.sku_profile.allocation_strategy
+            vmSizes = [
+              for vm_size in var.sku_profile.vm_sizes : {
+                name = vm_size
+              }
+            ]
+          }
+        } : {},
+        var.sku_name != null ? {
           virtualMachineProfile = merge(
-            var.orchestrated_virtual_machine_scale_set_capacity_reservation_group_id != null ? {
+            var.capacity_reservation_group_id != null ? {
               capacityReservation = {
                 capacityReservationGroup = {
-                  id = var.orchestrated_virtual_machine_scale_set_capacity_reservation_group_id
+                  id = var.capacity_reservation_group_id
                 }
               }
             } : {},
-            var.orchestrated_virtual_machine_scale_set_encryption_at_host_enabled != null ? {
+            var.encryption_at_host_enabled != null ? {
               securityProfile = {
-                encryptionAtHost = var.orchestrated_virtual_machine_scale_set_encryption_at_host_enabled
+                encryptionAtHost = var.encryption_at_host_enabled
               }
             } : {},
-            var.orchestrated_virtual_machine_scale_set_eviction_policy != null ? {
-              evictionPolicy = var.orchestrated_virtual_machine_scale_set_eviction_policy
+            var.eviction_policy != null ? {
+              evictionPolicy = var.eviction_policy
             } : {},
             {
-              priority = var.orchestrated_virtual_machine_scale_set_priority
+              priority = var.priority
             },
-            var.orchestrated_virtual_machine_scale_set_network_interface != null || var.orchestrated_virtual_machine_scale_set_sku_name != null ? {
-              networkProfile = var.orchestrated_virtual_machine_scale_set_network_interface != null ? {
+            var.network_interface != null || var.sku_name != null ? {
+              networkProfile = var.network_interface != null ? {
                 networkInterfaceConfigurations = [
-                    for nic in var.orchestrated_virtual_machine_scale_set_network_interface : {
+                    for nic in var.network_interface : {
                       name = nic.name # Task #61
                       properties = merge(
                         nic.auxiliary_mode != null ? {
@@ -377,40 +435,40 @@ locals {
                   ]
                 } : {}
             } : {},
-            var.orchestrated_virtual_machine_scale_set_boot_diagnostics != null ? {
+            var.boot_diagnostics != null ? {
               diagnosticsProfile = {
                 bootDiagnostics = merge(
                   {
                     enabled = true
                   },
-                  var.orchestrated_virtual_machine_scale_set_boot_diagnostics.storage_account_uri != null ? {
-                    storageUri = var.orchestrated_virtual_machine_scale_set_boot_diagnostics.storage_account_uri
+                  var.boot_diagnostics.storage_account_uri != null ? {
+                    storageUri = var.boot_diagnostics.storage_account_uri
                     } : {
                     storageUri = ""
                   }
                 )
               }
             } : {},
-            var.orchestrated_virtual_machine_scale_set_os_profile != null ? {
+            var.os_profile != null ? {
               osProfile = merge(
                 {
-                  allowExtensionOperations = var.orchestrated_virtual_machine_scale_set_extension_operations_enabled
+                  allowExtensionOperations = var.extension_operations_enabled
                 },
-                var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null ? merge(
+                var.os_profile.linux_configuration != null ? merge(
                   {
                     computerNamePrefix = local.linux_configuration_computer_name_prefix
                   },
                   {
                     linuxConfiguration = merge(
                       {
-                        adminUsername                 = var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_username
-                        disablePasswordAuthentication = var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.disable_password_authentication
-                        provisionVMAgent              = coalesce(var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.provision_vm_agent, true)
+                        adminUsername                 = var.os_profile.linux_configuration.admin_username
+                        disablePasswordAuthentication = var.os_profile.linux_configuration.disable_password_authentication
+                        provisionVMAgent              = coalesce(var.os_profile.linux_configuration.provision_vm_agent, true)
                       },
-                      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key != null && length(var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key) > 0 ? {
+                      var.os_profile.linux_configuration.admin_ssh_key != null && length(var.os_profile.linux_configuration.admin_ssh_key) > 0 ? {
                         ssh = {
                           publicKeys = [
-                            for ssh_key in var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key : {
+                            for ssh_key in var.os_profile.linux_configuration.admin_ssh_key : {
                               keyData = ssh_key.public_key
                               path    = "/home/${ssh_key.username}/.ssh/authorized_keys"
                             }
@@ -419,16 +477,16 @@ locals {
                       } : {},
                       {
                         patchSettings = {
-                          assessmentMode = var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.patch_assessment_mode
-                          patchMode      = var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.patch_mode
+                          assessmentMode = var.os_profile.linux_configuration.patch_assessment_mode
+                          patchMode      = var.os_profile.linux_configuration.patch_mode
                         }
                       }
                     )
                   }
                 ) : {},
-                var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null && var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.secret != null && length(var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.secret) > 0 ? {
+                var.os_profile.linux_configuration != null && var.os_profile.linux_configuration.secret != null && length(var.os_profile.linux_configuration.secret) > 0 ? {
                   secrets = [
-                    for secret in var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.secret : {
+                    for secret in var.os_profile.linux_configuration.secret : {
                       sourceVault = {
                         id = secret.key_vault_id
                       }
@@ -440,59 +498,93 @@ locals {
                     }
                   ]
                 } : {},
-                var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? merge(
+                var.os_profile.windows_configuration != null ? merge(
                   {
                     computerNamePrefix = local.windows_configuration_computer_name_prefix
                   },
                   {
                     windowsConfiguration = merge(
                       {
-                        enableAutomaticUpdates = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.enable_automatic_updates
+                        enableAutomaticUpdates = var.os_profile.windows_configuration.enable_automatic_updates
                       },
                       {
                         patchSettings = merge(
                           {
-                            enableHotpatching = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.hotpatching_enabled
+                            enableHotpatching = var.os_profile.windows_configuration.hotpatching_enabled
                           },
-                          var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_assessment_mode != null ? {
-                            assessmentMode = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_assessment_mode
+                          var.os_profile.windows_configuration.patch_assessment_mode != null ? {
+                            assessmentMode = var.os_profile.windows_configuration.patch_assessment_mode
                           } : {},
                           {
-                            patchMode = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_mode
+                            patchMode = var.os_profile.windows_configuration.patch_mode
                           }
                         )
                       },
                       {
-                        provisionVMAgent = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.provision_vm_agent
+                        provisionVMAgent = var.os_profile.windows_configuration.provision_vm_agent
                       },
-                      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.timezone != null && var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.timezone != "" ? {
-                        timeZone = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.timezone
+                      var.os_profile.windows_configuration.timezone != null && var.os_profile.windows_configuration.timezone != "" ? {
+                        timeZone = var.os_profile.windows_configuration.timezone
                       } : {},
-                      {
-                        # additionalUnattendContent = ... # Task #123-125
-                        # winRM = { # Task #131-133
-                        #   listeners = ... # Task #131-133
-                        # }
-                        # secrets = ... # Task #126-130
-                      }
+                      var.os_profile.windows_configuration.additional_unattend_content != null ? {
+                        additionalUnattendContent = [
+                          for idx, content in var.os_profile.windows_configuration.additional_unattend_content : {
+                            componentName = "Microsoft-Windows-Shell-Setup"
+                            passName      = "OobeSystem"
+                            # content = ... # Task #124 - in sensitive_body
+                            settingName = content.setting
+                          }
+                        ]
+                      } : {},
+                      var.os_profile.windows_configuration.winrm_listener != null && length(var.os_profile.windows_configuration.winrm_listener) > 0 ? {
+                        winRM = {
+                          listeners = [
+                            for listener in var.os_profile.windows_configuration.winrm_listener : merge(
+                              {
+                                protocol = listener.protocol
+                              },
+                              listener.certificate_url != null ? {
+                                certificateUrl = listener.certificate_url
+                              } : {}
+                            )
+                          ]
+                        }
+                      } : {}
                     )
                   }
                 ) : {},
-                var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? {
-                  adminUsername = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.admin_username
+                var.os_profile.windows_configuration != null &&
+                var.os_profile.windows_configuration.secret != null &&
+                length(var.os_profile.windows_configuration.secret) > 0 ? {
+                  secrets = [
+                    for secret in var.os_profile.windows_configuration.secret : {
+                      sourceVault = {
+                        id = secret.key_vault_id
+                      }
+                      vaultCertificates = [
+                        for cert in secret.certificate : {
+                          certificateStore = cert.store
+                          certificateUrl   = cert.url
+                        }
+                      ]
+                    }
+                  ]
+                } : {},
+                var.os_profile.windows_configuration != null ? {
+                  adminUsername = var.os_profile.windows_configuration.admin_username
                 } : {}
               )
             } : {},
-            var.orchestrated_virtual_machine_scale_set_max_bid_price > 0 ? {
+            var.max_bid_price > 0 ? {
               billingProfile = {
-                maxPrice = var.orchestrated_virtual_machine_scale_set_max_bid_price
+                maxPrice = var.max_bid_price
               }
             } : {},
-            var.orchestrated_virtual_machine_scale_set_extension != null || var.orchestrated_virtual_machine_scale_set_extensions_time_budget != null ? {
+            var.extension != null || var.extensions_time_budget != null ? {
               extensionProfile = merge(
-                var.orchestrated_virtual_machine_scale_set_extension != null ? {
+                var.extension != null ? {
                   extensions = [
-                    for ext in var.orchestrated_virtual_machine_scale_set_extension : {
+                    for ext in var.extension : {
                       name = ext.name
                       properties = merge(
                         {
@@ -526,12 +618,20 @@ locals {
                     }
                   ]
                 } : {},
-                var.orchestrated_virtual_machine_scale_set_extensions_time_budget != null ? {
-                  extensionsTimeBudget = var.orchestrated_virtual_machine_scale_set_extensions_time_budget
+                var.extensions_time_budget != null ? {
+                  extensionsTimeBudget = var.extensions_time_budget
                 } : {}
               )
             } : {},
-            var.orchestrated_virtual_machine_scale_set_data_disk != null || var.orchestrated_virtual_machine_scale_set_os_disk != null ? {
+            var.orchestrated_virtual_machine_scale_set_termination_notification != null ? {
+              scheduledEventsProfile = {
+                terminateNotificationProfile = {
+                  enable           = var.orchestrated_virtual_machine_scale_set_termination_notification.enabled
+                  notBeforeTimeout = var.orchestrated_virtual_machine_scale_set_termination_notification.timeout
+                }
+              }
+            } : {},
+            var.orchestrated_virtual_machine_scale_set_data_disk != null || var.orchestrated_virtual_machine_scale_set_os_disk != null || var.orchestrated_virtual_machine_scale_set_source_image_reference != null ? {
               storageProfile = merge(
                 var.orchestrated_virtual_machine_scale_set_data_disk != null ? {
                   dataDisks = [
@@ -580,6 +680,14 @@ locals {
                       }
                     } : {}
                   )
+                } : {},
+                var.orchestrated_virtual_machine_scale_set_source_image_reference != null ? {
+                  imageReference = {
+                    offer     = var.orchestrated_virtual_machine_scale_set_source_image_reference.offer
+                    publisher = var.orchestrated_virtual_machine_scale_set_source_image_reference.publisher
+                    sku       = var.orchestrated_virtual_machine_scale_set_source_image_reference.sku
+                    version   = var.orchestrated_virtual_machine_scale_set_source_image_reference.version
+                  }
                 } : {}
               )
             } : {}
@@ -587,50 +695,68 @@ locals {
         } : {}
       )
     },
-    var.orchestrated_virtual_machine_scale_set_sku_name != null ? {
+    var.sku_name != null ? {
       sku = {
-        name     = var.orchestrated_virtual_machine_scale_set_sku_name
-        capacity = var.orchestrated_virtual_machine_scale_set_instances
-        tier     = var.orchestrated_virtual_machine_scale_set_sku_name != "Mix" ? "Standard" : null
+        name     = var.sku_name
+        capacity = var.instances
+        tier     = var.sku_name != "Mix" ? "Standard" : null
       }
     } : {},
-    var.orchestrated_virtual_machine_scale_set_zones != null && length(var.orchestrated_virtual_machine_scale_set_zones) > 0 ? {
-      zones = tolist(var.orchestrated_virtual_machine_scale_set_zones)
+    var.zones != null && length(var.zones) > 0 ? {
+      zones = tolist(var.zones)
+    } : {},
+    var.plan != null ? {
+      plan = {
+        name = var.plan.name
+        product = var.plan.product
+        publisher = var.plan.publisher
+      }
     } : {}
   )
 
   sensitive_body = {
     properties = merge(
-      var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id != null ? {
+      var.proximity_placement_group_id != null ? {
         proximityPlacementGroup = {
-          id = var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id
+          id = var.proximity_placement_group_id
         }
       } : {},
-      var.orchestrated_virtual_machine_scale_set_sku_name != null ? {
+      var.sku_name != null ? {
         virtualMachineProfile = merge(
-          var.orchestrated_virtual_machine_scale_set_user_data_base64 != null ? {
-            userData = var.orchestrated_virtual_machine_scale_set_user_data_base64
+          var.data_base64 != null ? {
+            userData = var.data_base64
           } : {},
           local.normalized_license_type != null ? {
             licenseType = local.normalized_license_type
           } : {},
-          var.orchestrated_virtual_machine_scale_set_os_profile != null ? {
+          var.os_profile != null ? {
             osProfile = merge(
-              var.migrate_orchestrated_virtual_machine_scale_set_os_profile_custom_data != null ? {
-                customData = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_custom_data
+              var.os_profile_custom_data != null ? {
+                customData = var.os_profile_custom_data
               } : {},
-              var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null && var.migrate_orchestrated_virtual_machine_scale_set_os_profile_linux_configuration_admin_password != null ? {
-                adminPassword = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_linux_configuration_admin_password
+              var.os_profile.linux_configuration != null && var.os_profile_linux_configuration_admin_password != null ? {
+                adminPassword = var.os_profile_linux_configuration_admin_password
               } : {},
-              var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? {
-                adminPassword = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password
+              var.os_profile.windows_configuration != null ? {
+                windowsConfiguration = merge(
+                  {
+                    adminPassword = var.os_profile_windows_configuration_admin_password
+                  },
+                  var.os_profile.windows_configuration.additional_unattend_content != null && length(local.additional_unattend_content_map) > 0 ? {
+                    additionalUnattendContent = [
+                      for idx, content in var.os_profile.windows_configuration.additional_unattend_content : {
+                        content = local.additional_unattend_content_map[idx]
+                      }
+                    ]
+                  } : {}
+                )
               } : {}
             )
           } : {},
-          var.orchestrated_virtual_machine_scale_set_extension != null && length(local.extension_protected_settings_map) > 0 ? {
+          var.extension != null && length(local.extension_protected_settings_map) > 0 ? {
             extensionProfile = {
               extensions = [
-                for ext in var.orchestrated_virtual_machine_scale_set_extension : {
+                for ext in var.extension : {
                   name = ext.name
                   properties = lookup(local.extension_protected_settings_map, ext.name, null) != null ? {
                     protectedSettings = local.extension_protected_settings_map[ext.name]
@@ -639,7 +765,7 @@ locals {
               ]
             }
           } : {},
-          var.orchestrated_virtual_machine_scale_set_network_interface != null || var.orchestrated_virtual_machine_scale_set_sku_name != null ? {
+          var.network_interface != null || var.sku_name != null ? {
             networkProfile = {
               networkApiVersion = local.new_network_api_version
             }
@@ -650,27 +776,28 @@ locals {
   }
 
   sensitive_body_version = {
-    "properties.proximityPlacementGroup.id"                                            = "null"
-    "properties.virtualMachineProfile.osProfile.customData"                            = try(tostring(var.migrate_orchestrated_virtual_machine_scale_set_os_profile_custom_data_version), "null")
-    "properties.virtualMachineProfile.osProfile.adminPassword"                         = var.orchestrated_virtual_machine_scale_set_os_profile != null && var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null ? try(tostring(var.migrate_orchestrated_virtual_machine_scale_set_os_profile_linux_configuration_admin_password_version), "null") : var.orchestrated_virtual_machine_scale_set_os_profile != null && var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? try(tostring(var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password_version), "null") : "null"
-    "properties.virtualMachineProfile.userData"                                        = try(tostring(var.orchestrated_virtual_machine_scale_set_user_data_base64_version), "null")
-    "properties.virtualMachineProfile.licenseType"                                     = "null"
-    "properties.virtualMachineProfile.networkProfile.networkApiVersion"                = "null"
-    "properties.virtualMachineProfile.extensionProfile.protectedSettings"              = try(tostring(var.migrate_orchestrated_virtual_machine_scale_set_extension_protected_settings_version), "null")
+    "properties.proximityPlacementGroup.id"                                                           = "null"
+    "properties.virtualMachineProfile.osProfile.customData"                                           = try(tostring(var.os_profile_custom_data_version), "null")
+    "properties.virtualMachineProfile.osProfile.adminPassword"                                        = var.os_profile != null && var.os_profile.linux_configuration != null ? try(tostring(var.os_profile_linux_configuration_admin_password_version), "null") : var.os_profile != null && var.os_profile.windows_configuration != null ? try(tostring(var.os_profile_windows_configuration_admin_password_version), "null") : "null"
+    "properties.virtualMachineProfile.userData"                                                       = try(tostring(var.user_data_base64_version), "null")
+    "properties.virtualMachineProfile.licenseType"                                                    = "null"
+    "properties.virtualMachineProfile.networkProfile.networkApiVersion"                               = "null"
+    "properties.virtualMachineProfile.extensionProfile.protectedSettings"                             = try(tostring(var.extension_protected_settings_version), "null")
+    "properties.virtualMachineProfile.osProfile.windowsConfiguration.additionalUnattendContent"       = try(tostring(var.os_profile_windows_configuration_additional_unattend_content_content_version), "null")
   }
 
   post_creation_updates = compact([
     {
       azapi_header = {
         type      = "Microsoft.Compute/virtualMachineScaleSets@2024-11-01"
-        name      = var.orchestrated_virtual_machine_scale_set_name
-        parent_id = var.orchestrated_virtual_machine_scale_set_resource_group_id
+        name      = var.name
+        parent_id = var.resource_group_id
       }
       body = {
         properties = merge(
-          var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id != null ? {
+          var.proximity_placement_group_id != null ? {
             proximityPlacementGroup = {
-              id = var.orchestrated_virtual_machine_scale_set_proximity_placement_group_id
+              id = var.proximity_placement_group_id
             }
           } : {},
           {
@@ -678,7 +805,7 @@ locals {
               local.normalized_license_type != null ? {
                 licenseType = local.normalized_license_type
               } : {},
-              var.orchestrated_virtual_machine_scale_set_network_interface != null || var.orchestrated_virtual_machine_scale_set_sku_name != null ? {
+              var.network_interface != null || var.sku_name != null ? {
                 networkProfile = {
                   networkApiVersion = local.new_network_api_version
                 }
