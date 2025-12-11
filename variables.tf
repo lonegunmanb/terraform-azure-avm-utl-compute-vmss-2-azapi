@@ -911,14 +911,14 @@ variable "orchestrated_virtual_machine_scale_set_os_profile" {
       })))
     }))
     windows_configuration = optional(object({
-      admin_password           = string
-      admin_username           = string
+      admin_password           = string # TODO: delete later - migrated to independent ephemeral variable (Task #114)
+      admin_username           = string # ForceNew field, validation applied
       computer_name_prefix     = optional(string)
       enable_automatic_updates = optional(bool, true)
-      hotpatching_enabled      = optional(bool)
+      hotpatching_enabled      = optional(bool, false)
       patch_assessment_mode    = optional(string)
-      patch_mode               = optional(string)
-      provision_vm_agent       = optional(bool)
+      patch_mode               = optional(string, "AutomaticByOS")
+      provision_vm_agent       = optional(bool, true)
       timezone                 = optional(string)
       additional_unattend_content = optional(list(object({
         content = string
@@ -967,6 +967,109 @@ variable "orchestrated_virtual_machine_scale_set_os_profile" {
   validation {
     condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.patch_mode != "AutomaticByPlatform" || var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.provision_vm_agent == true
     error_message = "When patch_mode is set to 'AutomaticByPlatform', provision_vm_agent must be set to true."
+  }
+
+  validation {
+    condition = (
+      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.secret == null ||
+      alltrue([
+        for secret in var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.secret :
+        can(regex("^/subscriptions/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/resourceGroups/[^/]+/providers/Microsoft.KeyVault/vaults/[^/]+$", secret.key_vault_id))
+      ])
+    )
+    error_message = "Each key_vault_id must be a valid Key Vault resource ID in the format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}."
+  }
+
+  validation {
+    condition = (
+      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null ||
+      length(var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.admin_username) >= 1 &&
+      length(var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.admin_username) <= 20
+    )
+    error_message = "The admin_username must be between 1 and 20 characters in length."
+  }
+
+  validation {
+    condition = (
+      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null ||
+      !endswith(var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.admin_username, ".")
+    )
+    error_message = "The admin_username cannot end with a '.'."
+  }
+
+  validation {
+    condition = (
+      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null ||
+      !contains([
+        " ", "administrator", "admin", "user", "user1", "test", "user2", "test1", "user3", "admin1", "1", "123", "a",
+        "actuser", "adm", "admin2", "aspnet", "backup", "console", "david", "guest", "john", "owner", "root", "server",
+        "sql", "support", "support_388945a0", "sys", "test2", "test3", "user4", "user5"
+      ], lower(var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.admin_username))
+    )
+    error_message = "The admin_username cannot be one of the disallowed values: administrator, admin, user, user1, test, user2, test1, user3, admin1, 1, 123, a, actuser, adm, admin2, aspnet, backup, console, david, guest, john, owner, root, server, sql, support, support_388945a0, sys, test2, test3, user4, user5."
+  }
+
+  validation {
+    condition = (
+      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix == null ||
+      (
+        length(var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix) >= 1 &&
+        length(var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix) <= 9
+      )
+    )
+    error_message = "The computer_name_prefix can be at most 9 characters."
+  }
+
+  validation {
+    condition = (
+      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix == null ||
+      can(regex("^[a-zA-Z0-9-]+$", var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix))
+    )
+    error_message = "The computer_name_prefix may only contain alphanumeric characters and dashes."
+  }
+
+  validation {
+    condition = (
+      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix == null ||
+      !can(regex("^\\d+$", var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix))
+    )
+    error_message = "The computer_name_prefix cannot contain only numbers."
+  }
+
+  validation {
+    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_assessment_mode == null || contains(["AutomaticByPlatform", "ImageDefault"], var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_assessment_mode)
+    error_message = "The patch_assessment_mode must be either 'AutomaticByPlatform' or 'ImageDefault'."
+  }
+
+  validation {
+    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_assessment_mode != "AutomaticByPlatform" || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.provision_vm_agent != false
+    error_message = "When patch_assessment_mode is set to 'AutomaticByPlatform', provision_vm_agent must be set to true."
+  }
+
+  validation {
+    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_mode == null || contains(["AutomaticByOS", "AutomaticByPlatform", "Manual"], var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_mode)
+    error_message = "The patch_mode must be one of 'AutomaticByOS', 'AutomaticByPlatform', or 'Manual'."
+  }
+
+  validation {
+    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_mode != "AutomaticByPlatform" || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.provision_vm_agent != false
+    error_message = "When patch_mode is set to 'AutomaticByPlatform', provision_vm_agent must be set to true."
+  }
+
+  validation {
+    condition = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.timezone == null || contains(["", "Afghanistan Standard Time", "Alaskan Standard Time", "Arab Standard Time", "Arabian Standard Time", "Arabic Standard Time", "Argentina Standard Time", "Atlantic Standard Time", "AUS Central Standard Time", "AUS Eastern Standard Time", "Azerbaijan Standard Time", "Azores Standard Time", "Bahia Standard Time", "Bangladesh Standard Time", "Belarus Standard Time", "Canada Central Standard Time", "Cape Verde Standard Time", "Caucasus Standard Time", "Cen. Australia Standard Time", "Central America Standard Time", "Central Asia Standard Time", "Central Brazilian Standard Time", "Central Europe Standard Time", "Central European Standard Time", "Central Pacific Standard Time", "Central Standard Time (Mexico)", "Central Standard Time", "China Standard Time", "Dateline Standard Time", "E. Africa Standard Time", "E. Australia Standard Time", "E. Europe Standard Time", "E. South America Standard Time", "Eastern Standard Time (Mexico)", "Eastern Standard Time", "Egypt Standard Time", "Ekaterinburg Standard Time", "Fiji Standard Time", "FLE Standard Time", "Georgian Standard Time", "GMT Standard Time", "Greenland Standard Time", "Greenwich Standard Time", "GTB Standard Time", "Hawaiian Standard Time", "India Standard Time", "Iran Standard Time", "Israel Standard Time", "Jordan Standard Time", "Kaliningrad Standard Time", "Korea Standard Time", "Libya Standard Time", "Line Islands Standard Time", "Magadan Standard Time", "Mauritius Standard Time", "Middle East Standard Time", "Montevideo Standard Time", "Morocco Standard Time", "Mountain Standard Time (Mexico)", "Mountain Standard Time", "Myanmar Standard Time", "N. Central Asia Standard Time", "Namibia Standard Time", "Nepal Standard Time", "New Zealand Standard Time", "Newfoundland Standard Time", "North Asia East Standard Time", "North Asia Standard Time", "Pacific SA Standard Time", "Pacific Standard Time (Mexico)", "Pacific Standard Time", "Pakistan Standard Time", "Paraguay Standard Time", "Romance Standard Time", "Russia Time Zone 10", "Russia Time Zone 11", "Russia Time Zone 3", "Russian Standard Time", "SA Eastern Standard Time", "SA Pacific Standard Time", "SA Western Standard Time", "Samoa Standard Time", "SE Asia Standard Time", "Singapore Standard Time", "South Africa Standard Time", "Sri Lanka Standard Time", "Syria Standard Time", "Taipei Standard Time", "Tasmania Standard Time", "Tokyo Standard Time", "Tonga Standard Time", "Turkey Standard Time", "Ulaanbaatar Standard Time", "US Eastern Standard Time", "US Mountain Standard Time", "UTC", "UTC+12", "UTC-02", "UTC-11", "Venezuela Standard Time", "Vladivostok Standard Time", "W. Australia Standard Time", "W. Central Africa Standard Time", "W. Europe Standard Time", "West Asia Standard Time", "West Pacific Standard Time", "Yakutsk Standard Time"], var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.timezone)
+    error_message = "The timezone must be a valid Windows timezone string. See: https://jackstromberg.com/2017/01/list-of-time-zones-consumed-by-azure/"
   }
 
   description = <<-EOT
@@ -1069,6 +1172,34 @@ EOT
       )
     )
     error_message = "linux_configuration.computer_name_prefix must be at most 58 characters, cannot begin with an underscore, cannot end with a period, and cannot contain the special characters: \\\"[]:|<>+=;,?*@&~!#$%^()_{}'"
+  }
+
+  validation {
+    condition = (
+      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key == null ||
+      alltrue([
+        for ssh_key in var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key :
+        trimspace(ssh_key.public_key) != "" &&
+        length(split(" ", ssh_key.public_key)) >= 2 &&
+        contains(["ssh-rsa", "ssh-ed25519"], split(" ", ssh_key.public_key)[0])
+      ])
+    )
+    error_message = "Each admin_ssh_key.public_key must be a valid SSH2 public key (not empty, containing at least 2 space-separated parts, and starting with either ssh-rsa or ssh-ed25519)."
+  }
+
+  validation {
+    condition = (
+      var.orchestrated_virtual_machine_scale_set_os_profile == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration == null ||
+      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key == null ||
+      alltrue([
+        for ssh_key in var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key :
+        trimspace(ssh_key.username) != ""
+      ])
+    )
+    error_message = "Each admin_ssh_key.username must not be empty."
   }
 }
 

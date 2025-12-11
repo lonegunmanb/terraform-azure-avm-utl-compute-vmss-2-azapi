@@ -132,3 +132,59 @@ variable "migrate_orchestrated_virtual_machine_scale_set_os_profile_linux_config
     error_message = "When admin_password is set, admin_password_version must also be set."
   }
 }
+
+# Task #114: os_profile.windows_configuration.admin_password - independent ephemeral variable for nested block sensitive field
+variable "migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password" {
+  type        = string
+  nullable    = false
+  ephemeral   = true
+  description = "(Required) The Password which should be used for the local-administrator on this Virtual Machine. Changing this forces a new resource to be created."
+
+  validation {
+    condition = (
+      length(var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password) >= 8 &&
+      length(var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password) <= 123
+    )
+    error_message = "admin_password must be at least 6 characters long and less than 72 characters long."
+  }
+
+  validation {
+    condition = (
+      length(regexall("[a-z]", var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)) > 0 &&
+      length(regexall("[A-Z]", var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)) > 0 &&
+      length(regexall("[0-9]", var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)) > 0
+    ) || (
+      length(regexall("[a-z]", var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)) > 0 &&
+      length(regexall("[A-Z]", var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)) > 0 &&
+      length(regexall("[\\W_]", var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)) > 0
+    ) || (
+      length(regexall("[a-z]", var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)) > 0 &&
+      length(regexall("[0-9]", var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)) > 0 &&
+      length(regexall("[\\W_]", var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)) > 0
+    ) || (
+      length(regexall("[A-Z]", var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)) > 0 &&
+      length(regexall("[0-9]", var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)) > 0 &&
+      length(regexall("[\\W_]", var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)) > 0
+    )
+    error_message = "admin_password did not meet minimum password complexity requirements. A password must contain at least 3 of the 4 following conditions: a lower case character, a upper case character, a digit and/or a special character."
+  }
+
+  validation {
+    condition = !contains([
+      "abc@123", "P@$$w0rd", "P@ssw0rd", "P@ssword123", "Pa$$word",
+      "pass@word1", "Password!", "Password1", "Password22", "iloveyou!"
+    ], var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password)
+    error_message = "admin_password cannot be one of the disallowed values: 'abc@123', 'P@$$w0rd', 'P@ssw0rd', 'P@ssword123', 'Pa$$word', 'pass@word1', 'Password!', 'Password1', 'Password22', 'iloveyou!'."
+  }
+}
+
+variable "migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password_version" {
+  type        = number
+  default     = null
+  description = "(Optional) Version tracker for admin_password. Must be set when admin_password is provided."
+
+  validation {
+    condition     = var.orchestrated_virtual_machine_scale_set_os_profile == null || var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration == null || var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password_version != null
+    error_message = "When admin_password is set, admin_password_version must also be set."
+  }
+}

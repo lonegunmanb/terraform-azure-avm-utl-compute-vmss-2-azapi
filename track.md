@@ -147,23 +147,23 @@ func resourceOrchestratedVirtualMachineScaleSetCreate(d *pluginsdk.ResourceData,
 | 103 | os_profile.linux_configuration.patch_assessment_mode | Argument | No | ✅ Completed | [103.os_profile.linux_configuration.patch_assessment_mode.md](103.os_profile.linux_configuration.patch_assessment_mode.md) |
 | 104 | os_profile.linux_configuration.patch_mode | Argument | No | ✅ Completed | [104.os_profile.linux_configuration.patch_mode.md](104.os_profile.linux_configuration.patch_mode.md) |
 | 105 | os_profile.linux_configuration.provision_vm_agent | Argument | No | ✅ Completed | [105.os_profile.linux_configuration.provision_vm_agent.md](105.os_profile.linux_configuration.provision_vm_agent.md) |
-| 106 | os_profile.linux_configuration.admin_ssh_key | Block | No | In Progress | |
-| 107 | os_profile.linux_configuration.admin_ssh_key.public_key | Argument | Yes | Pending | |
-| 108 | os_profile.linux_configuration.admin_ssh_key.username | Argument | Yes | Pending | |
-| 109 | os_profile.linux_configuration.secret | Block | No | Pending | |
-| 110 | os_profile.linux_configuration.secret.key_vault_id | Argument | Yes | Pending | |
-| 111 | os_profile.linux_configuration.secret.certificate | Block | Yes | Pending | |
-| 112 | os_profile.linux_configuration.secret.certificate.url | Argument | Yes | Pending | |
+| 106 | os_profile.linux_configuration.admin_ssh_key | Block | No | ✅ Completed | [106.os_profile.linux_configuration.admin_ssh_key.md](106.os_profile.linux_configuration.admin_ssh_key.md) |
+| 107 | os_profile.linux_configuration.admin_ssh_key.public_key | Argument | Yes | ✅ Completed | [107.os_profile.linux_configuration.admin_ssh_key.public_key.md](107.os_profile.linux_configuration.admin_ssh_key.public_key.md) |
+| 108 | os_profile.linux_configuration.admin_ssh_key.username | Argument | Yes | ✅ Completed | [108.os_profile.linux_configuration.admin_ssh_key.username.md](108.os_profile.linux_configuration.admin_ssh_key.username.md) |
+| 109 | os_profile.linux_configuration.secret | Block | No | ✅ Completed | [109.os_profile.linux_configuration.secret.md](109.os_profile.linux_configuration.secret.md) |
+| 110 | os_profile.linux_configuration.secret.key_vault_id | Argument | Yes | ✅ Completed | [110.os_profile.linux_configuration.secret.key_vault_id.md](110.os_profile.linux_configuration.secret.key_vault_id.md) |
+| 111 | os_profile.linux_configuration.secret.certificate | Block | Yes | ✅ Completed | [111.os_profile.linux_configuration.secret.certificate.md](111.os_profile.linux_configuration.secret.certificate.md) |
+| 112 | os_profile.linux_configuration.secret.certificate.url | Argument | Yes | ✅ Completed | [112.os_profile.linux_configuration.secret.certificate.url.md](112.os_profile.linux_configuration.secret.certificate.url.md) |
 | 113 | os_profile.windows_configuration | Block | No | ✅ Completed | [113.os_profile.windows_configuration.md](113.os_profile.windows_configuration.md) |
-| 114 | os_profile.windows_configuration.admin_password | Argument | Yes | Pending | |
-| 115 | os_profile.windows_configuration.admin_username | Argument | Yes | Pending | |
-| 116 | os_profile.windows_configuration.computer_name_prefix | Argument | No | Pending | |
+| 114 | os_profile.windows_configuration.admin_password | Argument | Yes | ✅ Completed | [114.os_profile.windows_configuration.admin_password.md](114.os_profile.windows_configuration.admin_password.md) |
+| 115 | os_profile.windows_configuration.admin_username | Argument | Yes | ✅ Completed | [115.os_profile.windows_configuration.admin_username.md](115.os_profile.windows_configuration.admin_username.md) |
+| 116 | os_profile.windows_configuration.computer_name_prefix | Argument | No | ✅ Completed | [116.os_profile.windows_configuration.computer_name_prefix.md](116.os_profile.windows_configuration.computer_name_prefix.md) |
 | 117 | os_profile.windows_configuration.enable_automatic_updates | Argument | No | ✅ Completed | [117.os_profile.windows_configuration.enable_automatic_updates.md](117.os_profile.windows_configuration.enable_automatic_updates.md) |
-| 118 | os_profile.windows_configuration.hotpatching_enabled | Argument | No | Pending | |
-| 119 | os_profile.windows_configuration.patch_assessment_mode | Argument | No | Pending | |
-| 120 | os_profile.windows_configuration.patch_mode | Argument | No | Pending | |
-| 121 | os_profile.windows_configuration.provision_vm_agent | Argument | No | Pending | |
-| 122 | os_profile.windows_configuration.timezone | Argument | No | Pending | |
+| 118 | os_profile.windows_configuration.hotpatching_enabled | Argument | No | ✅ Completed | [118.os_profile.windows_configuration.hotpatching_enabled.md](118.os_profile.windows_configuration.hotpatching_enabled.md) |
+| 119 | os_profile.windows_configuration.patch_assessment_mode | Argument | No | ✅ Completed | [119.os_profile.windows_configuration.patch_assessment_mode.md](119.os_profile.windows_configuration.patch_assessment_mode.md) |
+| 120 | os_profile.windows_configuration.patch_mode | Argument | No | ✅ Completed | [120.os_profile.windows_configuration.patch_mode.md](120.os_profile.windows_configuration.patch_mode.md) |
+| 121 | os_profile.windows_configuration.provision_vm_agent | Argument | No | ✅ Completed | [121.os_profile.windows_configuration.provision_vm_agent.md](121.os_profile.windows_configuration.provision_vm_agent.md) |
+| 122 | os_profile.windows_configuration.timezone | Argument | No | ✅ Completed | [122.os_profile.windows_configuration.timezone.md](122.os_profile.windows_configuration.timezone.md) |
 | 123 | os_profile.windows_configuration.additional_unattend_content | Block | No | Pending | |
 | 124 | os_profile.windows_configuration.additional_unattend_content.content | Argument | Yes | Pending | |
 | 125 | os_profile.windows_configuration.additional_unattend_content.setting | Argument | Yes | Pending | |

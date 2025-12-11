@@ -90,6 +90,14 @@ locals {
     var.orchestrated_virtual_machine_scale_set_name
   ) : ""
 
+  windows_configuration_computer_name_prefix = (
+    var.orchestrated_virtual_machine_scale_set_os_profile != null &&
+    var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null
+  ) ? coalesce(
+    var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.computer_name_prefix,
+    var.orchestrated_virtual_machine_scale_set_name
+  ) : ""
+
   replace_triggers_external_values = {
     location                      = { value = var.orchestrated_virtual_machine_scale_set_location }
     platform_fault_domain_count   = { value = var.orchestrated_virtual_machine_scale_set_platform_fault_domain_count }
@@ -139,6 +147,10 @@ locals {
     linux_configuration_admin_password = { value = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_linux_configuration_admin_password }
     linux_configuration_computer_name_prefix = { value = local.linux_configuration_computer_name_prefix }
     linux_configuration_provision_vm_agent = { value = var.orchestrated_virtual_machine_scale_set_os_profile != null && var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null ? coalesce(var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.provision_vm_agent, true) : true }
+    windows_configuration_admin_password = { value = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password }
+    windows_configuration_admin_username = { value = var.orchestrated_virtual_machine_scale_set_os_profile != null && var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.admin_username : "" }
+    windows_configuration_computer_name_prefix = { value = local.windows_configuration_computer_name_prefix }
+    windows_configuration_provision_vm_agent = { value = var.orchestrated_virtual_machine_scale_set_os_profile != null && var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.provision_vm_agent : true }
   }
 
   body = merge(
@@ -394,11 +406,17 @@ locals {
                         adminUsername                 = var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_username
                         disablePasswordAuthentication = var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.disable_password_authentication
                         provisionVMAgent              = coalesce(var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.provision_vm_agent, true)
-                        # ssh = { # Task #106-108
-                        #   publicKeys = ... # Task #106-108
-                        # }
-                        # secrets = ... # Task #109-112
                       },
+                      var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key != null && length(var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key) > 0 ? {
+                        ssh = {
+                          publicKeys = [
+                            for ssh_key in var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.admin_ssh_key : {
+                              keyData = ssh_key.public_key
+                              path    = "/home/${ssh_key.username}/.ssh/authorized_keys"
+                            }
+                          ]
+                        }
+                      } : {},
                       {
                         patchSettings = {
                           assessmentMode = var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.patch_assessment_mode
@@ -408,28 +426,60 @@ locals {
                     )
                   }
                 ) : {},
-                var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? {
-                  windowsConfiguration = merge(
-                    {
-                      enableAutomaticUpdates = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.enable_automatic_updates
-                    },
-                    {
-                      # adminUsername = ... # Handled at parent osProfile level - Task #115
-                      # computerNamePrefix = ... # Handled at parent osProfile level - Task #116
-                      # provisionVMAgent = ... # Task #121
-                      # timeZone = ... # Task #122
-                      # patchSettings = { # Task #118, #119, #120
-                      #   assessmentMode = ... # Task #119
-                      #   patchMode = ... # Task #120
-                      #   enableHotpatching = ... # Task #118
-                      # }
-                      # additionalUnattendContent = ... # Task #123-125
-                      # winRM = { # Task #131-133
-                      #   listeners = ... # Task #131-133
-                      # }
-                      # secrets = ... # Task #126-130
+                var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null && var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.secret != null && length(var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.secret) > 0 ? {
+                  secrets = [
+                    for secret in var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration.secret : {
+                      sourceVault = {
+                        id = secret.key_vault_id
+                      }
+                      vaultCertificates = [
+                        for certificate in secret.certificate : {
+                          certificateUrl = certificate.url
+                        }
+                      ]
                     }
-                  )
+                  ]
+                } : {},
+                var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? merge(
+                  {
+                    computerNamePrefix = local.windows_configuration_computer_name_prefix
+                  },
+                  {
+                    windowsConfiguration = merge(
+                      {
+                        enableAutomaticUpdates = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.enable_automatic_updates
+                      },
+                      {
+                        patchSettings = merge(
+                          {
+                            enableHotpatching = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.hotpatching_enabled
+                          },
+                          var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_assessment_mode != null ? {
+                            assessmentMode = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_assessment_mode
+                          } : {},
+                          {
+                            patchMode = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.patch_mode
+                          }
+                        )
+                      },
+                      {
+                        provisionVMAgent = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.provision_vm_agent
+                      },
+                      var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.timezone != null && var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.timezone != "" ? {
+                        timeZone = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.timezone
+                      } : {},
+                      {
+                        # additionalUnattendContent = ... # Task #123-125
+                        # winRM = { # Task #131-133
+                        #   listeners = ... # Task #131-133
+                        # }
+                        # secrets = ... # Task #126-130
+                      }
+                    )
+                  }
+                ) : {},
+                var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? {
+                  adminUsername = var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration.admin_username
                 } : {}
               )
             } : {},
@@ -571,6 +621,9 @@ locals {
               } : {},
               var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null && var.migrate_orchestrated_virtual_machine_scale_set_os_profile_linux_configuration_admin_password != null ? {
                 adminPassword = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_linux_configuration_admin_password
+              } : {},
+              var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? {
+                adminPassword = var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password
               } : {}
             )
           } : {},
@@ -599,7 +652,7 @@ locals {
   sensitive_body_version = {
     "properties.proximityPlacementGroup.id"                                            = "null"
     "properties.virtualMachineProfile.osProfile.customData"                            = try(tostring(var.migrate_orchestrated_virtual_machine_scale_set_os_profile_custom_data_version), "null")
-    "properties.virtualMachineProfile.osProfile.adminPassword"                         = try(tostring(var.migrate_orchestrated_virtual_machine_scale_set_os_profile_linux_configuration_admin_password_version), "null")
+    "properties.virtualMachineProfile.osProfile.adminPassword"                         = var.orchestrated_virtual_machine_scale_set_os_profile != null && var.orchestrated_virtual_machine_scale_set_os_profile.linux_configuration != null ? try(tostring(var.migrate_orchestrated_virtual_machine_scale_set_os_profile_linux_configuration_admin_password_version), "null") : var.orchestrated_virtual_machine_scale_set_os_profile != null && var.orchestrated_virtual_machine_scale_set_os_profile.windows_configuration != null ? try(tostring(var.migrate_orchestrated_virtual_machine_scale_set_os_profile_windows_configuration_admin_password_version), "null") : "null"
     "properties.virtualMachineProfile.userData"                                        = try(tostring(var.orchestrated_virtual_machine_scale_set_user_data_base64_version), "null")
     "properties.virtualMachineProfile.licenseType"                                     = "null"
     "properties.virtualMachineProfile.networkProfile.networkApiVersion"                = "null"
