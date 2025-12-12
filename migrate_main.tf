@@ -9,10 +9,12 @@ data "azapi_resource" "existing" {
 locals {
   azapi_header = merge(
     {
-      type      = "Microsoft.Compute/virtualMachineScaleSets@2024-11-01"
-      name      = var.name
-      location  = var.location
-      parent_id = var.resource_group_id
+      type                 = "Microsoft.Compute/virtualMachineScaleSets@2024-11-01"
+      name                 = var.name
+      location             = var.location
+      parent_id            = var.resource_group_id
+      tags                 = var.tags
+      ignore_null_property = true
     },
     var.identity != null ? {
       identity = {
@@ -22,13 +24,13 @@ locals {
     } : {}
   )
 
-  existing_single_placement_group = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).properties.singlePlacementGroup, null) : null
+  existing_single_placement_group = data.azapi_resource.existing.exists ? try(data.azapi_resource.existing.output.properties.singlePlacementGroup, null) : null
   single_placement_group_force_new_trigger = (
     local.existing_single_placement_group == false &&
     var.single_placement_group == true
   ) ? "trigger_replacement" : null
 
-  existing_zones = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).zones, null) : null
+  existing_zones = data.azapi_resource.existing.exists ? try(data.azapi_resource.existing.output.zones, null) : null
   zones_force_new_trigger = (
     local.existing_zones != null &&
     var.zones != null &&
@@ -36,7 +38,7 @@ locals {
   ) ? "trigger_replacement" : null
 
   # Task #11: license_type - DiffSuppressFunc handling
-  existing_license_type       = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).properties.virtualMachineProfile.licenseType, null) : null
+  existing_license_type       = data.azapi_resource.existing.exists ? try(data.azapi_resource.existing.output.properties.virtualMachineProfile.licenseType, null) : null
   normalized_license_type     = var.license_type == "None" ? null : var.license_type
   license_type_should_suppress = (
     (local.existing_license_type == "None" && local.normalized_license_type == null) ||
@@ -50,7 +52,7 @@ locals {
   ) ? coalesce(local.normalized_license_type, "trigger") : null
 
   # Task #13: network_api_version - DiffSuppressFunc handling
-  existing_network_api_version = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).properties.virtualMachineProfile.networkProfile.networkApiVersion, "") : ""
+  existing_network_api_version = data.azapi_resource.existing.exists ? try(data.azapi_resource.existing.output.properties.virtualMachineProfile.networkProfile.networkApiVersion, "") : ""
   new_network_api_version = coalesce(
     var.network_api_version,
     "2020-11-01"
@@ -66,7 +68,7 @@ locals {
   ) ? local.new_network_api_version : null
 
   # Task #15: proximity_placement_group_id - DiffSuppressFunc handling (case-insensitive)
-  existing_proximity_placement_group_id = data.azapi_resource.existing.output != null ? try(jsondecode(data.azapi_resource.existing.output).properties.proximityPlacementGroup.id, null) : null
+  existing_proximity_placement_group_id = data.azapi_resource.existing.exists ? try(data.azapi_resource.existing.output.properties.proximityPlacementGroup.id, null) : null
   proximity_placement_group_id_should_suppress = (
     local.existing_proximity_placement_group_id != null &&
     var.proximity_placement_group_id != null &&

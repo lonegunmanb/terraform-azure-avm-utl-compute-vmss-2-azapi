@@ -97,6 +97,21 @@ From `executor.md`:
 
 **Key Point:** If CustomizeDiff logic compares old vs new state (like `ForceNewIfChange`), you MUST use `data "azapi_resource"` to read existing state.
 
+## 🔧 AzAPI Provider 2.0+ Requirements
+
+**Critical:** AzAPI 2.0+ uses native Terraform objects - NO json encoding/decoding needed.
+
+**❌ VIOLATIONS:**
+- `jsondecode(data.azapi_resource.existing.output)` - NO jsondecode needed
+- `data.azapi_resource.existing.output != null` - MUST use `.exists` instead
+- `jsonencode(...)` in `body`/`replace_triggers_external_values` - Pass native objects
+
+**✅ CORRECT:**
+```hcl
+existing_value = data.azapi_resource.existing.exists ? 
+  try(data.azapi_resource.existing.output.properties.field, null) : null
+```
+
 ## 🔧 Terraform >= 1.9 Feature Requirements
 
 ### Cross-Variable Validation

@@ -29,3 +29,7 @@ output "post_creation_updates" {
 output "locks" {
   value = local.locks
 }
+
+output "timeouts" {
+  value = var.timeouts
+}

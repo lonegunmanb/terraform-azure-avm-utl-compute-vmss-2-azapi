@@ -1,8 +1,15 @@
 # Executor Agent Instructions
 
-## Shadow Module Usage Context
+## Replicator Module Usage Context
 
-**Critical Understanding:** This Shadow Module's outputs feed user's `azapi_resource` blocks. AzAPI provider has NO built-in logic from AzureRM provider - no automatic validations, no defaults, no type coercions. When users migrate from `azurerm_*` to `azapi_resource`, they lose ALL provider-level protections.
+**Critical Understanding:** This Replicator Module's outputs feed user's `azapi_resource` blocks. AzAPI provider has NO built-in logic from AzureRM provider - no automatic validations, no defaults, no type coercions. When users migrate from `azurerm_*` to `azapi_resource`, they lose ALL provider-level protections.
+
+**⚠️ IMPORTANT - AzAPI Provider 2.0+:**
+We use AzAPI provider version 2.0 or above. This means:
+- ❌ **NO `jsonencode()` needed** for `body` or `sensitive_body` - pass native Terraform objects directly
+- ❌ **NO `jsondecode()` needed** for `data.azapi_resource.*.output` - it returns native Terraform objects
+- ✅ In fact, JSON encoding/decoding is rarely needed when working with AzAPI 2.0+
+- ✅ Access nested properties directly: `data.azapi_resource.existing.output.properties.field` (not `jsondecode(...).properties.field`)
 
 **Your Responsibility:** Replicate EVERY behavior from AzureRM provider:
 - ❌ **NEVER assume** "Azure API will validate this"
@@ -19,7 +26,7 @@ When implementing ANY logic from AzureRM provider (validations, defaults, condit
 1. ✅ Replicate the EXACT behavior from provider source code
 2. ✅ FAIL the task if exact replication is technically impossible
 
-You do NOT have permission to choose "safer" or "simpler" alternatives. Users depend on this Shadow Module to provide the SAME behavior as the original AzureRM provider.
+You do NOT have permission to choose "safer" or "simpler" alternatives. Users depend on this Replicator Module to provide the SAME behavior as the original AzureRM provider.
 
 ## 🚨 SPECIAL RULES - BLOCKING CONDITIONS
 
@@ -28,11 +35,12 @@ You do NOT have permission to choose "safer" or "simpler" alternatives. Users de
 | Condition | When to Apply | Override Document | 
 |-----------|---------------|-------------------|
 | **DiffSuppressFunc** | Provider schema shows `DiffSuppressFunc` for your field | `diffsuppressfunc.md` |
+| **Timeouts Block** | Task is for `timeouts`, `timeouts.create`, `timeouts.delete`, `timeouts.read`, or `timeouts.update` | `timeouts.md` |
 
 **Process:** If condition matches → ❌ **STOP** → ✅ **READ override document COMPLETELY** → ✅ **FOLLOW rules in that document** → ✅ Return here after implementation
 
 ## Core Mission
-Build `locals` in Shadow Module (`migrate_*` files) for `azapi_resource` body. ONE task at a time.
+Build `locals` in Replicator Module (`migrate_*` files) for `azapi_resource` body. ONE task at a time.
 **⚠️ Scope:** ONLY implement SPECIFIC field in task. Ignore other fields in source code.
 **⚠️ Critical Self-Review:** After completing implementation, critically review ALL changes made. Ask yourself:
 - Did I add ONLY what this specific task requires?
@@ -147,15 +155,15 @@ Replicate simple validation logic. Skip ONLY complex Azure queries that require 
 locals {
   azapi_header = {
     type = "<ResourceType>@<ApiVersion>"  # From track.md AzAPI Target Resource
-    name = var.{prefix}_name; location = var.{prefix}_location; parent_id = var.{prefix}_{parent_type}_id
-    # ONLY these 5 fields allowed: type, name, location, parent_id, identity
+    name = var.name; location = var.location; parent_id = var.{parent_type}_id
+    tags = var.tags
+    ignore_null_property = true
+    # ONLY these fields allowed: type, name, location, parent_id, tags, ignore_null_property, identity
     # identity = ... (if resource supports managed identity at root level)
   }
-  
-  tags = var.{prefix}_tags  # Top-level field, NOT in body
 }
 ```
-**Note:** Root-level API fields like `zones`, `sku` go in `body`. `tags` is a top-level `azapi_resource` parameter.
+**Note:** Root-level API fields like `zones`, `sku` go in `body`. `tags` and `ignore_null_property` are top-level `azapi_resource` parameters.
 
 ### 2. `body` - Non-Sensitive
 ⚠️ `merge()` is SHALLOW! Use nested `merge()` for shared paths:
@@ -233,7 +241,7 @@ data "azapi_resource" "existing" {
   ignore_not_found = true; response_export_values = ["*"]
 }
 locals {
-  existing_value = data.azapi_resource.existing.exists ? try(jsondecode(data.azapi_resource.existing.output).properties.field, null) : null
+  existing_value = data.azapi_resource.existing.exists ? try(data.azapi_resource.existing.output.properties.field, null) : null
   # Trigger ForceNew ONLY on blocked transition
   field_force_new = (local.existing_value == old_state && var.field == new_state) ? "trigger" : null
 }
@@ -279,13 +287,13 @@ locals {
 
 1. **Independent ephemeral var** in `migrate_variables.tf`:
    ```hcl
-   variable "migrate_{prefix}_{nested_path}_{field}" {
+   variable "{nested_path}_{field}" {
      type = string; nullable = <false if Required, true if Optional>; ephemeral = true
    }
-   variable "migrate_{prefix}_{nested_path}_{field}_version" {
+   variable "{nested_path}_{field}_version" {
      type = number; default = null
      validation {
-       condition = var.migrate_{prefix}_{nested_path}_{field} == null || var.migrate_{prefix}_{nested_path}_{field}_version != null
+       condition = var.{nested_path}_{field} == null || var.{nested_path}_{field}_version != null
        error_message = "When {field} is set, {field}_version must also be set."
      }
    }
@@ -293,7 +301,7 @@ locals {
 
 2. **Mark original field in `variables.tf`** (for code review):
    ```hcl
-   variable "orchestrated_virtual_machine_scale_set_os_profile" {
+   variable "os_profile" {
      type = object({
        custom_data = optional(string)  # TODO: delete later - migrated to independent ephemeral variable (Task #97)
        # ...
@@ -316,8 +324,8 @@ locals {
 
 ### Type 1: Root-Level Argument
 **Steps:** (1) Check `migrate_main.tf`, (2) Check `main.tf`, (3) **Query resource function for CustomizeDiff** (symbol=func, name=resource{Name}), (4) Query schema (entrypoint=schema), (5) **Check phase** (Create/Update), (6) Query Azure API, (7) **IMPLEMENT validations**, (8) **Check CustomizeDiff ForceNew**, (9) Add to local, (10) **CHECK following.md for deferred work**, (11) Create proof, (12) Update `track.md` status to `Pending for check`, (13) **Self-review: Remove content not in scope**.
-**Special - name (Task #1):** Create complete `azapi_header`. Get `type` from track.md. Do NOT add hidden fields like `kind` - those belong to `__check_root_hidden_fields__` task.
-**Special - resource_group_name (Task #2):** Create `{prefix}_{parent_type}_id` in `migrate_variables.tf`, use in `parent_id`, NOT in body.
+**Special - name (Task #1):** Create complete `azapi_header` with `type`, `name`, `location`, `parent_id`, `tags`, and `ignore_null_property`. Get `type` from track.md. Do NOT add hidden fields like `kind` - those belong to `__check_root_hidden_fields__` task.
+**Special - resource_group_name (Task #2):** Create `{parent_type}_id` in `migrate_variables.tf`, use in `parent_id`, NOT in body.
 
 ### Type 2: Check Root Hidden Fields
 **Steps:** (1) Query Create with `query_terraform_block_implementation_source_code`, (2) **Check Two-Phase** (create method → update method), (3) Document phases, (4) Find hardcoded values NO schema, (5) **Check locks** (see below), (6) Add to `local.body.properties`, (7) Add to `local.locks`, (8) Create proof, (9) Update `track.md` status to `Pending for check`.
@@ -452,8 +460,7 @@ locals {
     # All possible sensitive field paths with try(tostring(...), "null")
     # Example: "properties.virtualMachineProfile.userData" = try(tostring(var.user_data_version), "null")
   }
-  azapi_header = {}  # type from track.md Task #1
-  tags = null  # Top-level field, set when implementing tags task
+  azapi_header = {}  # type, name, location, parent_id, tags, ignore_null_property from track.md Task #1
   post_creation_updates = compact([])
   locks = []  # Populated by Type 2 task
 }
@@ -462,7 +469,6 @@ locals {
 **migrate_outputs.tf:**
 ```hcl
 output "azapi_header" { value = local.azapi_header; depends_on = [] }
-output "tags" { value = local.tags }
 output "body" { value = local.body }
 output "sensitive_body" { value = local.sensitive_body; sensitive = true; ephemeral = true }
 output "sensitive_body_version" { value = local.sensitive_body_version }
@@ -548,7 +554,8 @@ Your locals feed root module's `azapi_resource`:
 ```hcl
 resource "azapi_resource" "this" {
   type = local.azapi_header.type; name = local.azapi_header.name; location = local.azapi_header.location
-  parent_id = local.azapi_header.parent_id; tags = local.tags
+  parent_id = local.azapi_header.parent_id; tags = local.azapi_header.tags
+  ignore_null_property = local.azapi_header.ignore_null_property
   body = local.body
   sensitive_body = local.sensitive_body
   replace_triggers_external_values = local.replace_triggers_external_values

@@ -1545,10 +1545,10 @@ EOT
 
 variable "timeouts" {
   type = object({
-    create = optional(string)
-    delete = optional(string)
-    read   = optional(string)
-    update = optional(string)
+    create = optional(string, "60m")
+    delete = optional(string, "60m")
+    read   = optional(string, "5m")
+    update = optional(string, "60m")
   })
   default     = null
   description = <<-EOT
