@@ -209,12 +209,29 @@ locals {
 ❌ `merge({ a = {...} }, cond ? { b = {...} } : {})` ← Key `b` unstable
 ✅ `{ a = {...}, b = { value = cond ? val : "" } }` ← Key `b` always present
 
+**🔒 CRITICAL - Sensitive ForceNew Fields:**
+If a field is BOTH `ForceNew: true` AND `Sensitive: true`:
+- ❌ **NEVER** add the sensitive value directly to `replace_triggers_external_values`
+- ✅ **ALWAYS** use the corresponding `xxx_version` variable instead
+- ✅ The `xxx_version` variable acts as a non-sensitive change indicator
+
+Example:
+```hcl
+# ❌ WRONG - exposes sensitive value
+linux_configuration_admin_password = { value = var.os_profile_linux_configuration_admin_password }
+
+# ✅ CORRECT - uses version variable
+linux_configuration_admin_password_version = { value = var.os_profile_linux_configuration_admin_password_version }
+```
+
 **Two Modes for `replace_triggers_external_values`:**
 
 **Mode 1 - Direct Value Tracking (schema `ForceNew: true`):**
 Wrap in object to keep key stable. Track actual field value changes.
 ```hcl
 field = { value = var.field }  # Key always present, value changes trigger replacement
+# OR if field is Sensitive:
+field_version = { value = var.field_version }  # Track via version variable
 ```
 
 **Mode 2 - Conditional Trigger (CustomizeDiff logic):**
@@ -325,7 +342,17 @@ locals {
 
 ### Type 1: Root-Level Argument
 **Steps:** (1) Check `migrate_main.tf`, (2) Check `main.tf`, (3) **Query resource function for CustomizeDiff** (symbol=func, name=resource{Name}), (4) Query schema (entrypoint=schema), (5) **Check phase** (Create/Update), (6) Query Azure API, (7) **IMPLEMENT validations**, (8) **Check CustomizeDiff ForceNew**, (9) Add to local, (10) **CHECK following.md for deferred work**, (11) Create proof, (12) Update `track.md` status to `Pending for check`, (13) **Self-review: Remove content not in scope**.
-**Special - name (Task #1):** Create complete `azapi_header` with `type`, `name`, `location`, `parent_id`, `tags`, and `ignore_null_property`. Get `type` from track.md. Do NOT add hidden fields like `kind` - those belong to `__check_root_hidden_fields__` task.
+**Special - name (Task #1):** Create complete `azapi_header` with `type`, `name`, `location`, `parent_id`, `tags`, and `ignore_null_property`. Get `type` from track.md. Do NOT add hidden fields like `kind` - those belong to `__check_root_hidden_fields__` task. **ALSO create `terraform.tf` file** with the following content:
+```hcl
+terraform {
+  required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.0"
+    }
+  }
+}
+```
 **Special - resource_group_name (Task #2):** Create `{parent_type}_id` in `migrate_variables.tf`, use in `parent_id`, NOT in body.
 
 ### Type 2: Check Root Hidden Fields

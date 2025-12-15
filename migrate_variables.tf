@@ -111,17 +111,7 @@ variable "os_profile_linux_configuration_admin_password" {
         "pass@word1", "Password!", "Password1", "Password22", "iloveyou!"
       ], var.os_profile_linux_configuration_admin_password)
     )
-    error_message = "admin_password cannot be one of the disallowed values: 'abc@123', 'P@$$w0rd', 'P@ssw0rd', 'P@ssword123', 'Pa$$word', 'pass@word1', 'Password!', 'Password1', 'Password22', 'iloveyou!'."
-  }
-
-  validation {
-    condition = (
-      var.os_profile_linux_configuration_admin_password == null ||
-      var.os_profile == null ||
-      var.os_profile.linux_configuration == null ||
-      var.os_profile.linux_configuration.disable_password_authentication == false
-    )
-    error_message = "When admin_password is specified, disable_password_authentication must be set to false."
+    error_message = "admin_password cannot be one of the disallowed values: 'abc@123', 'P@$$w0rd', 'P@ssw0rd', 'P@ssword123', 'Pa$$word', 'pass@word1', 'Password!', 'Password1', 'Password22', 'iloveyou!'." 
   }
 }
 

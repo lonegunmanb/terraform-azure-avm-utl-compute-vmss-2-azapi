@@ -151,10 +151,10 @@ locals {
     os_disk_diff_disk_settings_option = { value = var.os_disk != null && var.os_disk.diff_disk_settings != null ? var.os_disk.diff_disk_settings.option : "" }
     os_disk_diff_disk_settings_placement = { value = var.os_disk != null && var.os_disk.diff_disk_settings != null ? var.os_disk.diff_disk_settings.placement : "" }
     linux_configuration_admin_username   = { value = var.os_profile != null && var.os_profile.linux_configuration != null ? var.os_profile.linux_configuration.admin_username : "" }
-    linux_configuration_admin_password = { value = var.os_profile_linux_configuration_admin_password }
+    linux_configuration_admin_password = { value = var.os_profile_linux_configuration_admin_password_version }
     linux_configuration_computer_name_prefix = { value = local.linux_configuration_computer_name_prefix }
     linux_configuration_provision_vm_agent = { value = var.os_profile != null && var.os_profile.linux_configuration != null ? coalesce(var.os_profile.linux_configuration.provision_vm_agent, true) : true }
-    windows_configuration_admin_password = { value = var.os_profile_windows_configuration_admin_password }
+    windows_configuration_admin_password = { value = var.os_profile_windows_configuration_admin_password_version }
     windows_configuration_admin_username = { value = var.os_profile != null && var.os_profile.windows_configuration != null ? var.os_profile.windows_configuration.admin_username : "" }
     windows_configuration_computer_name_prefix = { value = local.windows_configuration_computer_name_prefix }
     windows_configuration_provision_vm_agent = { value = var.os_profile != null && var.os_profile.windows_configuration != null ? var.os_profile.windows_configuration.provision_vm_agent : true }
@@ -616,7 +616,7 @@ locals {
                             }
                           }
                         } : {}
-                      }
+                      )
                     }
                   ]
                 } : {},
@@ -625,19 +625,19 @@ locals {
                 } : {}
               )
             } : {},
-            var.orchestrated_virtual_machine_scale_set_termination_notification != null ? {
+            var.termination_notification != null ? {
               scheduledEventsProfile = {
                 terminateNotificationProfile = {
-                  enable           = var.orchestrated_virtual_machine_scale_set_termination_notification.enabled
-                  notBeforeTimeout = var.orchestrated_virtual_machine_scale_set_termination_notification.timeout
+                  enable           = var.termination_notification.enabled
+                  notBeforeTimeout = var.termination_notification.timeout
                 }
               }
             } : {},
-            var.orchestrated_virtual_machine_scale_set_data_disk != null || var.orchestrated_virtual_machine_scale_set_os_disk != null || var.orchestrated_virtual_machine_scale_set_source_image_reference != null ? {
+            var.data_disk != null || var.os_disk != null || var.source_image_reference != null ? {
               storageProfile = merge(
-                var.orchestrated_virtual_machine_scale_set_data_disk != null ? {
+                var.data_disk != null ? {
                   dataDisks = [
-                    for data_disk in var.orchestrated_virtual_machine_scale_set_data_disk : {
+                    for data_disk in var.data_disk : {
                       caching = data_disk.caching
                       managedDisk = merge(
                         {
@@ -658,37 +658,37 @@ locals {
                     }
                   ]
                 } : {},
-                var.orchestrated_virtual_machine_scale_set_os_disk != null ? {
+                var.os_disk != null ? {
                   osDisk = merge(
                     {
-                      caching = var.orchestrated_virtual_machine_scale_set_os_disk.caching
+                      caching = var.os_disk.caching
                       managedDisk = merge(
                         {
-                          storageAccountType = var.orchestrated_virtual_machine_scale_set_os_disk.storage_account_type
+                          storageAccountType = var.os_disk.storage_account_type
                         },
-                        var.orchestrated_virtual_machine_scale_set_os_disk.disk_encryption_set_id != null && var.orchestrated_virtual_machine_scale_set_os_disk.disk_encryption_set_id != "" ? {
+                        var.os_disk.disk_encryption_set_id != null && var.os_disk.disk_encryption_set_id != "" ? {
                           diskEncryptionSet = {
-                            id = var.orchestrated_virtual_machine_scale_set_os_disk.disk_encryption_set_id
+                            id = var.os_disk.disk_encryption_set_id
                           }
                         } : {}
                       )
-                      diskSizeGB = var.orchestrated_virtual_machine_scale_set_os_disk.disk_size_gb != null && var.orchestrated_virtual_machine_scale_set_os_disk.disk_size_gb > 0 ? var.orchestrated_virtual_machine_scale_set_os_disk.disk_size_gb : null
-                      writeAcceleratorEnabled = var.orchestrated_virtual_machine_scale_set_os_disk.write_accelerator_enabled
+                      diskSizeGB = var.os_disk.disk_size_gb != null && var.os_disk.disk_size_gb > 0 ? var.os_disk.disk_size_gb : null
+                      writeAcceleratorEnabled = var.os_disk.write_accelerator_enabled
                     },
-                    var.orchestrated_virtual_machine_scale_set_os_disk.diff_disk_settings != null ? {
+                    var.os_disk.diff_disk_settings != null ? {
                       diffDiskSettings = {
-                        option = var.orchestrated_virtual_machine_scale_set_os_disk.diff_disk_settings.option
-                        placement = var.orchestrated_virtual_machine_scale_set_os_disk.diff_disk_settings.placement
+                        option = var.os_disk.diff_disk_settings.option
+                        placement = var.os_disk.diff_disk_settings.placement
                       }
                     } : {}
                   )
                 } : {},
-                var.orchestrated_virtual_machine_scale_set_source_image_reference != null ? {
+                var.source_image_reference != null ? {
                   imageReference = {
-                    offer     = var.orchestrated_virtual_machine_scale_set_source_image_reference.offer
-                    publisher = var.orchestrated_virtual_machine_scale_set_source_image_reference.publisher
-                    sku       = var.orchestrated_virtual_machine_scale_set_source_image_reference.sku
-                    version   = var.orchestrated_virtual_machine_scale_set_source_image_reference.version
+                    offer     = var.source_image_reference.offer
+                    publisher = var.source_image_reference.publisher
+                    sku       = var.source_image_reference.sku
+                    version   = var.source_image_reference.version
                   }
                 } : {}
               )

@@ -1,89 +1,242 @@
-# Terraform Configuration Auto-Fix Agent
+# Terraform AzureRM to AzAPI Conversion Test Guide
 
-## Task Description
-You are an agent responsible for testing and automatically fixing Terraform configurations in a given directory path. Your goal is to ensure the Terraform configuration can be successfully initialized without syntax errors, while preserving the original semantic meaning of the configuration.
+## Test Objective
 
-## Step-by-Step Process
+Verify the correctness of converting AzureRM Provider resources to AzAPI Provider resources.
 
-### Step 1: Run Terraform Init
-1. Navigate to the provided Terraform configuration folder path
-2. Execute `terraform init` in the target directory
-3. Capture and analyze the complete output
+## Test Directory Structure
 
-### Step 2: Analyze Results
-- **If `terraform init` succeeds (exit code 0)**: Report success and stop
-- **If `terraform init` fails**: Proceed to Step 3
+The `azurermacctest` directory contains multiple test case subdirectories, each representing a test scenario.
 
-### Step 3: Identify Syntax Errors
-When `terraform init` fails, carefully examine the error output to identify:
-- Specific file paths with errors
-- Line numbers and column positions
-- Error types and descriptions
-- Root cause of the syntax issues
+A typical test directory contains the following files:
+- `main.tf` - Common infrastructure code (provider configuration, random resources, network, etc.) **[Trusted, DO NOT MODIFY]**
+- `azurerm.tf` - AzureRM Provider resource declarations (extracted from AzureRM Provider test code) **[Trusted, DO NOT MODIFY]**
+- `azapi.tf.bak` - AzAPI implementation converted using the Replicator Module (theoretically equivalent to `azurerm.tf`)
 
-### Step 4: Fix Syntax Errors ONLY
-For each syntax error identified:
+## Test Workflow
 
-**DO FIX:**
-- Missing or incorrect punctuation (commas, brackets, braces, parentheses)
-- Invalid HCL syntax (string quotes, heredocs, interpolation syntax)
-- Typos in attribute or argument names
-- Incorrect data type formats (e.g., string vs number)
-- Missing required arguments with obvious default values
-- Duplicate or conflicting block definitions
-- Incorrect block nesting or structure
-
-**DO NOT CHANGE:**
-- Resource types, names, or identifiers
-- Provider configurations (except syntax fixes)
-- Variable values, expressions, or logic
-- Module sources, versions, or calling patterns
-- Data source queries or filters
-- Output definitions or values
-- Any semantic meaning or intended behavior
-- Business logic or resource dependencies
-
-**Critical Rule:** Make the minimal change necessary to fix syntax errors. When in doubt, preserve the original intent.
-
-### Step 5: Retry Loop
-After fixing syntax errors:
-1. Save the corrected files
-2. Run `terraform init` again
-3. If it fails, return to Step 3
-4. If it succeeds, proceed to Step 6
-5. Maximum iterations: If the same error persists after 3 attempts, report the issue and stop
-
-### Step 6: Report Results
-Once `terraform init` succeeds, provide a summary containing:
-- ✅ Final status: Success
-- 📁 Target directory path
-- 🔧 Number of files modified
-- 📝 List of syntax errors fixed
-- ⚠️ Any warnings or notes
-
-If unable to fix:
-- ❌ Final status: Failed
-- 🔍 Description of the blocking issue
-- 💡 Suggested manual intervention needed
-
-## Input Format
-The agent expects the Terraform configuration folder path as input:
-```
-Target directory: <absolute_or_relative_path>
+**Shell Detection**:
+```pseudocode
+IF current_shell == "pwsh" OR current_shell == "powershell" THEN
+    use PowerShell commands
+ELSE
+    use Bash commands
+END IF
 ```
 
-## Success Criteria
-- `terraform init` completes with exit code 0
-- All providers are downloaded successfully
-- Backend is initialized (if configured)
-- No syntax errors remain in the configuration
-- Original configuration semantics are preserved
+### Step 1: Clean Environment
 
-## Safety Guidelines
-- Always read files completely before making changes
-- Make one logical fix at a time
-- Verify each fix doesn't alter configuration meaning
-- Preserve all comments and documentation
-- Maintain consistent code formatting style
-- Never delete resources or modules
-- Never change resource addressing or references
+In the test directory, remove previous test artifacts:
+
+**PowerShell**:
+```powershell
+Remove-Item .terraform, .terraform.lock.hcl, err.log, fix.log -Recurse -Force -ErrorAction SilentlyContinue
+```
+
+**Bash**:
+```bash
+rm -rf .terraform .terraform.lock.hcl err.log fix.log
+```
+
+### Step 2: Verify AzureRM Configuration (Baseline Test)
+
+Execute `terraform init` with `main.tf` and `azurerm.tf` present:
+```bash
+terraform init
+```
+
+**Expected Result**: Success, no errors. This is the baseline validation, proving the original configuration works.
+
+### Step 3: Switch to AzAPI Configuration
+
+Rename files to enable AzAPI version:
+
+**PowerShell**:
+```powershell
+Rename-Item azurerm.tf azurerm.tf.bak -Force
+Rename-Item azapi.tf.bak azapi.tf -Force
+```
+
+**Bash**:
+```bash
+mv azurerm.tf azurerm.tf.bak
+mv azapi.tf.bak azapi.tf
+```
+
+Clean terraform cache to ensure fresh initialization:
+
+**PowerShell**:
+```powershell
+Remove-Item .terraform, .terraform.lock.hcl -Recurse -Force -ErrorAction SilentlyContinue
+```
+
+**Bash**:
+```bash
+rm -rf .terraform .terraform.lock.hcl
+```
+
+### Step 4: Test AzAPI Configuration
+
+Execute `terraform init`:
+```bash
+terraform init
+```
+
+**Possible Results**:
+- ✅ **Success**: No errors, test passed
+- ❌ **Failed**: Errors occurred, need analysis and fixes
+
+## Error Analysis and Fixes
+
+If Step 4 fails, analyze the error type and attempt fixes.
+
+### Error Analysis Process
+
+**When encountering errors from any `terraform` command (init, plan, apply, etc.)**:
+
+1. **First**, read `common_terraform_error.md` to check for known error patterns
+2. **If a matching pattern is found**, follow the instructions in that document to fix the issue
+3. **If no match is found**, proceed with the common error type analysis below
+
+### Common Error Types
+
+1. **Type Error**
+   - Property type mismatch (string vs number, list vs set, etc.)
+   - Example: `expected string, got number`
+
+2. **Naming Error**
+   - Property name typo or doesn't exist
+   - Example: `unsupported argument "xxx"`
+
+3. **Default Value Error**
+   - Missing required property
+   - Incorrect default value
+   - Example: `missing required argument "xxx"`
+
+4. **Reference Error**
+   - Incorrect resource reference
+   - Module output reference issues
+
+### Fix Principles
+
+⚠️ **Important Constraints**:
+- ✅ CAN modify configuration in `azapi.tf`
+- ✅ CAN modify module call parameters
+- ❌ **CANNOT modify** `main.tf` and `azurerm.tf.bak` contents
+- ❌ **CANNOT change** the semantic meaning of the original Terraform configuration
+- ❌ **CANNOT delete** module blocks or azapi_resource blocks to "fix" errors
+
+### Fix Strategies
+
+Use the **simplest possible** method to fix:
+
+1. **Type Conversion**
+   ```hcl
+   # Error: expected number, got string
+   instances = "2"
+   
+   # Fix: Convert to number
+   instances = 2
+   ```
+
+2. **Property Name Correction**
+   ```hcl
+   # Error: unsupported argument "computer_name"
+   computer_name = "test"
+   
+   # Fix: Use correct property name
+   computer_name_prefix = "test"
+   ```
+
+3. **Add Missing Required Properties**
+   ```hcl
+   # Error: missing required argument "admin_username"
+   
+   # Fix: Find corresponding value from azurerm.tf.bak and add
+   admin_username = "myadmin"
+   ```
+
+4. **Adjust Default Values or Optional Properties**
+   ```hcl
+   # If a property causes errors but is optional in azurerm.tf.bak
+   # Try removing the property or set to null
+   ```
+
+## Fix Limits
+
+Maximum **5 attempts** to fix. After each fix:
+1. **Immediately log the fix attempt to `fix.log`** (see format in Test Result Documentation section below)
+2. Re-run the terraform command (e.g., `terraform init`, `terraform plan`, etc.) to verify the fix
+
+## Test Result Documentation
+
+⚠️ **Critical Logging Requirement**:
+- **MUST log each fix attempt to `fix.log` IMMEDIATELY after making changes, BEFORE running the next terraform command**
+- Append to `fix.log` incrementally after each fix attempt
+- Do NOT wait until all attempts are complete to log
+- This ensures progress is documented even if unexpected errors occur
+
+### Successful Fix -> Generate `fix.log`
+
+Record the following content **incrementally after each attempt**:
+```
+Test Case: [directory name]
+================================================================================
+
+Initial Error:
+[paste initial error message]
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: [describe the problem you identified]
+- Fix Method: [describe your fix approach]
+- Changes Made: [list specific changes]
+- Result: [success/failure and new errors]
+
+Attempt 2:
+...
+
+Final Result: Fix successful
+```
+
+### Failed -> Generate `err.log`
+
+Record the following content **incrementally after each attempt**:
+```
+Test Case: [directory name]
+================================================================================
+
+Still failed after 5 fix attempts
+
+Initial Error:
+[paste initial error message]
+
+Attempted Fix Methods:
+
+Attempt 1:
+- Problem Analysis: [describe the problem you identified]
+- Fix Method: [describe your fix approach]
+- Result: [failure reason]
+
+Attempt 2:
+...
+
+Attempt 5:
+...
+
+Final Error:
+[paste last error message]
+
+Conclusion:
+[briefly explain why it couldn't be fixed, potential directions for further investigation]
+```
+
+## Notes
+
+- Each test directory is independent and does not affect others
+- Understand the root cause of errors when fixing, don't try fixes blindly
+- Keep modifications minimal to avoid introducing new issues
+- If an error is unclear, consult the corresponding AzureRM and AzAPI provider documentation
+- Record detailed fix process to facilitate later analysis and improvements to the Replicator Module
+

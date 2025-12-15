@@ -119,6 +119,11 @@ variable "capacity_reservation_group_id" {
     )
     error_message = "The capacity_reservation_group_id cannot be specified when proximity_placement_group_id is set (ConflictsWith)."
   }
+
+  validation {
+    condition = var.proximity_placement_group_id == null || var.capacity_reservation_group_id == null
+    error_message = "The proximity_placement_group_id cannot be specified when capacity_reservation_group_id is set (ConflictsWith)."
+  }
 }
 
   variable "data_disk" {
@@ -950,6 +955,16 @@ variable "os_profile" {
   }
 
   validation {
+    condition = (
+      var.os_profile_linux_configuration_admin_password == null ||
+      var.os_profile == null ||
+      var.os_profile.linux_configuration == null ||
+      var.os_profile.linux_configuration.disable_password_authentication == false
+    )
+    error_message = "When admin_password is specified, disable_password_authentication must be set to false."
+  }
+
+  validation {
     condition = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_assessment_mode == null || contains(["AutomaticByPlatform", "ImageDefault"], var.os_profile.linux_configuration.patch_assessment_mode)
     error_message = "The patch_assessment_mode must be either 'AutomaticByPlatform' or 'ImageDefault'."
   }
@@ -1324,11 +1339,6 @@ variable "proximity_placement_group_id" {
   validation {
     condition = var.proximity_placement_group_id == null || can(regex("^/subscriptions/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/resourceGroups/.+/providers/Microsoft.Compute/proximityPlacementGroups/.+$", var.proximity_placement_group_id))
     error_message = "The proximity_placement_group_id must be a valid Proximity Placement Group Resource ID."
-  }
-
-  validation {
-    condition = var.proximity_placement_group_id == null || var.capacity_reservation_group_id == null
-    error_message = "The proximity_placement_group_id cannot be specified when capacity_reservation_group_id is set (ConflictsWith)."
   }
 }
 
