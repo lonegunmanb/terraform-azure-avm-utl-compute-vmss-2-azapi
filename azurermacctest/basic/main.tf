@@ -23,15 +23,15 @@ provider "azapi" {}
 
 provider "random" {}
 
+resource "random_integer" "number" {
+  min = 1
+  max = 100
+}
+
 resource "random_string" "name" {
   length  = 8
   special = false
   upper   = false
-}
-
-resource "random_integer" "number" {
-  min = 1
-  max = 100
 }
 
 resource "azurerm_resource_group" "test" {

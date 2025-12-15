@@ -288,7 +288,7 @@ locals {
 1. **Independent ephemeral var** in `migrate_variables.tf`:
    ```hcl
    variable "{nested_path}_{field}" {
-     type = string; nullable = <false if Required, true if Optional>; ephemeral = true
+     type = string; nullable = true; ephemeral = true; default = null
    }
    variable "{nested_path}_{field}_version" {
      type = number; default = null
@@ -298,6 +298,7 @@ locals {
      }
    }
    ```
+   **⚠️ CRITICAL:** All new ephemeral variables for nested block sensitive/ephemeral fields MUST have `nullable = true`, regardless of whether the original field is Required or Optional in the provider schema.
 
 2. **Mark original field in `variables.tf`** (for code review):
    ```hcl

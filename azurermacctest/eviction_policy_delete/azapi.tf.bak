@@ -1,15 +1,16 @@
 module "vmss_replicator" {
   source = "../.."
 
-  name              = "acctestOVMSS-${random_integer.number.result}"
-  location          = azurerm_resource_group.test.location
-  resource_group_id = azurerm_resource_group.test.id
-
-  priority                    = "Spot"
-  eviction_policy             = "Delete"
-  sku_name                    = "Standard_D1_v2"
-  instances                   = 2
+  name                        = "acctestOVMSS-${random_integer.number.result}"
+  location                    = azurerm_resource_group.test.location
+  resource_group_id           = azurerm_resource_group.test.id
   platform_fault_domain_count = 2
+
+  priority        = "Spot"
+  eviction_policy = "Delete"
+
+  sku_name  = "Standard_D1_v2"
+  instances = 2
 
   os_profile = {
     linux_configuration = {
@@ -26,16 +27,20 @@ module "vmss_replicator" {
     {
       name    = "TestNetworkProfile-${random_integer.number.result}"
       primary = true
+
       ip_configuration = [
         {
           name      = "TestIPConfiguration"
           primary   = true
           subnet_id = azurerm_subnet.test.id
-          public_ip_address = {
-            name                    = "TestPublicIPConfiguration"
-            domain_name_label       = "test-domain-label"
-            idle_timeout_in_minutes = 4
-          }
+
+          public_ip_address = [
+            {
+              name                    = "TestPublicIPConfiguration"
+              domain_name_label       = "test-domain-label"
+              idle_timeout_in_minutes = 4
+            }
+          ]
         }
       ]
     }
@@ -55,16 +60,16 @@ module "vmss_replicator" {
 }
 
 resource "azapi_resource" "this" {
-  type                             = module.vmss_replicator.azapi_header.type
-  name                             = module.vmss_replicator.azapi_header.name
-  location                         = module.vmss_replicator.azapi_header.location
-  parent_id                        = module.vmss_replicator.azapi_header.parent_id
-  tags                             = module.vmss_replicator.tags
-  body                             = module.vmss_replicator.body
-  sensitive_body                   = module.vmss_replicator.sensitive_body
-  sensitive_body_version           = module.vmss_replicator.sensitive_body_version
-  replace_triggers_external_values = module.vmss_replicator.replace_triggers_external_values
-  locks                            = module.vmss_replicator.locks
+  type                                 = module.vmss_replicator.azapi_header.type
+  name                                 = module.vmss_replicator.azapi_header.name
+  location                             = module.vmss_replicator.azapi_header.location
+  parent_id                            = module.vmss_replicator.azapi_header.parent_id
+  tags                                 = module.vmss_replicator.tags
+  body                                 = module.vmss_replicator.body
+  sensitive_body                       = module.vmss_replicator.sensitive_body
+  sensitive_body_version               = module.vmss_replicator.sensitive_body_version
+  replace_triggers_external_values     = module.vmss_replicator.replace_triggers_external_values
+  locks                                = module.vmss_replicator.locks
 
   timeouts {
     create = module.vmss_replicator.timeouts.create

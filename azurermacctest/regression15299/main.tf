@@ -72,3 +72,4 @@ resource "azurerm_subnet_nat_gateway_association" "example" {
   subnet_id      = azurerm_subnet.test.id
   nat_gateway_id = azurerm_nat_gateway.test.id
 }
+

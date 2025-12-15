@@ -1,0 +1,84 @@
+module "vmss_replicator" {
+  source = "../.."
+
+  name                        = "acctestOVMSS-${random_integer.number.result}"
+  resource_group_id           = azurerm_resource_group.test.id
+  location                    = azurerm_resource_group.test.location
+  platform_fault_domain_count = 2
+
+  sku_name  = "Standard_F2"
+  instances = 1
+
+  os_profile_custom_data         = "Y3VzdG9tIGRhdGEh"
+  os_profile_custom_data_version = 1
+
+  os_profile = {
+    linux_configuration = {
+      computer_name_prefix = "prefix"
+      admin_username       = "ubuntu"
+
+      admin_ssh_key = toset([
+        {
+          username   = "ubuntu"
+          public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDCsTcryUl51Q2VSEHqDRNmceUFo55ZtcIwxl2QITbN1RREti5ml/VTytC0yeBOvnZA4x4CFpdw/lCDPk0yrH9Ei5vVkXmOrExdTlT3qI7YaAzj1tUVlBd4S6LX1F7y6VLActvdHuDDuXZXzCDd/97420jrDfWZqJMlUK/EmCE5ParCeHIRIvmBxcEnGfFIsw8xQZl0HphxWOtJil8qsUWSdMyCiJYYQpMoMliO99X40AUc4/AlsyPyT5ddbKk08YrZ+rKDVHF7o29rh4vi5MmHkVgVQHKiKybWlHq+b71gIAUQk9wrJxD+dqt4igrmDSpIjfjwnd+l5UIn5fJSO5DYV4YT/4hwK7OKmuo7OFHD0WyY5YnkYEMtFgzemnRBdE8ulcT60DQpVgRMXFWHvhyCWy0L6sgj1QWDZlLpvsIvNfHsyhKFMG1frLnMt/nP0+YCcfg+v1JYeCKjeoJxB8DWcRBsjzItY0CGmzP8UYZiYKl/2u+2TgFS5r7NWH11bxoUzjKdaa1NLw+ieA8GlBFfCbfWe6YVB9ggUte4VtYFMZGxOjS2bAiYtfgTKFJv+XqORAwExG6+G2eDxIDyo80/OA9IG7Xv/jwQr7D6KDjDuULFcN/iTxuttoKrHeYz1hf5ZQlBdllwJHYx6fK2g8kha6r2JIQKocvsAXiiONqSfw== hello@world.com"
+        }
+      ])
+    }
+  }
+
+  network_interface = [
+    {
+      name    = "TestNetworkProfile"
+      primary = true
+
+      ip_configuration = [
+        {
+          name                                   = "TestIPConfiguration"
+          primary                                = true
+          subnet_id                              = azurerm_subnet.test.id
+          load_balancer_backend_address_pool_ids = toset([azurerm_lb_backend_address_pool.test.id])
+        }
+      ]
+    }
+  ]
+
+  os_disk = {
+    storage_account_type = "Standard_LRS"
+    caching              = "ReadWrite"
+  }
+
+  source_image_reference = {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts"
+    version   = "latest"
+  }
+}
+
+resource "azapi_resource" "this" {
+  type                             = module.vmss_replicator.azapi_header.type
+  name                             = module.vmss_replicator.azapi_header.name
+  location                         = module.vmss_replicator.azapi_header.location
+  parent_id                        = module.vmss_replicator.azapi_header.parent_id
+  tags                             = module.vmss_replicator.tags
+  body                             = module.vmss_replicator.body
+  sensitive_body                   = module.vmss_replicator.sensitive_body
+  sensitive_body_version           = module.vmss_replicator.sensitive_body_version
+  replace_triggers_external_values = module.vmss_replicator.replace_triggers_external_values
+  locks                            = module.vmss_replicator.locks
+
+  timeouts {
+    create = module.vmss_replicator.timeouts.create
+    delete = module.vmss_replicator.timeouts.delete
+    read   = module.vmss_replicator.timeouts.read
+    update = module.vmss_replicator.timeouts.update
+  }
+}
+
+resource "azapi_update_resource" "update0" {
+  type           = module.vmss_replicator.post_creation_updates[0].azapi_header.type
+  name           = module.vmss_replicator.post_creation_updates[0].azapi_header.name
+  parent_id      = module.vmss_replicator.post_creation_updates[0].azapi_header.parent_id
+  body           = module.vmss_replicator.post_creation_updates[0].body
+  sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
+}

@@ -76,6 +76,7 @@ copilot -p "You are a Test Case Agent. Read 'expand_acc_test.md' and follow ALL 
 2. **For each test case**:
    - Delegate to a Test Case Agent
    - Wait for completion
+   - Update `test_cases.md` to mark the test case as "Completed"
    - Move to next test case
 3. **After all delegations complete**:
    - Verify all `azurermacctest/<case_name>` folders exist

@@ -10,6 +10,7 @@ variable "resource_group_id" {
 variable "os_profile_custom_data" {
   type        = string
   nullable    = true
+  default = null
   ephemeral   = true
   description = "(Optional) Specifies a base-64 encoded string of custom data. The base-64 encoded string is decoded to a binary array that is saved as a file on the Virtual Machine. The maximum length of the binary array is 65535 bytes."
 
@@ -49,6 +50,7 @@ variable "extension_protected_settings" {
     protected_settings = string
   }))
   nullable    = true
+  default = null
   ephemeral   = true
   description = "(Optional) Protected settings for extensions. Each object contains extension name and its protected settings JSON."
 
@@ -75,6 +77,7 @@ variable "extension_protected_settings_version" {
 variable "os_profile_linux_configuration_admin_password" {
   type        = string
   nullable    = true
+  default = null
   ephemeral   = true
   description = "(Optional) The admin password to be used on the Virtual Machine Scale Set. Changing this forces a new resource to be created."
 
@@ -136,7 +139,7 @@ variable "os_profile_linux_configuration_admin_password_version" {
 # Task #114: os_profile.windows_configuration.admin_password - independent ephemeral variable for nested block sensitive field
 variable "os_profile_windows_configuration_admin_password" {
   type        = string
-  nullable    = false
+  default = null
   ephemeral   = true
   description = "(Required) The Password which should be used for the local-administrator on this Virtual Machine. Changing this forces a new resource to be created."
 
@@ -196,6 +199,7 @@ variable "os_profile_windows_configuration_additional_unattend_content_content" 
     content = string
   }))
   nullable    = true
+  default = null
   ephemeral   = true
   description = "(Required for each item) The XML formatted content that is added to the unattend.xml file for the specified path and component. Changing this forces a new resource to be created."
 }

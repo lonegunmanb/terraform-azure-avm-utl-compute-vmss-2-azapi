@@ -1,5 +1,5 @@
 resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
-  name                = "acctestOVMSS-${random_string.name.result}"
+  name                = "acctestOVMSS-${random_integer.number.result}"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
 
@@ -10,7 +10,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
 
   os_profile {
     linux_configuration {
-      computer_name_prefix = "testvm-${random_string.name.result}"
+      computer_name_prefix = "testvm-${random_integer.number.result}"
       admin_username       = "myadmin"
       admin_password       = "Passwword1234"
 
@@ -19,7 +19,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
   }
 
   network_interface {
-    name    = "TestNetworkProfile-${random_string.name.result}"
+    name    = "TestNetworkProfile-${random_integer.number.result}"
     primary = true
 
     ip_configuration {

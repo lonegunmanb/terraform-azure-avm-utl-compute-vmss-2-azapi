@@ -41,11 +41,11 @@ variable "platform_fault_domain_count" {
   nullable    = false
 }
 
-variable "resource_group_name" {
-  type        = string
-  description = "(Required) The name of the Resource Group in which the Virtual Machine Scale Set should exist. Changing this forces a new resource to be created."
-  nullable    = false
-}
+# variable "resource_group_name" {
+#   type        = string
+#   description = "(Required) The name of the Resource Group in which the Virtual Machine Scale Set should exist. Changing this forces a new resource to be created."
+#   nullable    = false
+# }
 
 variable "additional_capabilities" {
   type = object({
