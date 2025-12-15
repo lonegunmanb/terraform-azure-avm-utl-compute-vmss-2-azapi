@@ -1,0 +1,87 @@
+module "vmss_replicator" {
+  source = "../../"
+
+  name                        = "acctestOVMSS-${random_integer.number.result}"
+  resource_group_id           = azurerm_resource_group.test.id
+  location                    = azurerm_resource_group.test.location
+  sku_name                    = "Standard_D1_v2"
+  instances                   = 2
+  platform_fault_domain_count = 2
+
+  os_profile = {
+    windows_configuration = {
+      computer_name_prefix     = "testvm"
+      admin_username           = "myadmin"
+      enable_automatic_updates = true
+      provision_vm_agent       = true
+      timezone                 = "W. Europe Standard Time"
+      winrm_listener = [
+        {
+          protocol = "Http"
+        }
+      ]
+    }
+  }
+
+  os_profile_windows_configuration_admin_password         = "Passwword1234"
+  os_profile_windows_configuration_admin_password_version = 1
+
+  network_interface = [
+    {
+      name    = "TestNetworkProfile-${random_integer.number.result}"
+      primary = true
+      ip_configuration = [
+        {
+          name      = "TestIPConfiguration"
+          primary   = true
+          subnet_id = azurerm_subnet.test.id
+          public_ip_address = {
+            name                    = "TestPublicIPConfiguration"
+            domain_name_label       = "test-domain-label"
+            idle_timeout_in_minutes = 4
+          }
+        }
+      ]
+    }
+  ]
+
+  os_disk = {
+    storage_account_type = "Standard_LRS"
+    caching              = "ReadWrite"
+  }
+
+  source_image_reference = {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2016-Datacenter-Server-Core"
+    version   = "latest"
+  }
+}
+
+resource "azapi_resource" "this" {
+  type                             = module.vmss_replicator.azapi_header.type
+  name                             = module.vmss_replicator.azapi_header.name
+  location                         = module.vmss_replicator.azapi_header.location
+  parent_id                        = module.vmss_replicator.azapi_header.parent_id
+  tags                             = module.vmss_replicator.tags
+  body                             = module.vmss_replicator.body
+  sensitive_body                   = module.vmss_replicator.sensitive_body
+  sensitive_body_version           = module.vmss_replicator.sensitive_body_version
+  replace_triggers_external_values = module.vmss_replicator.replace_triggers_external_values
+  locks                            = module.vmss_replicator.locks
+
+  timeouts {
+    create = module.vmss_replicator.timeouts.create
+    delete = module.vmss_replicator.timeouts.delete
+    read   = module.vmss_replicator.timeouts.read
+    update = module.vmss_replicator.timeouts.update
+  }
+}
+
+resource "azapi_update_resource" "update0" {
+  type           = module.vmss_replicator.post_creation_updates[0].azapi_header.type
+  name           = module.vmss_replicator.post_creation_updates[0].azapi_header.name
+  parent_id      = module.vmss_replicator.post_creation_updates[0].azapi_header.parent_id
+  body           = module.vmss_replicator.post_creation_updates[0].body
+  sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
+}
