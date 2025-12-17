@@ -1,0 +1,22 @@
+Test Case: disks_os_disk_ephemeral
+================================================================================
+
+Step: Step 2 - Verify AzureRM Configuration (Baseline Test)
+Failed Command: terraform apply -auto-approve -input=false
+
+Error Message:
+creating Orchestrated Virtual Machine Scale Set (Subscription: "f7a632a5-49db-4c5e-9828-cd62cb753971"
+Resource Group Name: "acctestRG-OVMSS-r7vufgq2"
+Virtual Machine Scale Set Name: "acctestOVMSS-r7vufgq2"): performing CreateOrUpdate: unexpected status 409 (409 Conflict) with error: NotSupported: Ephemeral OS disk is not supported for VM size Standard_F2.
+
+Root Cause Analysis:
+The baseline AzureRM configuration itself is invalid. The test case uses:
+- VM SKU: Standard_F2
+- OS Disk: Ephemeral (diff_disk_settings with placement = "CacheDisk")
+
+According to Azure, the Standard_F2 VM size does not support ephemeral OS disks. This is a fundamental incompatibility in the test case definition, not an issue with the Terraform provider or AzAPI conversion.
+
+Conclusion:
+This test case is invalid and cannot be tested. The baseline AzureRM configuration fails to deploy, which means there's no valid baseline to compare against. The test case should be skipped or the VM SKU should be changed to one that supports ephemeral OS disks (e.g., Standard_DS2_v2, Standard_D2s_v3, or other VMs with temp disk support).
+
+Test Status: INVALID - Baseline configuration is not deployable

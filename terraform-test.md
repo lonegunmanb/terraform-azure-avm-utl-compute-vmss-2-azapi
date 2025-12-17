@@ -27,7 +27,7 @@ This tracking is mandatory for:
 - Enabling team coordination
 - Facilitating debugging and rollback
 
-**Example**: When beginning Step 4 for the "basic" test case, update `test_cases.md` to show `step 4 in progress`. Once Step 4 completes successfully, update it to `step 4 finished` before proceeding to Step 5.
+**Example**: When beginning Step 3 for the "basic" test case, update `test_cases.md` to show `step 3 in progress`. Once Step 3 completes successfully, update it to `step 3 finished` before proceeding to Step 4.
 
 **⚠️ IMPORTANT - Interpreting Test Status**:
 - If `test_cases.md` shows `step X in progress` for a test case, this means **Step X was started but NOT completed successfully**
@@ -61,6 +61,8 @@ rm -rf .terraform .terraform.lock.hcl err.log fix.log
 
 ### Step 2: Verify AzureRM Configuration (Baseline Test)
 
+⚠️ **This step acts as a gate**: If ANY sub-step fails, mark test case as `invalid` and QUIT after cleanup.
+
 Navigate to the test directory and execute the full baseline validation with `main.tf` and `azurerm.tf` present:
 
 **PowerShell**:
@@ -75,7 +77,7 @@ cd azurermacctest/<test_case_name> && terraform init
 
 **Possible Results**:
 - ✅ **Success**: Proceed to apply
-- ❌ **Failed**: Mark test case as `invalid` in `test_cases.md`, skip remaining steps
+- ❌ **Failed**: Run destroy cleanup, mark test case as `invalid` in `test_cases.md`, QUIT
 
 If init succeeds, apply the configuration:
 
@@ -91,7 +93,7 @@ cd azurermacctest/<test_case_name> && terraform apply -auto-approve -input=false
 
 **Possible Results**:
 - ✅ **Success**: Proceed to verify idempotency
-- ❌ **Failed**: Mark test case as `invalid` in `test_cases.md`, run destroy cleanup, skip remaining steps
+- ❌ **Failed**: Run destroy cleanup, mark test case as `invalid` in `test_cases.md`, QUIT
 
 Verify no configuration drift:
 
@@ -106,12 +108,12 @@ cd azurermacctest/<test_case_name> && terraform plan -input=false
 ```
 
 **Expected Result**: Plan shows "No changes. Your infrastructure matches the configuration."
-- ✅ **Success**: Proceed to cleanup
-- ❌ **Failed** (drift detected): Mark test case as `invalid` in `test_cases.md`, record error, run destroy cleanup, skip remaining steps
+- ✅ **Success**: **Keep infrastructure running**, proceed to Step 3
+- ❌ **Failed** (drift detected): Run destroy cleanup, mark test case as `invalid` in `test_cases.md`, record error in `azurerm_err.log`, QUIT
 
 **Record Failure**: If Step 2 failed, create `azurerm_err.log` documenting the error, failed command, and root cause analysis before cleanup.
 
-**Cleanup - ALWAYS RUN before exiting Step 2**:
+**Cleanup - ONLY IF Step 2 FAILED**:
 
 **PowerShell**:
 ```powershell
@@ -125,16 +127,19 @@ cd azurermacctest/<test_case_name> && terraform destroy -auto-approve -input=fal
 
 **If destroy fails**: Document the error but continue (mark test case as `invalid` in `test_cases.md`).
 
-**Step 2 Summary**: This baseline validation ensures the original AzureRM configuration is valid, can be applied without errors, has no drift, and can be destroyed cleanly. If any of these checks fail, the test case is marked as `invalid` and skipped.
+**Step 2 Summary**: This baseline validation ensures the original AzureRM configuration is valid, can be applied without errors, and has no drift. If any of these checks fail, the test case is marked as `invalid` and all remaining steps are skipped. **If successful, infrastructure remains running for Step 3.**
 
-### Step 3: Switch to AzAPI Configuration
+### Step 3: Verify State Migration with Moved Blocks
 
-Rename files to enable AzAPI version:
+⚠️ **Prerequisites**: Infrastructure from Step 2 must still be running.
+
+Switch to AzAPI configuration with moved blocks:
 
 **PowerShell**:
 ```powershell
 Rename-Item azurerm.tf azurerm.tf.bak -Force
 Rename-Item azapi.tf.bak azapi.tf -Force
+Rename-Item moved.tf.bak moved.tf -Force
 terraform fmt
 ```
 
@@ -142,6 +147,7 @@ terraform fmt
 ```bash
 mv azurerm.tf azurerm.tf.bak
 mv azapi.tf.bak azapi.tf
+mv moved.tf.bak moved.tf
 terraform fmt
 ```
 
@@ -157,9 +163,7 @@ Remove-Item .terraform, .terraform.lock.hcl -Recurse -Force -ErrorAction Silentl
 rm -rf .terraform .terraform.lock.hcl
 ```
 
-### Step 4: Test AzAPI Configuration
-
-Navigate to the test directory and execute `terraform init`:
+Initialize with AzAPI provider:
 
 **PowerShell**:
 ```powershell
@@ -172,130 +176,8 @@ cd azurermacctest/<test_case_name> && terraform init
 ```
 
 **Possible Results**:
-- ✅ **Success**: No errors, proceed to Step 5
+- ✅ **Success**: Proceed to plan
 - ❌ **Failed**: Errors occurred, need analysis and fixes
-
-### Step 5: Validate AzAPI Configuration with Plan
-
-Navigate to the test directory and execute `terraform plan`:
-
-**PowerShell**:
-```powershell
-cd azurermacctest\<test_case_name>; terraform plan -input=false
-```
-
-**Bash**:
-```bash
-cd azurermacctest/<test_case_name> && terraform plan -input=false
-```
-
-**Possible Results**:
-- ✅ **Success**: No errors, proceed to Step 6
-- ❌ **Failed**: Errors occurred, need analysis and fixes
-
-### Step 6: Apply AzAPI Configuration
-
-Navigate to the test directory and execute `terraform apply -auto-approve`:
-
-**PowerShell**:
-```powershell
-cd azurermacctest\<test_case_name>; terraform apply -auto-approve -input=false
-```
-
-**Bash**:
-```bash
-cd azurermacctest/<test_case_name> && terraform apply -auto-approve -input=false
-```
-
-**Possible Results**:
-- ✅ **Success**: No errors, resources created successfully
-- ❌ **Failed**: Errors occurred, need analysis and fixes
-
-### Step 7: Verify Idempotency (No Config Drift)
-
-Navigate to the test directory and execute `terraform plan` to verify the configuration is idempotent:
-
-**PowerShell**:
-```powershell
-cd azurermacctest\<test_case_name>; terraform plan -input=false
-```
-
-**Bash**:
-```bash
-cd azurermacctest/<test_case_name> && terraform plan -input=false
-```
-
-**Expected Result**: 
-- ✅ **Success**: Plan shows "No changes. Your infrastructure matches the configuration."
-- ❌ **Failed**: Plan shows changes (config drift detected), need analysis
-
-### Step 8: Destroy AzAPI Resources
-
-Navigate to the test directory and execute `terraform destroy -auto-approve`:
-
-**PowerShell**:
-```powershell
-cd azurermacctest\<test_case_name>; terraform destroy -auto-approve -input=false
-```
-
-**Bash**:
-```bash
-cd azurermacctest/<test_case_name> && terraform destroy -auto-approve -input=false
-```
-
-**Possible Results**:
-- ✅ **Success**: No errors, resources destroyed successfully
-- ❌ **Failed**: Errors occurred, need analysis and fixes
-
-### Step 9: Verify AzureRM Import Compatibility
-
-Switch back to AzureRM configuration and apply:
-
-**PowerShell**:
-```powershell
-Rename-Item azapi.tf azapi.tf.bak -Force
-Rename-Item azurerm.tf.bak azurerm.tf -Force
-```
-
-**Bash**:
-```bash
-mv azapi.tf azapi.tf.bak
-mv azurerm.tf.bak azurerm.tf
-```
-
-Navigate to the test directory and execute `terraform apply -auto-approve`:
-
-**PowerShell**:
-```powershell
-cd azurermacctest\<test_case_name>; terraform apply -auto-approve -input=false
-```
-
-**Bash**:
-```bash
-cd azurermacctest/<test_case_name> && terraform apply -auto-approve -input=false
-```
-
-**Possible Results**:
-- ✅ **Success**: AzureRM configuration applied successfully
-- ❌ **Failed**: Errors occurred, need analysis
-
-### Step 10: Verify State Migration with Moved Blocks
-
-Switch to AzAPI configuration with moved blocks:
-
-**PowerShell**:
-```powershell
-Rename-Item azurerm.tf azurerm.tf.bak -Force
-Rename-Item azapi.tf.bak azapi.tf -Force
-Rename-Item moved.tf.bak moved.tf -Force
-```
-
-**Bash**:
-```bash
-mv azurerm.tf azurerm.tf.bak
-mv azapi.tf.bak azapi.tf
-mv moved.tf.bak moved.tf
-```
 
 Navigate to the test directory and execute `terraform plan`:
 
@@ -313,7 +195,7 @@ cd azurermacctest/<test_case_name> && terraform plan -input=false
 
 1. **If plan shows NO changes**:
    - ✅ **Perfect Success**: State migration is clean with no drift
-   - Proceed to the final step
+   - Proceed to Step 4
 
 2. **If plan shows changes (drift detected)**:
    - **CRITICAL**: Compare ALL detected drifts against `acceptable_drift_patterns.md`
@@ -333,6 +215,7 @@ cd azurermacctest/<test_case_name> && terraform plan -input=false
      ```
    
    - **Expected**: Second plan shows "No changes"
+   - If second plan shows no changes: ✅ Proceed to Step 4
    - If second plan still shows changes: ❌ **Failed** - investigate further
    
    **If ANY drift is NOT acceptable** (doesn't match acceptable patterns):
@@ -345,9 +228,9 @@ cd azurermacctest/<test_case_name> && terraform plan -input=false
 3. **If plan shows resource recreation** (destroy/create):
    - ❌ **Critical Failure**: State migration completely failed
    - This indicates a fundamental module implementation error
-   - Document in `err.log` and stop testing this case
+   - Document in `err.log` and proceed to cleanup
 
-### Step 11: Final Cleanup
+### Step 4: Cleanup After State Migration Test
 
 Navigate to the test directory and execute `terraform destroy -auto-approve`:
 
@@ -362,10 +245,10 @@ cd azurermacctest/<test_case_name> && terraform destroy -auto-approve -input=fal
 ```
 
 **Possible Results**:
-- ✅ **Success**: All resources destroyed, proceed to restore original file configuration
-- ❌ **Failed**: Errors occurred during cleanup
+- ✅ **Success**: All resources destroyed, proceed to restore files and Step 5
+- ❌ **Failed**: Errors occurred during cleanup, document but continue
 
-After successful destroy, restore the original file configuration:
+After destroy, restore the original file configuration:
 
 **PowerShell**:
 ```powershell
@@ -381,9 +264,135 @@ mv moved.tf moved.tf.bak
 mv azurerm.tf.bak azurerm.tf
 ```
 
+### Step 5: Fresh AzAPI Deployment Test
+
+⚠️ **This step tests clean AzAPI deployment without state migration.**
+
+Clean environment again:
+
+**PowerShell**:
+```powershell
+Remove-Item .terraform, .terraform.lock.hcl -Recurse -Force -ErrorAction SilentlyContinue
+```
+
+**Bash**:
+```bash
+rm -rf .terraform .terraform.lock.hcl
+```
+
+Switch to AzAPI configuration (without moved blocks):
+
+**PowerShell**:
+```powershell
+Rename-Item azurerm.tf azurerm.tf.bak -Force
+Rename-Item azapi.tf.bak azapi.tf -Force
+terraform fmt
+```
+
+**Bash**:
+```bash
+mv azurerm.tf azurerm.tf.bak
+mv azapi.tf.bak azapi.tf
+terraform fmt
+```
+
+Initialize:
+
+**PowerShell**:
+```powershell
+cd azurermacctest\<test_case_name>; terraform init
+```
+
+**Bash**:
+```bash
+cd azurermacctest/<test_case_name> && terraform init
+```
+
+**Possible Results**:
+- ✅ **Success**: Proceed to plan
+- ❌ **Failed**: Errors occurred, need analysis and fixes
+
+Plan:
+
+**PowerShell**:
+```powershell
+cd azurermacctest\<test_case_name>; terraform plan -input=false
+```
+
+**Bash**:
+```bash
+cd azurermacctest/<test_case_name> && terraform plan -input=false
+```
+
+**Possible Results**:
+- ✅ **Success**: Proceed to apply
+- ❌ **Failed**: Errors occurred, need analysis and fixes
+
+Apply:
+
+**PowerShell**:
+```powershell
+cd azurermacctest\<test_case_name>; terraform apply -auto-approve -input=false
+```
+
+**Bash**:
+```bash
+cd azurermacctest/<test_case_name> && terraform apply -auto-approve -input=false
+```
+
+**Possible Results**:
+- ✅ **Success**: Resources created, proceed to verify idempotency
+- ❌ **Failed**: Errors occurred, need analysis and fixes
+
+Verify idempotency (no config drift):
+
+**PowerShell**:
+```powershell
+cd azurermacctest\<test_case_name>; terraform plan -input=false
+```
+
+**Bash**:
+```bash
+cd azurermacctest/<test_case_name> && terraform plan -input=false
+```
+
+**Expected Result**: 
+- ✅ **Success**: Plan shows "No changes. Your infrastructure matches the configuration."
+- ❌ **Failed**: Plan shows changes (config drift detected), need analysis
+
+Destroy:
+
+**PowerShell**:
+```powershell
+cd azurermacctest\<test_case_name>; terraform destroy -auto-approve -input=false
+```
+
+**Bash**:
+```bash
+cd azurermacctest/<test_case_name> && terraform destroy -auto-approve -input=false
+```
+
+**Possible Results**:
+- ✅ **Success**: Resources destroyed, proceed to restore files
+- ❌ **Failed**: Errors occurred, document but continue
+
+Restore original file configuration:
+
+**PowerShell**:
+```powershell
+Rename-Item azapi.tf azapi.tf.bak -Force
+Rename-Item azurerm.tf.bak azurerm.tf -Force
+```
+
+**Bash**:
+```bash
+mv azapi.tf azapi.tf.bak
+mv azurerm.tf.bak azurerm.tf
+```
+
 **Expected Result**: Test case directory is restored to its original state with `azurerm.tf` active and `azapi.tf.bak`, `moved.tf.bak` as backups.
 
-**Final Status Update**: After the final step completes successfully, update `test_cases.md` to mark the test case's test status as `test success`.
+**Final Status Update**: After all steps complete successfully, update `test_cases.md` to mark the test case's test status as `test success`.
 
 ## Error Analysis and Fixes
 
