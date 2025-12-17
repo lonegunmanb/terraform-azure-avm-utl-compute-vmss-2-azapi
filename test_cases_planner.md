@@ -12,15 +12,37 @@ You should store these names in a table stored in `test_cases.md` file with the 
 
 ## Instructions
 
-### Step 1: Locate the Test File
-Find the acceptance test file for the target resource type in the HashiCorp Terraform provider repository:
-- **Pattern**: `<resource_name>_resource_test.go` or `<resource_name>_resource_*_test.go`
-- **Example**: For `azurerm_orchestrated_virtual_machine_scale_set`, look for:
-  - `orchestrated_virtual_machine_scale_set_resource_test.go`
-  - `orchestrated_virtual_machine_scale_set_resource_*_test.go` (if split into multiple files)
+### Step 1: Locate ALL Test Files
+Find ALL acceptance test files for the target resource type in the HashiCorp Terraform provider repository. **IMPORTANT**: Many resources have their tests split across multiple files by feature area.
 
-### Step 2: Identify Test Configuration Functions
-Scan the test file for configuration functions that return Terraform HCL strings. These typically:
+**Search Pattern**: `<resource_name>_resource*_test.go`
+
+**Example**: For `azurerm_orchestrated_virtual_machine_scale_set`, search for files matching:
+- Pattern: `orchestrated_virtual_machine_scale_set_resource*_test.go`
+- This will match:
+  - `orchestrated_virtual_machine_scale_set_resource_test.go` (main test file)
+  - `orchestrated_virtual_machine_scale_set_resource_disk_data_test.go`
+  - `orchestrated_virtual_machine_scale_set_resource_disk_os_test.go`
+  - `orchestrated_virtual_machine_scale_set_resource_extensions_test.go`
+  - `orchestrated_virtual_machine_scale_set_resource_identity_test.go`
+  - `orchestrated_virtual_machine_scale_set_resource_network_test.go`
+  - `orchestrated_virtual_machine_scale_set_resource_other_test.go`
+  - And any other split files
+
+**How to Search**:
+1. Use GitHub search with pattern: `filename:orchestrated_virtual_machine_scale_set_resource repo:hashicorp/terraform-provider-azurerm path:internal/services/compute`
+2. Or fetch URLs for all matching files:
+   - `https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go`
+   - `https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_data_test.go`
+   - Continue for each file matching the pattern
+
+**EXCLUSIONS**: 
+- ❌ **IGNORE files containing `legacy` in the filename** (e.g., `*_resource_legacy_test.go`) - we don't care about legacy code
+
+**CRITICAL**: You MUST scan ALL test files (except legacy), not just the main one, to get a complete list of test cases.
+
+### Step 2: Identify Test Configuration Functions Across ALL Files
+Scan **ALL test files** for configuration functions that return Terraform HCL strings. These typically:
 - Are methods on the resource's test struct (e.g., `(r ResourceType) functionName(data acceptance.TestData) string`)
 - Return `fmt.Sprintf(...)` with Terraform configuration
 - Are called within `TestStep.Config` in test methods
@@ -66,7 +88,7 @@ For each function found, determine its classification:
 
 ### Step 4: Analyze Test Methods for Usage
 
-For each configuration function, check how it's used in test methods (`func TestAcc...`):
+For each configuration function, check how it's used in test methods (`func TestAcc...`) **across ALL test files**:
 
 **Direct Usage (INCLUDE)**:
 ```go
@@ -152,22 +174,26 @@ For each valid test case, provide:
 
 ## Example Analysis Workflow
 
-1. **Find function**: `func (r Resource) linux(data acceptance.TestData) string`
-2. **Check usage**: Search for `r.linux(data)` in test methods
-3. **Found in**: `TestAccResource_basic` with `Config: r.linux(data)` → ✅ INCLUDE
-4. **Classification**: Basic Linux configuration
-5. **Add to list**: Under "Basic/Foundation Cases"
+1. **Find ALL test files**: Search for `orchestrated_virtual_machine_scale_set_resource*_test.go` - found 7 files
+2. **Scan all files for functions**: `func (r Resource) linux(data acceptance.TestData) string` found in main test file
+3. **Check usage across all files**: Search for `r.linux(data)` in all 7 test files
+4. **Found in**: `TestAccResource_basic` with `Config: r.linux(data)` → ✅ INCLUDE
+5. **Classification**: Basic Linux configuration
+6. **Add to list**: Under "Basic/Foundation Cases"
 
 ## Validation Checklist
 
 Before finalizing the list:
-- [ ] All functions used directly in `TestStep.Config` are included
+- [ ] All test files matching `<resource_name>_resource*_test.go` pattern have been identified (excluding `*legacy*` files)
+- [ ] All test files have been scanned for configuration functions (excluding legacy files)
+- [ ] All functions used directly in `TestStep.Config` are included (from all files)
 - [ ] All functions with `ExpectError` in same TestStep are excluded
 - [ ] All helper functions (only called by other functions) are excluded
 - [ ] All `requiresImport` variants are excluded
 - [ ] Each case has a clear, descriptive label
 - [ ] Cases are logically categorized
 - [ ] Total count is accurate
+- [ ] File source is documented for each test case
 
 ## Common Pitfalls to Avoid
 
@@ -180,7 +206,10 @@ Before finalizing the list:
 
 ## Notes
 
-- Some test files may be split across multiple `*_test.go` files - check all of them
+- **CRITICAL**: Some test files are split across multiple `*_test.go` files - check ALL of them by using the pattern `<resource_name>_resource*_test.go`
+- **EXCLUDE**: Files containing `legacy` in the filename (e.g., `*_resource_legacy_test.go`) - ignore these completely
+- Use GitHub file search or fetch multiple URLs to retrieve all test files
+- Look for patterns like `_disk_`, `_network_`, `_identity_`, `_extensions_`, `_other_` in filenames (often indicate split test files by feature area)
 - Look for patterns like `_template`, `_helper`, `_base` in function names (often indicate helpers)
 - Test methods with "Error" or "Invalid" in their names often use error test cases
 - Update test cases (testing A → B transitions) are valid if both A and B are valid configs

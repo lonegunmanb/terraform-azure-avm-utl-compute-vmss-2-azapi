@@ -1,0 +1,54 @@
+Test Case: application_gateway_template
+================================================================================
+
+AzureRM Baseline Configuration Failure (Step 2)
+
+Failed Command:
+terraform apply -auto-approve -input=false
+
+Error Message:
+╷
+│ Error: creating Application Gateway (Subscription: "f7a632a5-49db-4c5e-9828-cd62cb753971"
+│ Resource Group Name: "acctestRG-OVMSS-38"
+│ Application Gateway Name: "acctestgw-38"): performing CreateOrUpdate: unexpected status
+│ 400 (400 Bad Request) with error: ApplicationGatewayInvalidPublicIpSku: Application gateway 
+│ /subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-38/providers/Microsoft.Network/applicationGateways/acctestgw-38 
+│ with SKU Standard_v2 can only reference public ip with Standard SKU.
+│
+│   with azurerm_application_gateway.test,
+│   on main.tf line 92, in resource "azurerm_application_gateway" "test":
+│   92: resource "azurerm_application_gateway" "test" {
+│
+╵
+
+Root Cause Analysis:
+====================
+The baseline AzureRM configuration in main.tf has a resource incompatibility:
+
+1. azurerm_public_ip.gwtest (lines 86-91 in main.tf):
+   - allocation_method = "Dynamic"
+   - sku = "Basic"
+
+2. azurerm_application_gateway.test (line 92+ in main.tf):
+   - sku.name = "Standard_v2"
+   - sku.tier = "Standard_v2"
+
+Incompatibility:
+Application Gateway with SKU "Standard_v2" requires a Public IP with SKU "Standard", 
+but the configuration specifies SKU "Basic" with Dynamic allocation.
+
+Resolution Required:
+====================
+The main.tf infrastructure file needs to be corrected to use:
+- sku = "Standard"
+- allocation_method = "Static"
+
+for azurerm_public_ip.gwtest resource.
+
+Test Result:
+============
+Status: INVALID
+Reason: Baseline AzureRM configuration cannot be deployed successfully
+Action: Test case marked as invalid, remaining steps skipped per test guide requirements
+
+Note: Cannot modify main.tf as it is a trusted infrastructure file per test constraints.

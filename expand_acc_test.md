@@ -202,7 +202,7 @@ provider "random" {}
 Example:
 
 ```hcl
-module "vmss_replicator" {
+module "vmss_replicator" { #`vmss_replicator` here is just for example
   source = "../../"
   orchestrated_virtual_machine_scale_set_name = "example-vmss"
   # ...
@@ -252,16 +252,29 @@ resource "azapi_resource" "this" {
        parent_id                 = module.vmss_replicator.azapi_header.parent_id
        tags                      = module.vmss_replicator.azapi_header.tags
        body                      = module.vmss_replicator.body
+       ignore_null_property      = module.vmss_replicator.azapi_header.ignore_null_property
        sensitive_body            = module.vmss_replicator.sensitive_body
        sensitive_body_version    = module.vmss_replicator.sensitive_body_version
        replace_triggers_external_values = module.vmss_replicator.replace_triggers_external_values
        locks                     = module.vmss_replicator.locks
-       
-       timeouts {
-         create = module.vmss_replicator.timeouts.create
-         delete = module.vmss_replicator.timeouts.delete
-         read   = module.vmss_replicator.timeouts.read
-         update = module.vmss_replicator.timeouts.update
+       retry                     = module.vmss_replicator.retry
+
+       dynamic "identity" {
+        for_each = can(module.vmss_replicator.azapi_header.identity) ? [module.vmss_replicator.identity] : []
+        content {
+          type = identity.value.type
+          identity_ids = try(identity.value.identity_ids, null)
+        }
+       }
+
+       dynamic "timeouts" {
+        for_each = module.vmss_replicator.timeouts != null ? [module.vmss_replicator.timeouts] : []
+        content {
+          create = timeouts.value.create
+          delete = timeouts.value.delete
+          read   = timeouts.value.read
+          update = timeouts.value.update
+        }
        }
      }
      ```
@@ -278,6 +291,7 @@ resource "azapi_resource" "this" {
          parent_id      = module.vmss_replicator.post_creation_updates[0].azapi_header.parent_id
          body           = module.vmss_replicator.post_creation_updates[0].body
          sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
+         depends_on     = [azapi_resource.this]
        }
        
        resource "azapi_update_resource" "update1" {

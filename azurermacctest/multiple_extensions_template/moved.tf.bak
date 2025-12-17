@@ -1,0 +1,4 @@
+moved {
+  from = azurerm_orchestrated_virtual_machine_scale_set.test
+  to   = azapi_resource.this
+}

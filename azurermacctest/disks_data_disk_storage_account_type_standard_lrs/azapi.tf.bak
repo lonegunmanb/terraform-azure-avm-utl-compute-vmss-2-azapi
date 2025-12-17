@@ -1,0 +1,100 @@
+module "vmss_replicator" {
+  source = "../.."
+
+  name                        = "acctestOVMSS-${random_integer.number.result}"
+  location                    = azurerm_resource_group.test.location
+  resource_group_id           = azurerm_resource_group.test.id
+  platform_fault_domain_count = 2
+  sku_name                    = "Standard_F2s_v2"
+  instances                   = 1
+
+  os_profile = {
+    linux_configuration = {
+      computer_name_prefix            = "testvm-${random_integer.number.result}"
+      admin_username                  = "myadmin"
+      disable_password_authentication = false
+    }
+  }
+
+  os_profile_linux_configuration_admin_password         = "Passwword1234"
+  os_profile_linux_configuration_admin_password_version = 1
+
+  network_interface = [
+    {
+      name    = "TestNetworkProfile"
+      primary = true
+      ip_configuration = [
+        {
+          name                                       = "TestIPConfiguration"
+          primary                                    = true
+          subnet_id                                  = azurerm_subnet.test.id
+          load_balancer_backend_address_pool_ids     = [azurerm_lb_backend_address_pool.test.id]
+        }
+      ]
+    }
+  ]
+
+  os_disk = {
+    storage_account_type = "Standard_LRS"
+    caching              = "ReadWrite"
+  }
+
+  data_disk = [
+    {
+      lun                  = 0
+      caching              = "ReadWrite"
+      create_option        = "Empty"
+      disk_size_gb         = 10
+      storage_account_type = "Standard_LRS"
+    }
+  ]
+
+  source_image_reference = {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts"
+    version   = "latest"
+  }
+}
+
+resource "azapi_resource" "this" {
+  type                             = module.vmss_replicator.azapi_header.type
+  name                             = module.vmss_replicator.azapi_header.name
+  location                         = module.vmss_replicator.azapi_header.location
+  parent_id                        = module.vmss_replicator.azapi_header.parent_id
+  tags                             = module.vmss_replicator.azapi_header.tags
+  body                             = module.vmss_replicator.body
+  ignore_null_property             = module.vmss_replicator.azapi_header.ignore_null_property
+  sensitive_body                   = module.vmss_replicator.sensitive_body
+  sensitive_body_version           = module.vmss_replicator.sensitive_body_version
+  replace_triggers_external_values = module.vmss_replicator.replace_triggers_external_values
+  locks                            = module.vmss_replicator.locks
+  retry                            = module.vmss_replicator.retry
+
+  dynamic "identity" {
+    for_each = can(module.vmss_replicator.azapi_header.identity) ? [module.vmss_replicator.azapi_header.identity] : []
+    content {
+      type         = identity.value.type
+      identity_ids = try(identity.value.identity_ids, null)
+    }
+  }
+
+  dynamic "timeouts" {
+    for_each = module.vmss_replicator.timeouts != null ? [module.vmss_replicator.timeouts] : []
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
+}
+
+resource "azapi_update_resource" "update0" {
+  type           = module.vmss_replicator.post_creation_updates[0].azapi_header.type
+  name           = module.vmss_replicator.post_creation_updates[0].azapi_header.name
+  parent_id      = module.vmss_replicator.post_creation_updates[0].azapi_header.parent_id
+  body           = module.vmss_replicator.post_creation_updates[0].body
+  sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
+  depends_on     = [azapi_resource.this]
+}

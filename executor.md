@@ -158,7 +158,8 @@ locals {
     name = var.name; location = var.location; parent_id = var.{parent_type}_id
     tags = var.tags
     ignore_null_property = true
-    # ONLY these fields allowed: type, name, location, parent_id, tags, ignore_null_property, identity
+    retry = null
+    # ONLY these fields allowed: type, name, location, parent_id, tags, ignore_null_property, identity, retry
     # identity = ... (if resource supports managed identity at root level)
   }
 }
@@ -342,7 +343,7 @@ locals {
 
 ### Type 1: Root-Level Argument
 **Steps:** (1) Check `migrate_main.tf`, (2) Check `main.tf`, (3) **Query resource function for CustomizeDiff** (symbol=func, name=resource{Name}), (4) Query schema (entrypoint=schema), (5) **Check phase** (Create/Update), (6) Query Azure API, (7) **IMPLEMENT validations**, (8) **Check CustomizeDiff ForceNew**, (9) Add to local, (10) **CHECK following.md for deferred work**, (11) Create proof, (12) Update `track.md` status to `Pending for check`, (13) **Self-review: Remove content not in scope**.
-**Special - name (Task #1):** Create complete `azapi_header` with `type`, `name`, `location`, `parent_id`, `tags`, and `ignore_null_property`. Get `type` from track.md. Do NOT add hidden fields like `kind` - those belong to `__check_root_hidden_fields__` task. **ALSO create `terraform.tf` file** with the following content:
+**Special - name (Task #1):** Create complete `azapi_header` with `type`, `name`, `location`, `parent_id`, `tags`, `ignore_null_property`, and `retry`. Get `type` from track.md. Do NOT add hidden fields like `kind` - those belong to `__check_root_hidden_fields__` task. **ALSO create `terraform.tf` file** with the following content:
 ```hcl
 terraform {
   required_providers {
@@ -488,7 +489,7 @@ locals {
     # All possible sensitive field paths with try(tostring(...), "null")
     # Example: "properties.virtualMachineProfile.userData" = try(tostring(var.user_data_version), "null")
   }
-  azapi_header = {}  # type, name, location, parent_id, tags, ignore_null_property from track.md Task #1
+  azapi_header = {}  # type, name, location, parent_id, tags, ignore_null_property, retry from track.md Task #1
   post_creation_updates = compact([])
   locks = []  # Populated by Type 2 task
 }
@@ -503,6 +504,7 @@ output "sensitive_body_version" { value = local.sensitive_body_version }
 output "replace_triggers_external_values" { value = local.replace_triggers_external_values }
 output "post_creation_updates" { value = local.post_creation_updates; sensitive = true }
 output "locks" { value = local.locks }
+output "retry" { value = local.retry }
 ```
 
 **migrate_validation.tf:** `# Complex runtime validations only. Most in variables.tf`
@@ -584,6 +586,7 @@ resource "azapi_resource" "this" {
   type = local.azapi_header.type; name = local.azapi_header.name; location = local.azapi_header.location
   parent_id = local.azapi_header.parent_id; tags = local.azapi_header.tags
   ignore_null_property = local.azapi_header.ignore_null_property
+  retry = local.azapi_header.retry
   body = local.body
   sensitive_body = local.sensitive_body
   replace_triggers_external_values = local.replace_triggers_external_values

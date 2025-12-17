@@ -151,10 +151,10 @@ locals {
     os_disk_diff_disk_settings_option = { value = var.os_disk != null && var.os_disk.diff_disk_settings != null ? var.os_disk.diff_disk_settings.option : "" }
     os_disk_diff_disk_settings_placement = { value = var.os_disk != null && var.os_disk.diff_disk_settings != null ? var.os_disk.diff_disk_settings.placement : "" }
     linux_configuration_admin_username   = { value = var.os_profile != null && var.os_profile.linux_configuration != null ? var.os_profile.linux_configuration.admin_username : "" }
-    linux_configuration_admin_password = { value = var.os_profile_linux_configuration_admin_password_version }
+    linux_configuration_admin_password_version = { value = var.os_profile_linux_configuration_admin_password_version }
     linux_configuration_computer_name_prefix = { value = local.linux_configuration_computer_name_prefix }
     linux_configuration_provision_vm_agent = { value = var.os_profile != null && var.os_profile.linux_configuration != null ? coalesce(var.os_profile.linux_configuration.provision_vm_agent, true) : true }
-    windows_configuration_admin_password = { value = var.os_profile_windows_configuration_admin_password_version }
+    windows_configuration_admin_password_version = { value = var.os_profile_windows_configuration_admin_password_version }
     windows_configuration_admin_username = { value = var.os_profile != null && var.os_profile.windows_configuration != null ? var.os_profile.windows_configuration.admin_username : "" }
     windows_configuration_computer_name_prefix = { value = local.windows_configuration_computer_name_prefix }
     windows_configuration_provision_vm_agent = { value = var.os_profile != null && var.os_profile.windows_configuration != null ? var.os_profile.windows_configuration.provision_vm_agent : true }
@@ -336,13 +336,13 @@ locals {
                                       {
                                         name = ip_config.public_ip_address[0].name
                                       },
-                                       ip_config.public_ip_address[0].domain_name_label != null && ip_config.public_ip_address[0].domain_name_label != "" ? {
+                                      {
                                         properties = merge(
-                                          {
+                                          ip_config.public_ip_address[0].domain_name_label != null && ip_config.public_ip_address[0].domain_name_label != "" ? {
                                             dnsSettings = {
                                               domainNameLabel = ip_config.public_ip_address[0].domain_name_label
                                             }
-                                          },
+                                          } : {},
                                           ip_config.public_ip_address[0].idle_timeout_in_minutes != null && ip_config.public_ip_address[0].idle_timeout_in_minutes > 0 ? {
                                             idleTimeoutInMinutes = ip_config.public_ip_address[0].idle_timeout_in_minutes
                                           } : {},
@@ -351,61 +351,6 @@ locals {
                                               id = ip_config.public_ip_address[0].public_ip_prefix_id
                                             }
                                           } : {},
-                                          {
-                                            publicIPAddressVersion = ip_config.public_ip_address[0].version
-                                          },
-                                          ip_config.public_ip_address[0].ip_tag != null && length(ip_config.public_ip_address[0].ip_tag) > 0 ? {
-                                            ipTags = [
-                                              for ip_tag in ip_config.public_ip_address[0].ip_tag : {
-                                                tag       = ip_tag.tag
-                                                ipTagType = ip_tag.type
-                                              }
-                                            ]
-                                          } : {}
-                                        )
-                                      } : ip_config.public_ip_address[0].idle_timeout_in_minutes != null && ip_config.public_ip_address[0].idle_timeout_in_minutes > 0 ? {
-                                        properties = merge(
-                                          {
-                                            idleTimeoutInMinutes = ip_config.public_ip_address[0].idle_timeout_in_minutes
-                                          },
-                                          ip_config.public_ip_address[0].public_ip_prefix_id != null && ip_config.public_ip_address[0].public_ip_prefix_id != "" ? {
-                                            publicIPPrefix = {
-                                              id = ip_config.public_ip_address[0].public_ip_prefix_id
-                                            }
-                                          } : {},
-                                          {
-                                            publicIPAddressVersion = ip_config.public_ip_address[0].version
-                                          },
-                                          ip_config.public_ip_address[0].ip_tag != null && length(ip_config.public_ip_address[0].ip_tag) > 0 ? {
-                                            ipTags = [
-                                              for ip_tag in ip_config.public_ip_address[0].ip_tag : {
-                                                tag       = ip_tag.tag
-                                                ipTagType = ip_tag.type
-                                              }
-                                            ]
-                                          } : {}
-                                        )
-                                      } : ip_config.public_ip_address[0].public_ip_prefix_id != null && ip_config.public_ip_address[0].public_ip_prefix_id != "" ? {
-                                        properties = merge(
-                                          {
-                                            publicIPPrefix = {
-                                              id = ip_config.public_ip_address[0].public_ip_prefix_id
-                                            }
-                                          },
-                                          {
-                                            publicIPAddressVersion = ip_config.public_ip_address[0].version
-                                          },
-                                          ip_config.public_ip_address[0].ip_tag != null && length(ip_config.public_ip_address[0].ip_tag) > 0 ? {
-                                            ipTags = [
-                                              for ip_tag in ip_config.public_ip_address[0].ip_tag : {
-                                                tag       = ip_tag.tag
-                                                ipTagType = ip_tag.type
-                                              }
-                                            ]
-                                          } : {}
-                                        )
-                                      } : {
-                                        properties = merge(
                                           {
                                             publicIPAddressVersion = ip_config.public_ip_address[0].version
                                           },
@@ -456,36 +401,36 @@ locals {
                 {
                   allowExtensionOperations = var.extension_operations_enabled
                 },
-                var.os_profile.linux_configuration != null ? merge(
-                  {
-                    computerNamePrefix = local.linux_configuration_computer_name_prefix
-                  },
-                  {
-                    linuxConfiguration = merge(
-                      {
-                        adminUsername                 = var.os_profile.linux_configuration.admin_username
-                        disablePasswordAuthentication = var.os_profile.linux_configuration.disable_password_authentication
-                        provisionVMAgent              = coalesce(var.os_profile.linux_configuration.provision_vm_agent, true)
-                      },
-                      var.os_profile.linux_configuration.admin_ssh_key != null && length(var.os_profile.linux_configuration.admin_ssh_key) > 0 ? {
-                        ssh = {
-                          publicKeys = [
-                            for ssh_key in var.os_profile.linux_configuration.admin_ssh_key : {
-                              keyData = ssh_key.public_key
-                              path    = "/home/${ssh_key.username}/.ssh/authorized_keys"
-                            }
-                          ]
-                        }
-                      } : {},
-                      {
-                        patchSettings = {
-                          assessmentMode = var.os_profile.linux_configuration.patch_assessment_mode
-                          patchMode      = var.os_profile.linux_configuration.patch_mode
-                        }
+                var.os_profile.linux_configuration != null ? {
+                  computerNamePrefix = local.linux_configuration_computer_name_prefix
+                } : {},
+                var.os_profile.linux_configuration != null ? {
+                  linuxConfiguration = merge(
+                    {
+                      disablePasswordAuthentication = var.os_profile.linux_configuration.disable_password_authentication
+                      provisionVMAgent              = coalesce(var.os_profile.linux_configuration.provision_vm_agent, true)
+                    },
+                    var.os_profile.linux_configuration.admin_ssh_key != null && length(var.os_profile.linux_configuration.admin_ssh_key) > 0 ? {
+                      ssh = {
+                        publicKeys = [
+                          for ssh_key in var.os_profile.linux_configuration.admin_ssh_key : {
+                            keyData = ssh_key.public_key
+                            path    = "/home/${ssh_key.username}/.ssh/authorized_keys"
+                          }
+                        ]
                       }
-                    )
-                  }
-                ) : {},
+                    } : {},
+                    {
+                      patchSettings = {
+                        assessmentMode = var.os_profile.linux_configuration.patch_assessment_mode
+                        patchMode      = var.os_profile.linux_configuration.patch_mode
+                      }
+                    }
+                  )
+                } : {},
+                var.os_profile.linux_configuration != null ? {
+                  adminUsername = var.os_profile.linux_configuration.admin_username
+                } : {},
                 var.os_profile.linux_configuration != null && var.os_profile.linux_configuration.secret != null && length(var.os_profile.linux_configuration.secret) > 0 ? {
                   secrets = [
                     for secret in var.os_profile.linux_configuration.secret : {
@@ -661,6 +606,7 @@ locals {
                 var.os_disk != null ? {
                   osDisk = merge(
                     {
+                      createOption = "FromImage"
                       caching = var.os_disk.caching
                       managedDisk = merge(
                         {
@@ -788,7 +734,17 @@ locals {
     "properties.virtualMachineProfile.osProfile.windowsConfiguration.additionalUnattendContent"       = try(tostring(var.os_profile_windows_configuration_additional_unattend_content_content_version), "null")
   }
 
-  post_creation_updates = compact([
+  retry = {
+    error_message_regex = [
+      "retryable",
+      "RetryableError",
+      "try later",
+      "try again later",
+      "please retry",
+    ]
+  }
+
+  post_creation_updates = [
     {
       azapi_header = {
         type      = "Microsoft.Compute/virtualMachineScaleSets@2024-11-01"
@@ -822,7 +778,7 @@ locals {
         network_api_version          = local.network_api_version_update_trigger
       }
     }
-  ])
+  ]
 
   locks = []
 }

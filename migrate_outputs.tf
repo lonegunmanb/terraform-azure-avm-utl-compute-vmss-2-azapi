@@ -33,3 +33,7 @@ output "locks" {
 output "timeouts" {
   value = var.timeouts
 }
+
+output "retry"  {
+  value = local.retry
+}

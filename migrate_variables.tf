@@ -135,38 +135,49 @@ variable "os_profile_windows_configuration_admin_password" {
 
   validation {
     condition = (
-      length(var.os_profile_windows_configuration_admin_password) >= 8 &&
-      length(var.os_profile_windows_configuration_admin_password) <= 123
+      var.os_profile_windows_configuration_admin_password == null ||
+      (
+        length(var.os_profile_windows_configuration_admin_password) >= 8 &&
+        length(var.os_profile_windows_configuration_admin_password) <= 123
+      )
     )
     error_message = "admin_password must be at least 6 characters long and less than 72 characters long."
   }
 
   validation {
     condition = (
-      length(regexall("[a-z]", var.os_profile_windows_configuration_admin_password)) > 0 &&
-      length(regexall("[A-Z]", var.os_profile_windows_configuration_admin_password)) > 0 &&
-      length(regexall("[0-9]", var.os_profile_windows_configuration_admin_password)) > 0
-    ) || (
-      length(regexall("[a-z]", var.os_profile_windows_configuration_admin_password)) > 0 &&
-      length(regexall("[A-Z]", var.os_profile_windows_configuration_admin_password)) > 0 &&
-      length(regexall("[\\W_]", var.os_profile_windows_configuration_admin_password)) > 0
-    ) || (
-      length(regexall("[a-z]", var.os_profile_windows_configuration_admin_password)) > 0 &&
-      length(regexall("[0-9]", var.os_profile_windows_configuration_admin_password)) > 0 &&
-      length(regexall("[\\W_]", var.os_profile_windows_configuration_admin_password)) > 0
-    ) || (
-      length(regexall("[A-Z]", var.os_profile_windows_configuration_admin_password)) > 0 &&
-      length(regexall("[0-9]", var.os_profile_windows_configuration_admin_password)) > 0 &&
-      length(regexall("[\\W_]", var.os_profile_windows_configuration_admin_password)) > 0
+      var.os_profile_windows_configuration_admin_password == null ||
+      (
+        (
+          length(regexall("[a-z]", var.os_profile_windows_configuration_admin_password)) > 0 &&
+          length(regexall("[A-Z]", var.os_profile_windows_configuration_admin_password)) > 0 &&
+          length(regexall("[0-9]", var.os_profile_windows_configuration_admin_password)) > 0
+        ) || (
+          length(regexall("[a-z]", var.os_profile_windows_configuration_admin_password)) > 0 &&
+          length(regexall("[A-Z]", var.os_profile_windows_configuration_admin_password)) > 0 &&
+          length(regexall("[\\W_]", var.os_profile_windows_configuration_admin_password)) > 0
+        ) || (
+          length(regexall("[a-z]", var.os_profile_windows_configuration_admin_password)) > 0 &&
+          length(regexall("[0-9]", var.os_profile_windows_configuration_admin_password)) > 0 &&
+          length(regexall("[\\W_]", var.os_profile_windows_configuration_admin_password)) > 0
+        ) || (
+          length(regexall("[A-Z]", var.os_profile_windows_configuration_admin_password)) > 0 &&
+          length(regexall("[0-9]", var.os_profile_windows_configuration_admin_password)) > 0 &&
+          length(regexall("[\\W_]", var.os_profile_windows_configuration_admin_password)) > 0
+        )
+      )
     )
     error_message = "admin_password did not meet minimum password complexity requirements. A password must contain at least 3 of the 4 following conditions: a lower case character, a upper case character, a digit and/or a special character."
   }
 
   validation {
-    condition = !contains([
-      "abc@123", "P@$$w0rd", "P@ssw0rd", "P@ssword123", "Pa$$word",
-      "pass@word1", "Password!", "Password1", "Password22", "iloveyou!"
-    ], var.os_profile_windows_configuration_admin_password)
+    condition = (
+      var.os_profile_windows_configuration_admin_password == null ||
+      !contains([
+        "abc@123", "P@$$w0rd", "P@ssw0rd", "P@ssword123", "Pa$$word",
+        "pass@word1", "Password!", "Password1", "Password22", "iloveyou!"
+      ], var.os_profile_windows_configuration_admin_password)
+    )
     error_message = "admin_password cannot be one of the disallowed values: 'abc@123', 'P@$$w0rd', 'P@ssw0rd', 'P@ssword123', 'Pa$$word', 'pass@word1', 'Password!', 'Password1', 'Password22', 'iloveyou!'."
   }
 }

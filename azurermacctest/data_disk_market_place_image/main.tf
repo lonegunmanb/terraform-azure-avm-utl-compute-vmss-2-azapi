@@ -1,0 +1,73 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+provider "azapi" {}
+
+provider "random" {}
+
+resource "random_integer" "number" {
+  min = 1
+  max = 100
+}
+
+resource "azurerm_resource_group" "test" {
+  name     = "acctestRG-OVMSS-${random_integer.number.result}"
+  location = "eastus"
+}
+
+resource "azurerm_virtual_network" "test" {
+  name                = "acctestvn-${random_integer.number.result}"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+  address_space       = ["10.0.0.0/8"]
+}
+
+resource "azurerm_subnet" "test" {
+  name                 = "acctestsn-${random_integer.number.result}"
+  resource_group_name  = azurerm_resource_group.test.name
+  virtual_network_name = azurerm_virtual_network.test.name
+  address_prefixes     = ["10.0.1.0/24"]
+}
+
+resource "azurerm_lb" "test" {
+  name                = "acctestlb-${random_integer.number.result}"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+
+  sku = "Standard"
+
+  frontend_ip_configuration {
+    name                          = "default"
+    subnet_id                     = azurerm_subnet.test.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+resource "azurerm_lb_backend_address_pool" "test" {
+  name            = "acctestbap-${random_integer.number.result}"
+  loadbalancer_id = azurerm_lb.test.id
+}
+
+resource "azurerm_marketplace_agreement" "barracuda" {
+  publisher = "micro-focus"
+  offer     = "arcsight-logger"
+  plan      = "arcsight_logger_72_byol"
+}

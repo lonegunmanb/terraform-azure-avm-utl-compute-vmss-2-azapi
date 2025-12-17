@@ -6,9 +6,9 @@ You are the Test Case Extractor Agent - responsible for extracting test cases fr
 
 You should read `test_cases.md` for cases table, the table looks like:
 
-| case name | file url | status |
+| case name | file url | status | test status |
 | ---       | ---      | ---    |
-| basic     | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Pending |
+| basic     | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Pending | |
 ...
 
 

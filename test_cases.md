@@ -2,31 +2,63 @@
 
 ## Test Cases Summary
 
-| case name | file url | status |
+**Notes**: 
+- Test cases marked with status `invalid` should be skipped during testing unless explicitly commanded by a human to run.
+- Test cases with status `test success` can be rerun at any time, as new changes may be imported after a task has been tested.
+
+| case name | file url | status | test status |
 | --- | --- | --- |
-| basic | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| regression15299 | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| evictionPolicyDelete | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| specializedImage | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| withPPG | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| basicApplicationSecurity | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| basicWindows | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| otherAdditionalUnattendContent | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| basicWindowsNoTimezone | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| linux | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| linuxInstances | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| linuxUpdated | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| linuxCustomDataUpdated | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| bootDiagnostic | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| bootDiagnostic_noStorage | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| linuxEd25119SshKey | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| linuxKeyDataUpdated | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| applicationGatewayTemplate | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| skuProfile | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| skuProfileUpdate | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| priorityMixPolicy | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| updatePriorityMixPolicy | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
-| osProfile_empty | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed |
+| basic | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | test success |
+| regression15299 | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| evictionPolicyDelete | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| specializedImage | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| withPPG | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| basicApplicationSecurity | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| basicWindows | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| otherAdditionalUnattendContent | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| basicWindowsNoTimezone | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| linux | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| linuxInstances | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| linuxUpdated | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| linuxCustomDataUpdated | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| bootDiagnostic | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| bootDiagnostic_noStorage | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| linuxEd25119SshKey | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| linuxKeyDataUpdated | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| applicationGatewayTemplate | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | invalid | step 2 failed |
+| skuProfile | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| skuProfileUpdate | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| priorityMixPolicy | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| updatePriorityMixPolicy | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| osProfile_empty | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_test.go | Completed | |
+| basicLinux_managedDisk | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_data_test.go | Completed | |
+| basicLinux_managedDisk_withZones | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_data_test.go | Completed | |
+| loadBalancerTemplateManagedDataDisks | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_data_test.go | Completed | |
+| disksDataDiskStorageAccountType_PremiumLRS | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_data_test.go | Completed | |
+| disksDataDiskStorageAccountTypePremiumV2LRS | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_data_test.go | Completed | |
+| disksDataDiskStorageAccountType_PremiumZRS | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_data_test.go | Completed | |
+| disksDataDiskStorageAccountType_StandardLRS | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_data_test.go | Completed | |
+| disksDataDiskStorageAccountType_StandardSSDLRS | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_data_test.go | Completed | |
+| disksDataDiskStorageAccountType_StandardSSDZRS | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_data_test.go | Completed | |
+| disksDataDiskStorageAccountTypeUltraSSDLRS | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_data_test.go | Completed | |
+| dataDiskMarketPlaceImage | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_data_test.go | Completed | |
+| disksOSDiskEphemeral_CacheDisk | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_os_test.go | Completed | |
+| disksOSDiskEphemeral_ResourceDisk | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_os_test.go | Completed | |
+| disksOSDiskStorageAccountType_PremiumLRS | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_os_test.go | Completed | |
+| disksOSDiskStorageAccountType_PremiumZRS | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_os_test.go | Completed | |
+| disksOSDiskStorageAccountType_StandardLRS | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_os_test.go | Completed | |
+| disksOSDiskStorageAccountType_StandardSSDLRS | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_os_test.go | Completed | |
+| disksOSDiskStorageAccountType_StandardSSDZRS | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_disk_os_test.go | Completed | |
+| extensionTemplate | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_extensions_test.go | Completed | |
+| extensionTemplateUpdated | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_extensions_test.go | Completed | |
+| multipleExtensionsTemplate | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_extensions_test.go | Completed | |
+| multipleExtensionsTemplate_provisionMultipleExtensionOnExistingOvmss | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_extensions_test.go | Completed | |
+| extensionOperationsEnabled | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_extensions_test.go | Completed | |
+| extensionOperationsDisabled | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_extensions_test.go | Completed | |
+| extensionFailureSuppression | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_extensions_test.go | Completed | |
+| extensionFailureSuppressionUpdated | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_extensions_test.go | Completed | |
+| extensionProtectedSettingsFromKeyVault | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_extensions_test.go | Completed | |
+| extensionProtectedSettingsFromKeyVaultUpdated | https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/compute/orchestrated_virtual_machine_scale_set_resource_extensions_test.go | Completed | |
 
 ---
 
@@ -64,6 +96,48 @@
 21. **`r.skuProfile(data)`** - SKU profile with Mix sku_name and VM sizes (Spot priority, CapacityOptimized)
 22. **`r.skuProfileUpdate(data)`** - Updated SKU profile (LowestPrice allocation, different VM sizes)
 23. **`r.priorityMixPolicy(data)`** - Priority mix policy with base_regular_count and percentage
+
+### Disk Configuration Cases - Data Disks (11 cases):
+24. **`r.basicLinux_managedDisk(data)`** - Basic managed disk configuration
+25. **`r.basicLinux_managedDisk_withZones(data)`** - Managed disk with zone 1 specified
+26. **`r.loadBalancerTemplateManagedDataDisks(data)`** - With data disk (10GB Standard_LRS)
+27. **`r.disksDataDiskStorageAccountType(data, "Premium_LRS")`** - Data disk with Premium_LRS storage
+28. **`r.disksDataDiskStorageAccountTypePremiumV2LRS(data)`** - Data disk with PremiumV2_LRS (zonal, westeurope)
+29. **`r.disksDataDiskStorageAccountType(data, "Premium_ZRS")`** - Data disk with Premium_ZRS (zone-redundant)
+30. **`r.disksDataDiskStorageAccountType(data, "Standard_LRS")`** - Data disk with Standard_LRS
+31. **`r.disksDataDiskStorageAccountType(data, "StandardSSD_LRS")`** - Data disk with StandardSSD_LRS
+32. **`r.disksDataDiskStorageAccountType(data, "StandardSSD_ZRS")`** - Data disk with StandardSSD_ZRS
+33. **`r.disksDataDiskStorageAccountTypeUltraSSDLRS(data)`** - Data disk with UltraSSD_LRS (requires ultra_ssd_enabled, eastus2)
+34. **`r.dataDiskMarketPlaceImage(data)`** - Data disk created from marketplace image (900GB from ArcsightLogger)
+
+### Disk Configuration Cases - OS Disk (7 cases):
+35. **`r.disksOSDiskEphemeral(data, "CacheDisk")`** - Ephemeral OS disk with CacheDisk placement
+36. **`r.disksOSDiskEphemeral(data, "ResourceDisk")`** - Ephemeral OS disk with ResourceDisk placement
+37. **`r.disksOSDiskStorageAccountType(data, "Premium_LRS")`** - OS disk with Premium_LRS
+38. **`r.disksOSDiskStorageAccountType(data, "Premium_ZRS")`** - OS disk with Premium_ZRS (westeurope)
+39. **`r.disksOSDiskStorageAccountType(data, "Standard_LRS")`** - OS disk with Standard_LRS
+40. **`r.disksOSDiskStorageAccountType(data, "StandardSSD_LRS")`** - OS disk with StandardSSD_LRS
+41. **`r.disksOSDiskStorageAccountType(data, "StandardSSD_ZRS")`** - OS disk with StandardSSD_ZRS (westeurope)
+51
+
+**Source Files**:
+- Main: `orchestrated_virtual_machine_scale_set_resource_test.go` (23 cases)
+- Data Disks: `orchestrated_virtual_machine_scale_set_resource_disk_data_test.go` (11 cases)
+- OS Disks: `orchestrated_virtual_machine_scale_set_resource_disk_os_test.go` (7 cases)
+- Extensions: `orchestrated_virtual_machine_scale_set_resource_extensions_test.go` (10 cases)
+
+**Notes**:
+- Some test functions are used in multiple test scenarios (e.g., `r.linux()` is used as base config in several update tests)
+- Extension tests set instances=0 to avoid timeout during VMSS allocation
+- PremiumV2_LRS and UltraSSD_LRS require specific regions (westeurope/eastus2) and zonal deployment
+- Premium_ZRS and StandardSSD_ZRS require westeurope region
+- Priority mix and SKU profile features are preview features with specific region requirements (eastus2)
+- Several update test cases validate transitions between states (A → B)
+47. **`r.extensionOperationsDisabled(data)`** - With extension_operations_enabled = false
+48. **`r.extensionFailureSuppression(data)`** - Extension with failure_suppression_enabled = true
+49. **`r.extensionFailureSuppressionUpdated(data)`** - Extension with failure_suppression_enabled = false
+50. **`r.extensionProtectedSettingsFromKeyVault(data)`** - Extension protected settings from Key Vault (index 0)
+51. **`r.extensionProtectedSettingsFromKeyVaultUpdated(data)`** - Extension protected settings from different Key Vault (index 1)
 
 ---
 
