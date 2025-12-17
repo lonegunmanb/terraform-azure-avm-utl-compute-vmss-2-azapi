@@ -59,7 +59,7 @@ resource "azapi_resource" "this" {
   name                                 = module.vmss_replicator.azapi_header.name
   location                             = module.vmss_replicator.azapi_header.location
   parent_id                            = module.vmss_replicator.azapi_header.parent_id
-  tags                                 = module.vmss_replicator.tags
+  tags                                 = module.vmss_replicator.azapi_header.tags
   body                                 = module.vmss_replicator.body
   ignore_null_property = module.vmss_replicator.azapi_header.ignore_null_property
   sensitive_body                       = module.vmss_replicator.sensitive_body
@@ -95,4 +95,7 @@ resource "azapi_update_resource" "update0" {
   body           = module.vmss_replicator.post_creation_updates[0].body
   sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
   depends_on     = [azapi_resource.this]
+  lifecycle {
+    ignore_changes = [all]
+  }
 }

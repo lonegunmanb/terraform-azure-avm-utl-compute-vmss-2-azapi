@@ -16,7 +16,15 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = true
+    }
+    key_vault {
+      purge_soft_delete_on_destroy    = true
+      recover_soft_deleted_key_vaults = true
+    }
+  }
 }
 
 provider "azapi" {}
@@ -30,8 +38,8 @@ resource "random_string" "name" {
 }
 
 resource "random_integer" "number" {
-  min = 1
-  max = 100
+  min = 10000
+  max = 100000
 }
 
 resource "azurerm_resource_group" "test" {
@@ -52,5 +60,4 @@ resource "azurerm_subnet" "test" {
   virtual_network_name = azurerm_virtual_network.test.name
   address_prefixes     = ["10.0.2.0/24"]
 }
-
 

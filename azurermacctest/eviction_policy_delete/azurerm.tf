@@ -6,7 +6,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "test" {
   priority        = "Spot"
   eviction_policy = "Delete"
 
-  sku_name  = "Standard_D1_v2"
+  sku_name  = "Standard_D2_v2"
   instances = 2
 
   platform_fault_domain_count = 2

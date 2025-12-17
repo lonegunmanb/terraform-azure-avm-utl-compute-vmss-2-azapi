@@ -1,0 +1,27 @@
+Test Case: basic_linux_managed_disk_with_zones
+================================================================================
+
+Step 2 Failed: Baseline AzureRM Configuration Failed
+
+Failed Command:
+terraform apply -auto-approve -input=false
+
+Error Message:
+Error: creating Orchestrated Virtual Machine Scale Set (Subscription: "f7a632a5-49db-4c5e-9828-cd62cb753971"
+Resource Group Name: "acctestRG-OVMSS-al0acgqz"
+Virtual Machine Scale Set Name: "acctestOVMSS-al0acgqz"): performing CreateOrUpdate: unexpected status 400 (400 Bad Request) with error: InvalidParameter: The specified fault domain count 25 must fall in the range 1 to 5.
+
+Root Cause Analysis:
+The test configuration uses a random_integer (min=1, max=100) to set the platform_fault_domain_count.
+In this execution, the random value was 25, which exceeds Azure's valid range (1-5) for fault domains.
+This is a fundamental issue with the test case configuration itself - the random range is invalid.
+
+The azurerm.tf configuration should either:
+1. Set platform_fault_domain_count to a fixed value between 1-5, or
+2. Use random_integer with max=5 instead of max=100
+
+This is NOT a module conversion issue but a broken test case configuration.
+
+Conclusion:
+Test case is INVALID due to incorrect random range configuration in the original AzureRM test code.
+The test case cannot be used for validation purposes without fixing the random_integer max value.

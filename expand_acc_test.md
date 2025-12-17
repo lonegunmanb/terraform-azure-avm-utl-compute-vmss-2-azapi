@@ -98,8 +98,8 @@ fmt.Sprintf(`
 Transform to (using a single random_integer for ALL integer placeholders, **positive numbers only**):
 ```hcl
 resource "random_integer" "number" {
-  min = 1
-  max = 100
+  min = 10000
+  max = 100000
 }
 
 # In the resource blocks:
@@ -138,7 +138,15 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = true
+    }
+    key_vault {
+      purge_soft_delete_on_destroy    = true
+      recover_soft_deleted_key_vaults = true
+    }
+  }
 }
 
 provider "azapi" {}
@@ -166,7 +174,7 @@ provider "random" {}
 #### Random Resource Names
 **Use these standard names** (one of each per test case):
 - `random_string.name` - the single random string resource for all string placeholders
-- `random_integer.number` - the single random integer resource for all integer placeholders (min >= 1 for positive numbers only)
+- `random_integer.number` - the single random integer resource for all integer placeholders (min >= 100000  and max < 1000000 for positive numbers only)
 
 ### Best Practices
 
@@ -292,6 +300,9 @@ resource "azapi_resource" "this" {
          body           = module.vmss_replicator.post_creation_updates[0].body
          sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
          depends_on     = [azapi_resource.this]
+         lifecycle {
+           ignore_changes = [all]
+         }
        }
        
        resource "azapi_update_resource" "update1" {
@@ -301,6 +312,9 @@ resource "azapi_resource" "this" {
          body           = module.vmss_replicator.post_creation_updates[1].body
          sensitive_body = try(module.vmss_replicator.post_creation_updates[1].sensitive_body, null)
          depends_on     = [azapi_update_resource.update0]
+         lifecycle {
+           ignore_changes = [all]
+         }
        }
        ```
 

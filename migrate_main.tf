@@ -445,61 +445,59 @@ locals {
                     }
                   ]
                 } : {},
-                var.os_profile.windows_configuration != null ? merge(
-                  {
-                    computerNamePrefix = local.windows_configuration_computer_name_prefix
-                  },
-                  {
-                    windowsConfiguration = merge(
-                      {
-                        enableAutomaticUpdates = var.os_profile.windows_configuration.enable_automatic_updates
-                      },
-                      {
-                        patchSettings = merge(
-                          {
-                            enableHotpatching = var.os_profile.windows_configuration.hotpatching_enabled
-                          },
-                          var.os_profile.windows_configuration.patch_assessment_mode != null ? {
-                            assessmentMode = var.os_profile.windows_configuration.patch_assessment_mode
-                          } : {},
-                          {
-                            patchMode = var.os_profile.windows_configuration.patch_mode
-                          }
-                        )
-                      },
-                      {
-                        provisionVMAgent = var.os_profile.windows_configuration.provision_vm_agent
-                      },
-                      var.os_profile.windows_configuration.timezone != null && var.os_profile.windows_configuration.timezone != "" ? {
-                        timeZone = var.os_profile.windows_configuration.timezone
-                      } : {},
-                      var.os_profile.windows_configuration.additional_unattend_content != null ? {
-                        additionalUnattendContent = [
-                          for idx, content in var.os_profile.windows_configuration.additional_unattend_content : {
-                            componentName = "Microsoft-Windows-Shell-Setup"
-                            passName      = "OobeSystem"
-                            # content = ... # Task #124 - in sensitive_body
-                            settingName = content.setting
-                          }
-                        ]
-                      } : {},
-                      var.os_profile.windows_configuration.winrm_listener != null && length(var.os_profile.windows_configuration.winrm_listener) > 0 ? {
-                        winRM = {
-                          listeners = [
-                            for listener in var.os_profile.windows_configuration.winrm_listener : merge(
-                              {
-                                protocol = listener.protocol
-                              },
-                              listener.certificate_url != null ? {
-                                certificateUrl = listener.certificate_url
-                              } : {}
-                            )
-                          ]
+                var.os_profile.windows_configuration != null ? {
+                  computerNamePrefix = local.windows_configuration_computer_name_prefix
+                } : {},
+                var.os_profile.windows_configuration != null ? {
+                  windowsConfiguration = merge(
+                    {
+                      enableAutomaticUpdates = var.os_profile.windows_configuration.enable_automatic_updates
+                    },
+                    {
+                      patchSettings = merge(
+                        {
+                          enableHotpatching = var.os_profile.windows_configuration.hotpatching_enabled
+                        },
+                        var.os_profile.windows_configuration.patch_assessment_mode != null ? {
+                          assessmentMode = var.os_profile.windows_configuration.patch_assessment_mode
+                        } : {},
+                        {
+                          patchMode = var.os_profile.windows_configuration.patch_mode
                         }
-                      } : {}
-                    )
-                  }
-                ) : {},
+                      )
+                    },
+                    {
+                      provisionVMAgent = var.os_profile.windows_configuration.provision_vm_agent
+                    },
+                    var.os_profile.windows_configuration.timezone != null && var.os_profile.windows_configuration.timezone != "" ? {
+                      timeZone = var.os_profile.windows_configuration.timezone
+                    } : {},
+                    var.os_profile.windows_configuration.additional_unattend_content != null ? {
+                      additionalUnattendContent = [
+                        for idx, content in var.os_profile.windows_configuration.additional_unattend_content : {
+                          componentName = "Microsoft-Windows-Shell-Setup"
+                          passName      = "OobeSystem"
+                          # content = ... # Task #124 - in sensitive_body
+                          settingName = content.setting
+                        }
+                      ]
+                    } : {},
+                    var.os_profile.windows_configuration.winrm_listener != null && length(var.os_profile.windows_configuration.winrm_listener) > 0 ? {
+                      winRM = {
+                        listeners = [
+                          for listener in var.os_profile.windows_configuration.winrm_listener : merge(
+                            {
+                              protocol = listener.protocol
+                            },
+                            listener.certificate_url != null ? {
+                              certificateUrl = listener.certificate_url
+                            } : {}
+                          )
+                        ]
+                      }
+                    } : {}
+                  )
+                } : {},
                 var.os_profile.windows_configuration != null &&
                 var.os_profile.windows_configuration.secret != null &&
                 length(var.os_profile.windows_configuration.secret) > 0 ? {
@@ -685,11 +683,11 @@ locals {
               var.os_profile.linux_configuration != null && var.os_profile_linux_configuration_admin_password != null ? {
                 adminPassword = var.os_profile_linux_configuration_admin_password
               } : {},
+              var.os_profile.windows_configuration != null && var.os_profile_windows_configuration_admin_password != null ? {
+                adminPassword = var.os_profile_windows_configuration_admin_password
+              } : {},
               var.os_profile.windows_configuration != null ? {
                 windowsConfiguration = merge(
-                  {
-                    adminPassword = var.os_profile_windows_configuration_admin_password
-                  },
                   var.os_profile.windows_configuration.additional_unattend_content != null && length(local.additional_unattend_content_map) > 0 ? {
                     additionalUnattendContent = [
                       for idx, content in var.os_profile.windows_configuration.additional_unattend_content : {

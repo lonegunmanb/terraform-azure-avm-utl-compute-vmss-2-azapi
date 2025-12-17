@@ -1,0 +1,27 @@
+Test Case: eviction_policy_delete
+================================================================================
+
+Step 2 (Verify AzureRM Configuration) FAILED
+
+Failed Command: terraform apply -auto-approve -input=false
+
+Error Message:
+Error: creating Orchestrated Virtual Machine Scale Set (Subscription: "f7a632a5-49db-4c5e-9828-cd62cb753971"
+Resource Group Name: "acctestRG-OVMSS-32"
+Virtual Machine Scale Set Name: "acctestOVMSS-32"): polling after CreateOrUpdate: polling failed: the Azure API returned the following error:
+
+Status: "SkuNotAvailable"
+Code: ""
+Message: "The requested VM size for resource 'Following SKUs have failed for Capacity Restrictions: Standard_D1_v2' is currently not available in location 'eastus'. Please try another size or deploy to a different location or different zone. See https://aka.ms/azureskunotavailable for details."
+
+Root Cause Analysis:
+The Azure API returned a SkuNotAvailable error for Standard_D1_v2 in the eastus region. This is an Azure capacity restriction, not a configuration error. The VM SKU is temporarily or permanently unavailable in the specified location.
+
+Impact:
+This baseline test failure prevents the validation of the AzureRM configuration itself. Since Step 2 acts as a gate, and the failure is due to Azure capacity limitations (not a configuration issue), this test case should be marked as "invalid" rather than "test failed".
+
+Conclusion:
+Test case marked as INVALID due to Azure SKU capacity restrictions. The configuration is correct but cannot be deployed due to Azure regional capacity limitations.
+
+Cleanup Status:
+terraform destroy command initiated but resource group deletion is taking excessive time (>9 minutes). The resource group acctestRG-OVMSS-32 may need manual cleanup or will eventually be cleaned by Azure.

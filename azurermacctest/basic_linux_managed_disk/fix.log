@@ -1,0 +1,20 @@
+Test Case: basic_linux_managed_disk
+================================================================================
+
+Initial Error:
+Error: Invalid value for input variable
+  on azapi.tf line 22, in module "vmss_replicator":
+  22:   network_interface = [
+The given value is not suitable for module.vmss_replicator.var.network_interface declared at
+..\..\variables.tf:536,1-29: element 0: attribute "ip_configuration": element 0: attribute "public_ip_address": list
+of object required.
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The public_ip_address attribute is defined as an object, but the module expects a list of objects
+- Fix Method: Wrap the public_ip_address object in a list [ ]
+- Changes Made: Change public_ip_address = {...} to public_ip_address = [{...}]
+- Result: Success - plan runs successfully with only acceptable drifts (ignore_null_property, locks, output, replace_triggers_external_values, retry, sensitive_body_version, type API version change)
+
+Final Result: Fix successful

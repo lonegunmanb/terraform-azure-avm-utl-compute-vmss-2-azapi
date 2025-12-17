@@ -20,12 +20,20 @@ A typical test directory contains the following files:
 ⚠️ **CRITICAL REQUIREMENT**: For each step in the test workflow:
 1. **Before starting** any step: Update the `test status` column in `test_cases.md` to `step X in progress`
 2. **After completing** a step successfully: Update the `test status` column in `test_cases.md` to `step X finished`
+3. **If ANY step fails**: IMMEDIATELY mark the test case in `test_cases.md` as `test failed` or `invalid` (depending on the step)
+
+⚠️ **ABSOLUTE PROHIBITION - NO EXCEPTIONS**:
+- **NEVER mark a test as `test success` if ANY test command fails**
+- **NEVER rationalize failures as "environmental issues" or "expected behavior"**
+- **If a terraform command fails (init, plan, apply, etc.), the test has FAILED**
+- **Only mark as `test success` if ALL steps complete without errors**
 
 This tracking is mandatory for:
 - Maintaining visibility of test progress
 - Preventing duplicate work
 - Enabling team coordination
 - Facilitating debugging and rollback
+- Ensuring test result accuracy
 
 **Example**: When beginning Step 3 for the "basic" test case, update `test_cases.md` to show `step 3 in progress`. Once Step 3 completes successfully, update it to `step 3 finished` before proceeding to Step 4.
 
@@ -310,7 +318,7 @@ cd azurermacctest/<test_case_name> && terraform init
 
 **Possible Results**:
 - ✅ **Success**: Proceed to plan
-- ❌ **Failed**: Errors occurred, need analysis and fixes
+- ❌ **Failed**: Errors occurred, need analysis and fixes. After attempting fixes (max 5 attempts per error), if still failing, mark test case as `test failed` in `test_cases.md`, create `err.log`, proceed to cleanup
 
 Plan:
 
@@ -326,7 +334,7 @@ cd azurermacctest/<test_case_name> && terraform plan -input=false
 
 **Possible Results**:
 - ✅ **Success**: Proceed to apply
-- ❌ **Failed**: Errors occurred, need analysis and fixes
+- ❌ **Failed**: Errors occurred, need analysis and fixes. After attempting fixes (max 5 attempts per error), if still failing, mark test case as `test failed` in `test_cases.md`, create `err.log`, proceed to cleanup
 
 Apply:
 
@@ -342,7 +350,7 @@ cd azurermacctest/<test_case_name> && terraform apply -auto-approve -input=false
 
 **Possible Results**:
 - ✅ **Success**: Resources created, proceed to verify idempotency
-- ❌ **Failed**: Errors occurred, need analysis and fixes
+- ❌ **Failed**: Errors occurred, need analysis and fixes. After attempting fixes (max 5 attempts per error), if still failing, mark test case as `test failed` in `test_cases.md`, create `err.log`, proceed to cleanup
 
 Verify idempotency (no config drift):
 
@@ -358,7 +366,7 @@ cd azurermacctest/<test_case_name> && terraform plan -input=false
 
 **Expected Result**: 
 - ✅ **Success**: Plan shows "No changes. Your infrastructure matches the configuration."
-- ❌ **Failed**: Plan shows changes (config drift detected), need analysis
+- ❌ **Failed**: Plan shows changes (config drift detected), need analysis. After attempting fixes (max 5 attempts per error), if still failing, mark test case as `test failed` in `test_cases.md`, create `err.log`, proceed to cleanup
 
 Destroy:
 
@@ -392,7 +400,11 @@ mv azurerm.tf.bak azurerm.tf
 
 **Expected Result**: Test case directory is restored to its original state with `azurerm.tf` active and `azapi.tf.bak`, `moved.tf.bak` as backups.
 
-**Final Status Update**: After all steps complete successfully, update `test_cases.md` to mark the test case's test status as `test success`.
+**Final Status Update**: 
+- ✅ **If ALL steps (Step 1-5) completed successfully without ANY errors**: Update `test_cases.md` to mark the test case's test status as `test success`
+- ❌ **If ANY step failed at any point**: The test case MUST be marked as `test failed` or `invalid` in `test_cases.md`. Do NOT mark as success regardless of the reason for failure (environmental, API issues, etc.)
+
+⚠️ **REMINDER**: Success means ZERO failures in ALL steps. Any failure = test failed.
 
 ## Error Analysis and Fixes
 

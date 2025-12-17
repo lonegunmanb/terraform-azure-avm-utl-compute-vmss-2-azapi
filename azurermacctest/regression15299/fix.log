@@ -1,0 +1,27 @@
+Test Case: regression15299
+================================================================================
+
+Initial Error:
+│ Error: Unsupported attribute
+│
+│   on azapi.tf line 97, in resource "azapi_update_resource" "update0":
+│   97:     ignore_changes = [all]
+│
+│ This object has no argument, nested block, or exported attribute named "all".
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The error indicates that `ignore_changes = [all]` is not valid syntax in the lifecycle block. The correct Terraform syntax for ignoring all changes is to not use brackets around `all`.
+- Fix Method: Remove the brackets around `all` in the ignore_changes line
+- Changes Made: Changed `ignore_changes = [all]` to `ignore_changes = all` on line 97
+- Result: Success - terraform plan now shows acceptable drift only
+
+Final Result: Fix successful
+
+Drift Analysis:
+All detected drifts match acceptable patterns from acceptable_drift_patterns.md:
+- ignore_null_property, locks, replace_triggers_external_values, sensitive_body_version, output, type changes (Pattern 1)
+- body changes removing diskSizeGB (Optional+Computed), osType (not in AzureRM schema), deleteOption (computed) (Pattern 2)
+- Proceeding to apply and verify idempotency
+

@@ -44,6 +44,10 @@ When processing timeout-related tasks, you MUST:
 
 ### 2. Update Variable Defaults in `variables.tf`
 
+**⚠️ CRITICAL REQUIREMENTS:**
+1. **Sync `default` with `type` definition:** The values in the `default` block MUST exactly match the default values defined in the `optional(string, "XXm")` parameters in the `type` definition
+2. **Set `nullable = false`:** Always ensure `nullable = false` is explicitly set to prevent null values
+
 - Locate the existing timeout variable (e.g., `orchestrated_virtual_machine_scale_set_timeouts`)
 - Update the `default` value for the specific timeout field:
   ```hcl
@@ -54,7 +58,13 @@ When processing timeout-related tasks, you MUST:
       read   = optional(string, "5m")   # <- Update with extracted default
       update = optional(string, "60m")  # <- Update with extracted default
     })
-    default     = null
+    default     = {
+      create = "60m" # <- MUST match type definition: optional(string, "60m")
+      delete = "60m"  # <- MUST match type definition: optional(string, "60m")
+      read   = "5m"   # <- MUST match type definition: optional(string, "5m")
+      update = "60m"  # <- MUST match type definition: optional(string, "60m")
+    }
+    nullable = false # <- REQUIRED: Always set to false
     description = <<-EOT
      - `create` - (Optional) Specifies the timeout for create operations. Defaults to 60 minutes.
      - `delete` - (Optional) Specifies the timeout for delete operations. Defaults to 60 minutes.
@@ -64,6 +74,7 @@ When processing timeout-related tasks, you MUST:
   }
   ```
 - Convert Go duration to string format: `60 * time.Minute` → `"60m"`, `30 * time.Minute` → `"30m"`
+- **Verify synchronization:** Double-check that each field in `default` block matches its corresponding `optional(string, "XXm")` value
 
 ### 3. Update Variable Description
 

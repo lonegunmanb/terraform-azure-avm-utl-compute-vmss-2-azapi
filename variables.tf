@@ -294,7 +294,7 @@ variable "extension" {
     failure_suppression_enabled               = optional(bool, false)
     force_extension_execution_on_change       = optional(string)
     name                                      = string
-    protected_settings                        = optional(string) # TODO: delete later - migrated to independent ephemeral variable (Task #52)
+    protected_settings                        = optional(string) # TODO: delete later - migrated to independent ephemeral variable (Task #52) var.extension_protected_settings
     publisher                                 = string
     settings                                  = optional(string)
     type                                      = string
@@ -895,9 +895,9 @@ EOT
 
 variable "os_profile" {
   type = object({
-    custom_data = optional(string) # TODO: delete later - migrated to independent ephemeral variable (Task #97)
+    custom_data = optional(string) # TODO: delete later - migrated to independent ephemeral variable (Task #97) var.os_profile_custom_data
     linux_configuration = optional(object({
-      admin_password                  = optional(string) # TODO: delete later - migrated to independent ephemeral variable (Task #100)
+      admin_password                  = optional(string) # TODO: delete later - migrated to independent ephemeral variable (Task #100) var.os_profile_linux_configuration_admin_password
       admin_username                  = string
       computer_name_prefix            = optional(string) # Computed - defaults to VMSS name if not specified
       disable_password_authentication = optional(bool, true)
@@ -916,7 +916,7 @@ variable "os_profile" {
       })))
     }))
     windows_configuration = optional(object({
-      admin_password           = string # TODO: delete later - migrated to independent ephemeral variable (Task #114)
+      admin_password           = optional(string) # TODO: delete later - migrated to independent ephemeral variable (Task #114) var.os_profile_windows_configuration_admin_password
       admin_username           = string # ForceNew field, validation applied
       computer_name_prefix     = optional(string)
       enable_automatic_updates = optional(bool, true)
@@ -926,7 +926,7 @@ variable "os_profile" {
       provision_vm_agent       = optional(bool, true)
       timezone                 = optional(string)
       additional_unattend_content = optional(list(object({
-        content = string # TODO: delete later - migrated to independent ephemeral variable (Task #124)
+        content = string # TODO: delete later - migrated to independent ephemeral variable (Task #124) var.os_profile_windows_configuration_additional_unattend_content_content
         setting = string
       })))
       secret = optional(list(object({
@@ -1560,7 +1560,13 @@ variable "timeouts" {
     read   = optional(string, "5m")
     update = optional(string, "60m")
   })
-  default     = null
+  default     = {
+    create = "60m"
+    delete = "60m"
+    read   = "5m"
+    update = "60m"
+  }
+  nullable = false
   description = <<-EOT
  - `create` - (Optional) Specifies the timeout for create operations. Defaults to 60 minutes.
  - `delete` - (Optional) Specifies the timeout for delete operations. Defaults to 60 minutes.

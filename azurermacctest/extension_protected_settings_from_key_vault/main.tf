@@ -17,13 +17,15 @@ terraform {
 
 provider "azurerm" {
   features {
+    resource_group {
+      prevent_deletion_if_contains_resources = true
+    }
     key_vault {
-      recover_soft_deleted_key_vaults       = false
-      purge_soft_delete_on_destroy          = false
-      purge_soft_deleted_keys_on_destroy    = false
-      purge_soft_deleted_secrets_on_destroy = false
+      purge_soft_delete_on_destroy    = true
+      recover_soft_deleted_key_vaults = true
     }
   }
+}
 }
 
 provider "azapi" {}
@@ -37,8 +39,8 @@ resource "random_string" "name" {
 }
 
 resource "random_integer" "number" {
-  min = 1
-  max = 100
+  min = 10000
+  max = 100000
 }
 
 data "azurerm_client_config" "current" {}

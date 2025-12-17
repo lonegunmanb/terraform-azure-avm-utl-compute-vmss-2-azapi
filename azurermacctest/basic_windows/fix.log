@@ -1,0 +1,117 @@
+Test Case: basic_windows
+================================================================================
+
+Initial Error:
+Error: Invalid value for input variable
+  on azapi.tf line 11, in module "vmss_replicator":
+  11:   os_profile = {
+  12:     windows_configuration = {
+  13:       computer_name_prefix     = "testvm"
+  14:       admin_username           = "myadmin"
+  15:       enable_automatic_updates = true
+  16:       provision_vm_agent       = true
+  17:       timezone                 = "W. Europe Standard Time"
+  18:       winrm_listener = [
+  19:         {
+  20:           protocol = "Http"
+  21:         }
+  22:       ]
+  23:     }
+  24:   }
+
+The given value is not suitable for module.vmss_replicator.var.os_profile declared at ..\..\variables.tf:896,1-22:
+attribute "windows_configuration": attribute "admin_password" is required.
+
+Error: Invalid value for input variable
+  on azapi.tf line 29, in module "vmss_replicator":
+  29:   network_interface = [
+  ...
+  38:           public_ip_address = {
+  39:             name                    = "TestPublicIPConfiguration"
+  40:             domain_name_label       = "test-domain-label"
+  41:             idle_timeout_in_minutes = 4
+  42:           }
+  ...
+
+The given value is not suitable for module.vmss_replicator.var.network_interface declared at
+..\..\variables.tf:536,1-29: element 0: attribute "ip_configuration": element 0: attribute "public_ip_address": list
+of object required.
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: Two type errors in azapi.tf:
+  1. admin_password is required in windows_configuration but missing (provided separately on line 26)
+  2. public_ip_address should be a list but provided as an object
+- Fix Method: 
+  1. Add admin_password to windows_configuration block
+  2. Convert public_ip_address from object to list format
+- Changes Made:
+  1. Added admin_password = "Passwword1234" to windows_configuration
+  2. Wrapped public_ip_address in square brackets to make it a list
+- Result: New error - Module bug detected
+
+Attempt 2:
+New Error after Attempt 1:
+Error: Inconsistent conditional result types
+  on ..\..\migrate_main.tf line 448, in locals:
+ 448:                 var.os_profile.windows_configuration != null ? merge(
+ 449:                   {
+ 450:                     computerNamePrefix = local.windows_configuration_computer_name_prefix
+ 451:                   },
+ 452:                   {
+ 453:                     windowsConfiguration = merge(
+
+The true and false result expressions must have consistent types. The 'true' value includes object attribute
+"computerNamePrefix", which is absent in the 'false' value.
+
+- Problem Analysis: This is a bug in the module code (migrate_main.tf). The Windows configuration conditional at line 448-502 tries to merge computerNamePrefix with windowsConfiguration in a single conditional block. This causes a type inconsistency error because when the condition is false, it returns {}, but when true, it returns an object with computerNamePrefix. The Linux configuration (lines 404-406) correctly splits this into separate conditionals.
+
+This is a MODULE BUG that cannot be fixed from the test configuration level. The module code needs to be fixed to split the Windows configuration conditional similar to how Linux is handled:
+- Line 448-451: Should be a separate conditional for computerNamePrefix
+- Line 452-501: Should be a separate conditional for windowsConfiguration
+- Line 520-522: Already separate for adminUsername
+
+- Fix Method: Fixed the module code (migrate_main.tf) by splitting the single merged conditional into two separate conditionals, matching the Linux configuration pattern
+- Changes Made: 
+  1. Split lines 448-502 into two separate conditionals
+  2. First conditional (lines 448-451) for computerNamePrefix
+  3. Second conditional (lines 452-502) for windowsConfiguration
+- Result: Module fix successful. New error revealed.
+
+Attempt 3:
+New Error after Attempt 2:
+Error: Invalid configuration
+  with azapi_resource.this,
+  on azapi.tf line 64, in resource "azapi_resource" "this":
+  64: resource "azapi_resource" "this" {
+
+embedded schema validation failed: the argument "body" is invalid:
+`properties.virtualMachineProfile.osProfile.windowsConfiguration.adminPassword` is not expected here. Do you mean
+`properties.virtualMachineProfile.osProfile.windowsConfiguration.winRM`?
+
+- Problem Analysis: The admin_password should NOT be in the os_profile.windows_configuration block. It's already provided via the separate os_profile_windows_configuration_admin_password parameter (line 26 in azapi.tf), which gets placed in sensitive_body by the module. Having it in both places causes this error.
+
+However, the module's variable definition (variables.tf line 919) still requires admin_password as a non-optional field in windows_configuration. This is a transitional state (TODO comment indicates it should be migrated to independent ephemeral variable).
+
+- Fix Method: 
+  1. Attempt 3a: Remove admin_password from windows_configuration block in azapi.tf - FAILED (variable requires it)
+  2. Attempt 3b: Make admin_password optional in variables.tf line 919, changing `admin_password = string` to `admin_password = optional(string)` - FAILED (admin_password still appearing in body)
+  3. Attempt 3c: Found root cause - migrate_main.tf line 686-690 unconditionally adds adminPassword to windowsConfiguration in sensitive_body, unlike Linux which checks for null first (line 683-685). Fixed by adding null check: `var.os_profile_windows_configuration_admin_password != null ? { adminPassword = ... } : {}` - FAILED (adminPassword should not be in windowsConfiguration at all)
+  4. Attempt 3d: Realized adminPassword should be at osProfile level (like Linux line 684), not inside windowsConfiguration. Moved adminPassword from windowsConfiguration to osProfile level with null check.
+- Changes Made: 
+  1. Updated variables.tf line 919 to make admin_password optional
+  2. Moved adminPassword from inside windowsConfiguration (line 688-690) to osProfile level (after line 685), with null check matching Linux pattern
+- Result: SUCCESS! Plan now works with acceptable drift patterns detected.
+
+Final Result: Fix successful after 3 attempts with multiple sub-attempts.
+
+Summary of Module Bugs Fixed:
+1. migrate_main.tf line 448-502: Windows configuration merged computerNamePrefix with windowsConfiguration causing type inconsistency. Split into separate conditionals.
+2. variables.tf line 919: admin_password marked as required instead of optional, preventing use of separate ephemeral variable. Made it optional.
+3. migrate_main.tf line 688-690: adminPassword incorrectly placed inside windowsConfiguration instead of at osProfile level. Moved to osProfile level with null check.
+
+Summary of Test Config Fixes:
+1. azapi.tf: Changed public_ip_address from object to list format (wrapped in [])
+
+
