@@ -121,16 +121,16 @@ variable "capacity_reservation_group_id" {
   }
 
   validation {
-    condition = var.proximity_placement_group_id == null || var.capacity_reservation_group_id == null
+    condition     = var.proximity_placement_group_id == null || var.capacity_reservation_group_id == null
     error_message = "The proximity_placement_group_id cannot be specified when capacity_reservation_group_id is set (ConflictsWith)."
   }
 }
 
-  variable "data_disk" {
-    type = list(object({
-      caching                        = string
-      create_option                  = optional(string, "Empty")
-      disk_encryption_set_id         = optional(string)
+variable "data_disk" {
+  type = list(object({
+    caching                        = string
+    create_option                  = optional(string, "Empty")
+    disk_encryption_set_id         = optional(string)
     disk_size_gb                   = optional(number)
     lun                            = optional(number, 0)
     storage_account_type           = string
@@ -474,7 +474,7 @@ EOT
     condition = (
       var.identity == null ||
       (length(var.identity.identity_ids) > 0 &&
-        alltrue([for id in var.identity.identity_ids : can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.ManagedIdentity/userAssignedIdentities/[^/]+$", id))]))
+      alltrue([for id in var.identity.identity_ids : can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.ManagedIdentity/userAssignedIdentities/[^/]+$", id))]))
     )
     error_message = "All identity_ids must be valid User Assigned Identity resource IDs in the format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}."
   }
@@ -917,7 +917,7 @@ variable "os_profile" {
     }))
     windows_configuration = optional(object({
       admin_password           = optional(string) # TODO: delete later - migrated to independent ephemeral variable (Task #114) var.os_profile_windows_configuration_admin_password
-      admin_username           = string # ForceNew field, validation applied
+      admin_username           = string           # ForceNew field, validation applied
       computer_name_prefix     = optional(string)
       enable_automatic_updates = optional(bool, true)
       hotpatching_enabled      = optional(bool, false)
@@ -942,7 +942,7 @@ variable "os_profile" {
       })))
     }))
   })
-  default     = null
+  default = null
 
   validation {
     condition = (
@@ -965,22 +965,22 @@ variable "os_profile" {
   }
 
   validation {
-    condition = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_assessment_mode == null || contains(["AutomaticByPlatform", "ImageDefault"], var.os_profile.linux_configuration.patch_assessment_mode)
+    condition     = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_assessment_mode == null || contains(["AutomaticByPlatform", "ImageDefault"], var.os_profile.linux_configuration.patch_assessment_mode)
     error_message = "The patch_assessment_mode must be either 'AutomaticByPlatform' or 'ImageDefault'."
   }
 
   validation {
-    condition = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_assessment_mode != "AutomaticByPlatform" || var.os_profile.linux_configuration.provision_vm_agent == true
+    condition     = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_assessment_mode != "AutomaticByPlatform" || var.os_profile.linux_configuration.provision_vm_agent == true
     error_message = "When patch_assessment_mode is set to 'AutomaticByPlatform', provision_vm_agent must be set to true."
   }
 
   validation {
-    condition = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_mode == null || contains(["ImageDefault", "AutomaticByPlatform"], var.os_profile.linux_configuration.patch_mode)
+    condition     = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_mode == null || contains(["ImageDefault", "AutomaticByPlatform"], var.os_profile.linux_configuration.patch_mode)
     error_message = "The patch_mode must be either 'ImageDefault' or 'AutomaticByPlatform'."
   }
 
   validation {
-    condition = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_mode != "AutomaticByPlatform" || var.os_profile.linux_configuration.provision_vm_agent == true
+    condition     = var.os_profile == null || var.os_profile.linux_configuration == null || var.os_profile.linux_configuration.patch_mode != "AutomaticByPlatform" || var.os_profile.linux_configuration.provision_vm_agent == true
     error_message = "When patch_mode is set to 'AutomaticByPlatform', provision_vm_agent must be set to true."
   }
 
@@ -1092,27 +1092,27 @@ variable "os_profile" {
   }
 
   validation {
-    condition = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.patch_assessment_mode == null || contains(["AutomaticByPlatform", "ImageDefault"], var.os_profile.windows_configuration.patch_assessment_mode)
+    condition     = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.patch_assessment_mode == null || contains(["AutomaticByPlatform", "ImageDefault"], var.os_profile.windows_configuration.patch_assessment_mode)
     error_message = "The patch_assessment_mode must be either 'AutomaticByPlatform' or 'ImageDefault'."
   }
 
   validation {
-    condition = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.patch_assessment_mode != "AutomaticByPlatform" || var.os_profile.windows_configuration.provision_vm_agent != false
+    condition     = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.patch_assessment_mode != "AutomaticByPlatform" || var.os_profile.windows_configuration.provision_vm_agent != false
     error_message = "When patch_assessment_mode is set to 'AutomaticByPlatform', provision_vm_agent must be set to true."
   }
 
   validation {
-    condition = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.patch_mode == null || contains(["AutomaticByOS", "AutomaticByPlatform", "Manual"], var.os_profile.windows_configuration.patch_mode)
+    condition     = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.patch_mode == null || contains(["AutomaticByOS", "AutomaticByPlatform", "Manual"], var.os_profile.windows_configuration.patch_mode)
     error_message = "The patch_mode must be one of 'AutomaticByOS', 'AutomaticByPlatform', or 'Manual'."
   }
 
   validation {
-    condition = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.patch_mode != "AutomaticByPlatform" || var.os_profile.windows_configuration.provision_vm_agent != false
+    condition     = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.patch_mode != "AutomaticByPlatform" || var.os_profile.windows_configuration.provision_vm_agent != false
     error_message = "When patch_mode is set to 'AutomaticByPlatform', provision_vm_agent must be set to true."
   }
 
   validation {
-    condition = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.timezone == null || contains(["", "Afghanistan Standard Time", "Alaskan Standard Time", "Arab Standard Time", "Arabian Standard Time", "Arabic Standard Time", "Argentina Standard Time", "Atlantic Standard Time", "AUS Central Standard Time", "AUS Eastern Standard Time", "Azerbaijan Standard Time", "Azores Standard Time", "Bahia Standard Time", "Bangladesh Standard Time", "Belarus Standard Time", "Canada Central Standard Time", "Cape Verde Standard Time", "Caucasus Standard Time", "Cen. Australia Standard Time", "Central America Standard Time", "Central Asia Standard Time", "Central Brazilian Standard Time", "Central Europe Standard Time", "Central European Standard Time", "Central Pacific Standard Time", "Central Standard Time (Mexico)", "Central Standard Time", "China Standard Time", "Dateline Standard Time", "E. Africa Standard Time", "E. Australia Standard Time", "E. Europe Standard Time", "E. South America Standard Time", "Eastern Standard Time (Mexico)", "Eastern Standard Time", "Egypt Standard Time", "Ekaterinburg Standard Time", "Fiji Standard Time", "FLE Standard Time", "Georgian Standard Time", "GMT Standard Time", "Greenland Standard Time", "Greenwich Standard Time", "GTB Standard Time", "Hawaiian Standard Time", "India Standard Time", "Iran Standard Time", "Israel Standard Time", "Jordan Standard Time", "Kaliningrad Standard Time", "Korea Standard Time", "Libya Standard Time", "Line Islands Standard Time", "Magadan Standard Time", "Mauritius Standard Time", "Middle East Standard Time", "Montevideo Standard Time", "Morocco Standard Time", "Mountain Standard Time (Mexico)", "Mountain Standard Time", "Myanmar Standard Time", "N. Central Asia Standard Time", "Namibia Standard Time", "Nepal Standard Time", "New Zealand Standard Time", "Newfoundland Standard Time", "North Asia East Standard Time", "North Asia Standard Time", "Pacific SA Standard Time", "Pacific Standard Time (Mexico)", "Pacific Standard Time", "Pakistan Standard Time", "Paraguay Standard Time", "Romance Standard Time", "Russia Time Zone 10", "Russia Time Zone 11", "Russia Time Zone 3", "Russian Standard Time", "SA Eastern Standard Time", "SA Pacific Standard Time", "SA Western Standard Time", "Samoa Standard Time", "SE Asia Standard Time", "Singapore Standard Time", "South Africa Standard Time", "Sri Lanka Standard Time", "Syria Standard Time", "Taipei Standard Time", "Tasmania Standard Time", "Tokyo Standard Time", "Tonga Standard Time", "Turkey Standard Time", "Ulaanbaatar Standard Time", "US Eastern Standard Time", "US Mountain Standard Time", "UTC", "UTC+12", "UTC-02", "UTC-11", "Venezuela Standard Time", "Vladivostok Standard Time", "W. Australia Standard Time", "W. Central Africa Standard Time", "W. Europe Standard Time", "West Asia Standard Time", "West Pacific Standard Time", "Yakutsk Standard Time"], var.os_profile.windows_configuration.timezone)
+    condition     = var.os_profile == null || var.os_profile.windows_configuration == null || var.os_profile.windows_configuration.timezone == null || contains(["", "Afghanistan Standard Time", "Alaskan Standard Time", "Arab Standard Time", "Arabian Standard Time", "Arabic Standard Time", "Argentina Standard Time", "Atlantic Standard Time", "AUS Central Standard Time", "AUS Eastern Standard Time", "Azerbaijan Standard Time", "Azores Standard Time", "Bahia Standard Time", "Bangladesh Standard Time", "Belarus Standard Time", "Canada Central Standard Time", "Cape Verde Standard Time", "Caucasus Standard Time", "Cen. Australia Standard Time", "Central America Standard Time", "Central Asia Standard Time", "Central Brazilian Standard Time", "Central Europe Standard Time", "Central European Standard Time", "Central Pacific Standard Time", "Central Standard Time (Mexico)", "Central Standard Time", "China Standard Time", "Dateline Standard Time", "E. Africa Standard Time", "E. Australia Standard Time", "E. Europe Standard Time", "E. South America Standard Time", "Eastern Standard Time (Mexico)", "Eastern Standard Time", "Egypt Standard Time", "Ekaterinburg Standard Time", "Fiji Standard Time", "FLE Standard Time", "Georgian Standard Time", "GMT Standard Time", "Greenland Standard Time", "Greenwich Standard Time", "GTB Standard Time", "Hawaiian Standard Time", "India Standard Time", "Iran Standard Time", "Israel Standard Time", "Jordan Standard Time", "Kaliningrad Standard Time", "Korea Standard Time", "Libya Standard Time", "Line Islands Standard Time", "Magadan Standard Time", "Mauritius Standard Time", "Middle East Standard Time", "Montevideo Standard Time", "Morocco Standard Time", "Mountain Standard Time (Mexico)", "Mountain Standard Time", "Myanmar Standard Time", "N. Central Asia Standard Time", "Namibia Standard Time", "Nepal Standard Time", "New Zealand Standard Time", "Newfoundland Standard Time", "North Asia East Standard Time", "North Asia Standard Time", "Pacific SA Standard Time", "Pacific Standard Time (Mexico)", "Pacific Standard Time", "Pakistan Standard Time", "Paraguay Standard Time", "Romance Standard Time", "Russia Time Zone 10", "Russia Time Zone 11", "Russia Time Zone 3", "Russian Standard Time", "SA Eastern Standard Time", "SA Pacific Standard Time", "SA Western Standard Time", "Samoa Standard Time", "SE Asia Standard Time", "Singapore Standard Time", "South Africa Standard Time", "Sri Lanka Standard Time", "Syria Standard Time", "Taipei Standard Time", "Tasmania Standard Time", "Tokyo Standard Time", "Tonga Standard Time", "Turkey Standard Time", "Ulaanbaatar Standard Time", "US Eastern Standard Time", "US Mountain Standard Time", "UTC", "UTC+12", "UTC-02", "UTC-11", "Venezuela Standard Time", "Vladivostok Standard Time", "W. Australia Standard Time", "W. Central Africa Standard Time", "W. Europe Standard Time", "West Asia Standard Time", "West Pacific Standard Time", "Yakutsk Standard Time"], var.os_profile.windows_configuration.timezone)
     error_message = "The timezone must be a valid Windows timezone string. See: https://jackstromberg.com/2017/01/list-of-time-zones-consumed-by-azure/"
   }
 
@@ -1337,7 +1337,7 @@ variable "proximity_placement_group_id" {
   description = "(Optional) The ID of the Proximity Placement Group which the Virtual Machine should be assigned to. Changing this forces a new resource to be created."
 
   validation {
-    condition = var.proximity_placement_group_id == null || can(regex("^/subscriptions/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/resourceGroups/.+/providers/Microsoft.Compute/proximityPlacementGroups/.+$", var.proximity_placement_group_id))
+    condition     = var.proximity_placement_group_id == null || can(regex("^/subscriptions/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/resourceGroups/.+/providers/Microsoft.Compute/proximityPlacementGroups/.+$", var.proximity_placement_group_id))
     error_message = "The proximity_placement_group_id must be a valid Proximity Placement Group Resource ID."
   }
 }
@@ -1400,11 +1400,11 @@ EOT
 
   validation {
     condition = (
-      (var.upgrade_mode == null || var.upgrade_mode == "Manual") && var.rolling_upgrade_policy == null ||
+      var.upgrade_mode == "Manual" && var.rolling_upgrade_policy == null ||
       var.upgrade_mode == "Rolling" && var.rolling_upgrade_policy != null ||
       var.upgrade_mode == "Automatic"
     )
-    error_message = "rolling_upgrade_policy cannot be specified when upgrade_mode is 'Manual' (or null/default) and is required when upgrade_mode is 'Rolling'."
+    error_message = "rolling_upgrade_policy cannot be specified when upgrade_mode is 'Manual' and is required when upgrade_mode is 'Rolling'."
   }
 
   validation {
@@ -1421,8 +1421,8 @@ EOT
       var.rolling_upgrade_policy.cross_zone_upgrades_enabled == null ||
       var.rolling_upgrade_policy.cross_zone_upgrades_enabled == false ||
       (var.rolling_upgrade_policy.cross_zone_upgrades_enabled == true &&
-       var.zones != null &&
-       length(var.zones) > 0)
+        var.zones != null &&
+      length(var.zones) > 0)
     )
     error_message = "cross_zone_upgrades_enabled can only be set to true when zones is specified."
   }
@@ -1488,6 +1488,14 @@ variable "source_image_id" {
   type        = string
   default     = null
   description = "(Optional) The ID of an Image which each Virtual Machine in this Scale Set should be based on. Possible Image ID types include `Image ID`s, `Shared Image ID`s, `Shared Image Version ID`s, `Community Gallery Image ID`s, `Community Gallery Image Version ID`s, `Shared Gallery Image ID`s and `Shared Gallery Image Version ID`s."
+
+  validation {
+    condition = (
+      var.source_image_id == null ||
+      var.source_image_reference == null
+    )
+    error_message = "Only one of `source_image_id` or `source_image_reference` can be specified."
+  }
 }
 
 variable "source_image_reference" {
@@ -1560,13 +1568,13 @@ variable "timeouts" {
     read   = optional(string, "5m")
     update = optional(string, "60m")
   })
-  default     = {
+  default = {
     create = "60m"
     delete = "60m"
     read   = "5m"
     update = "60m"
   }
-  nullable = false
+  nullable    = false
   description = <<-EOT
  - `create` - (Optional) Specifies the timeout for create operations. Defaults to 60 minutes.
  - `delete` - (Optional) Specifies the timeout for delete operations. Defaults to 60 minutes.
@@ -1577,8 +1585,18 @@ EOT
 
 variable "upgrade_mode" {
   type        = string
-  default     = null
+  default     = "Manual"
+  nullable = false
   description = "(Optional) Specifies how upgrades (e.g. changing the Image/SKU) should be performed to Virtual Machine Instances. Possible values are `Automatic`, `Manual` and `Rolling`. Defaults to `Manual`. Changing this forces a new resource to be created."
+
+  validation {
+    condition = contains([
+      "Automatic",
+      "Manual",
+      "Rolling"
+    ], var.upgrade_mode)
+    error_message = "The upgrade_mode must be one of 'Automatic', 'Manual', or 'Rolling'."
+  }
 }
 
 variable "data_base64" {

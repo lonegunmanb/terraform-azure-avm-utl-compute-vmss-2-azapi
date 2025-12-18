@@ -6,8 +6,9 @@ module "vmss_replicator" {
   location                    = azurerm_resource_group.test.location
   platform_fault_domain_count = 2
 
-  sku_name  = "Standard_F2"
-  instances = 2
+  sku_name             = "Standard_F2"
+  instances            = 2
+  network_api_version  = "2020-11-01"
 
   os_profile_custom_data         = "Y3VzdG9tIGRhdGEh"
   os_profile_custom_data_version = 1
@@ -67,23 +68,23 @@ resource "azapi_resource" "this" {
 
   dynamic "identity" {
     for_each = can(module.vmss_replicator.azapi_header.identity) ? [module.vmss_replicator.identity] : []
-     content {
-       type = identity.value.type
-       identity_ids = try(identity.value.identity_ids, null)
+    content {
+      type         = identity.value.type
+      identity_ids = try(identity.value.identity_ids, null)
     }
   }
 
   retry = module.vmss_replicator.retry
 
   dynamic "timeouts" {
-        for_each = module.vmss_replicator.timeouts != null ? [module.vmss_replicator.timeouts] : []
-        content {
-          create = timeouts.value.create
-          delete = timeouts.value.delete
-          read   = timeouts.value.read
-          update = timeouts.value.update
-        }
-       }
+    for_each = module.vmss_replicator.timeouts != null ? [module.vmss_replicator.timeouts] : []
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 resource "azapi_update_resource" "update0" {
@@ -94,6 +95,6 @@ resource "azapi_update_resource" "update0" {
   sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
   depends_on     = [azapi_resource.this]
   lifecycle {
-    ignore_changes = [all]
+    ignore_changes = all
   }
 }

@@ -144,7 +144,7 @@ check "some_validation" {...}
 Replicate simple validation logic. Skip ONLY complex Azure queries that require API calls to verify resource existence.
 
 **Defaults:** If schema has `Default`, replicate it:
-- **Top-level:** `variable "field" { default = value }`
+- **Top-level:** `variable "field" { type = ...; default = value; nullable = false }` - **CRITICAL:** Root/top-level arguments with defaults MUST have both `default` value AND `nullable = false` set
 - **Nested (PREFER):** `optional(bool, true)` or `optional(string, "PT1H30M")` in object type
 - **Fallback:** Apply default in locals if optional() syntax not possible
 
@@ -273,7 +273,7 @@ locals {
   post_creation_updates = compact([
     var.field != null ? {
       azapi_header = { type = "..." }  # Usually same as main, verify from Update client
-      body = { properties = {...} }; sensitive_body = {...}
+      body = { properties = {...} }; sensitive_body = {...}; locks = local.locks
     } : null,
   ])
 }

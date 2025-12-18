@@ -7,6 +7,7 @@ module "vmss_replicator" {
   sku_name                    = "Standard_F2"
   instances                   = 1
   platform_fault_domain_count = 2
+  network_api_version         = "2020-11-01"
 
   os_profile = {
     linux_configuration = {
@@ -30,10 +31,10 @@ module "vmss_replicator" {
       primary = true
       ip_configuration = [
         {
-          name                                       = "TestIPConfiguration"
-          primary                                    = true
-          subnet_id                                  = azurerm_subnet.test.id
-          load_balancer_backend_address_pool_ids     = [azurerm_lb_backend_address_pool.test.id]
+          name                                   = "TestIPConfiguration"
+          primary                                = true
+          subnet_id                              = azurerm_subnet.test.id
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
         }
       ]
     }
@@ -42,6 +43,7 @@ module "vmss_replicator" {
   os_disk = {
     storage_account_type = "Standard_LRS"
     caching              = "ReadWrite"
+    disk_size_gb         = 30
   }
 
   source_image_reference = {
@@ -53,22 +55,22 @@ module "vmss_replicator" {
 }
 
 resource "azapi_resource" "this" {
-  type                                 = module.vmss_replicator.azapi_header.type
-  name                                 = module.vmss_replicator.azapi_header.name
-  location                             = module.vmss_replicator.azapi_header.location
-  parent_id                            = module.vmss_replicator.azapi_header.parent_id
-  tags                                 = module.vmss_replicator.azapi_header.tags
-  body                                 = module.vmss_replicator.body
-  sensitive_body                       = module.vmss_replicator.sensitive_body
-  sensitive_body_version               = module.vmss_replicator.sensitive_body_version
-  replace_triggers_external_values     = module.vmss_replicator.replace_triggers_external_values
-  locks                                = module.vmss_replicator.locks
+  type                             = module.vmss_replicator.azapi_header.type
+  name                             = module.vmss_replicator.azapi_header.name
+  location                         = module.vmss_replicator.azapi_header.location
+  parent_id                        = module.vmss_replicator.azapi_header.parent_id
+  tags                             = module.vmss_replicator.azapi_header.tags
+  body                             = module.vmss_replicator.body
+  sensitive_body                   = module.vmss_replicator.sensitive_body
+  sensitive_body_version           = module.vmss_replicator.sensitive_body_version
+  replace_triggers_external_values = module.vmss_replicator.replace_triggers_external_values
+  locks                            = module.vmss_replicator.locks
 
   dynamic "identity" {
     for_each = can(module.vmss_replicator.azapi_header.identity) ? [module.vmss_replicator.identity] : []
-     content {
-       type = identity.value.type
-       identity_ids = try(identity.value.identity_ids, null)
+    content {
+      type         = identity.value.type
+      identity_ids = try(identity.value.identity_ids, null)
     }
   }
 
@@ -93,6 +95,6 @@ resource "azapi_update_resource" "update0" {
   sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
   depends_on     = [azapi_resource.this]
   lifecycle {
-    ignore_changes = [all]
+    ignore_changes = all
   }
 }

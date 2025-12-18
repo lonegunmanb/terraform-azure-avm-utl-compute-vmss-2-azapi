@@ -17,7 +17,7 @@ module "vmss_replicator" {
     }
   }
 
-  os_profile_linux_configuration_admin_password = "Passwword1234"
+  os_profile_linux_configuration_admin_password         = "Passwword1234"
   os_profile_linux_configuration_admin_password_version = 1
 
   network_interface = [
@@ -99,6 +99,6 @@ resource "azapi_update_resource" "update0" {
   sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
   depends_on     = [azapi_resource.this]
   lifecycle {
-    ignore_changes = [all]
+    ignore_changes = all
   }
 }

@@ -38,8 +38,8 @@ locals {
   ) ? "trigger_replacement" : null
 
   # Task #11: license_type - DiffSuppressFunc handling
-  existing_license_type       = data.azapi_resource.existing.exists ? try(data.azapi_resource.existing.output.properties.virtualMachineProfile.licenseType, null) : null
-  normalized_license_type     = var.license_type == "None" ? null : var.license_type
+  existing_license_type   = data.azapi_resource.existing.exists ? try(data.azapi_resource.existing.output.properties.virtualMachineProfile.licenseType, null) : null
+  normalized_license_type = var.license_type == "None" ? null : var.license_type
   license_type_should_suppress = (
     (local.existing_license_type == "None" && local.normalized_license_type == null) ||
     (local.existing_license_type == null && local.normalized_license_type == null) ||
@@ -87,7 +87,7 @@ locals {
   linux_configuration_computer_name_prefix = (
     var.os_profile != null &&
     var.os_profile.linux_configuration != null
-  ) ? coalesce(
+    ) ? coalesce(
     var.os_profile.linux_configuration.computer_name_prefix,
     var.name
   ) : ""
@@ -95,7 +95,7 @@ locals {
   windows_configuration_computer_name_prefix = (
     var.os_profile != null &&
     var.os_profile.windows_configuration != null
-  ) ? coalesce(
+    ) ? coalesce(
     var.os_profile.windows_configuration.computer_name_prefix,
     var.name
   ) : ""
@@ -105,18 +105,29 @@ locals {
     for item in var.os_profile_windows_configuration_additional_unattend_content_content : item.index => item.content
   } : {}
 
+  # Task #18: Intelligent routing of source_image_id to correct Azure API field
+  source_image_reference_from_id = var.source_image_id != null ? (
+    can(regex("^/communityGalleries/[^/]+/images/[^/]+(/versions/[^/]+)?$", var.source_image_id)) ? {
+      communityGalleryImageId = var.source_image_id
+      } : can(regex("^/sharedGalleries/[^/]+/images/[^/]+(/versions/[^/]+)?$", var.source_image_id)) ? {
+      sharedGalleryImageId = var.source_image_id
+      } : {
+      id = var.source_image_id
+    }
+  ) : null
+
   replace_triggers_external_values = {
-    location                      = { value = var.location }
-    platform_fault_domain_count   = { value = var.platform_fault_domain_count }
-    zone_balance                  = { value = var.zone_balance }
-    capacity_reservation_group_id = { value = var.capacity_reservation_group_id }
-    eviction_policy               = { value = var.eviction_policy }
-    extension_operations_enabled  = { value = var.extension_operations_enabled }
-    priority                      = { value = var.priority }
-    network_interface_name        = { value = var.network_interface != null ? jsonencode([for nic in var.network_interface : nic.name]) : "" }
-    single_placement_group        = local.single_placement_group_force_new_trigger
-    zones                         = local.zones_force_new_trigger
-    ultra_ssd_enabled             = { value = var.additional_capabilities != null ? coalesce(var.additional_capabilities.ultra_ssd_enabled, false) : false }
+    location                         = { value = var.location }
+    platform_fault_domain_count      = { value = var.platform_fault_domain_count }
+    zone_balance                     = { value = var.zone_balance }
+    capacity_reservation_group_id    = { value = var.capacity_reservation_group_id }
+    eviction_policy                  = { value = var.eviction_policy }
+    extension_operations_enabled     = { value = var.extension_operations_enabled }
+    priority                         = { value = var.priority }
+    network_interface_name           = { value = var.network_interface != null ? jsonencode([for nic in var.network_interface : nic.name]) : "" }
+    single_placement_group           = local.single_placement_group_force_new_trigger
+    zones                            = local.zones_force_new_trigger
+    ultra_ssd_enabled                = { value = var.additional_capabilities != null ? coalesce(var.additional_capabilities.ultra_ssd_enabled, false) : false }
     data_disk_disk_encryption_set_id = { value = var.data_disk != null ? jsonencode([for disk in var.data_disk : disk.disk_encryption_set_id]) : "" }
     public_ip_prefix_id = {
       value = var.network_interface != null ? jsonencode([
@@ -146,34 +157,35 @@ locals {
         ]
       ]) : ""
     }
-    os_disk_storage_account_type = { value = var.os_disk != null ? var.os_disk.storage_account_type : "" }
-    os_disk_disk_encryption_set_id = { value = var.os_disk != null ? var.os_disk.disk_encryption_set_id : "" }
-    os_disk_diff_disk_settings_option = { value = var.os_disk != null && var.os_disk.diff_disk_settings != null ? var.os_disk.diff_disk_settings.option : "" }
-    os_disk_diff_disk_settings_placement = { value = var.os_disk != null && var.os_disk.diff_disk_settings != null ? var.os_disk.diff_disk_settings.placement : "" }
-    linux_configuration_admin_username   = { value = var.os_profile != null && var.os_profile.linux_configuration != null ? var.os_profile.linux_configuration.admin_username : "" }
-    linux_configuration_admin_password_version = { value = var.os_profile_linux_configuration_admin_password_version }
-    linux_configuration_computer_name_prefix = { value = local.linux_configuration_computer_name_prefix }
-    linux_configuration_provision_vm_agent = { value = var.os_profile != null && var.os_profile.linux_configuration != null ? coalesce(var.os_profile.linux_configuration.provision_vm_agent, true) : true }
+    os_disk_storage_account_type                 = { value = var.os_disk != null ? var.os_disk.storage_account_type : "" }
+    upgrade_mode                                 = { value = var.upgrade_mode }
+    os_disk_disk_encryption_set_id               = { value = var.os_disk != null ? var.os_disk.disk_encryption_set_id : "" }
+    os_disk_diff_disk_settings_option            = { value = var.os_disk != null && var.os_disk.diff_disk_settings != null ? var.os_disk.diff_disk_settings.option : "" }
+    os_disk_diff_disk_settings_placement         = { value = var.os_disk != null && var.os_disk.diff_disk_settings != null ? var.os_disk.diff_disk_settings.placement : "" }
+    linux_configuration_admin_username           = { value = var.os_profile != null && var.os_profile.linux_configuration != null ? var.os_profile.linux_configuration.admin_username : "" }
+    linux_configuration_admin_password_version   = { value = var.os_profile_linux_configuration_admin_password_version }
+    linux_configuration_computer_name_prefix     = { value = local.linux_configuration_computer_name_prefix }
+    linux_configuration_provision_vm_agent       = { value = var.os_profile != null && var.os_profile.linux_configuration != null ? coalesce(var.os_profile.linux_configuration.provision_vm_agent, true) : true }
     windows_configuration_admin_password_version = { value = var.os_profile_windows_configuration_admin_password_version }
-    windows_configuration_admin_username = { value = var.os_profile != null && var.os_profile.windows_configuration != null ? var.os_profile.windows_configuration.admin_username : "" }
-    windows_configuration_computer_name_prefix = { value = local.windows_configuration_computer_name_prefix }
-    windows_configuration_provision_vm_agent = { value = var.os_profile != null && var.os_profile.windows_configuration != null ? var.os_profile.windows_configuration.provision_vm_agent : true }
+    windows_configuration_admin_username         = { value = var.os_profile != null && var.os_profile.windows_configuration != null ? var.os_profile.windows_configuration.admin_username : "" }
+    windows_configuration_computer_name_prefix   = { value = local.windows_configuration_computer_name_prefix }
+    windows_configuration_provision_vm_agent     = { value = var.os_profile != null && var.os_profile.windows_configuration != null ? var.os_profile.windows_configuration.provision_vm_agent : true }
     windows_configuration_winrm_listener_protocol = {
       value = var.os_profile != null && var.os_profile.windows_configuration != null && var.os_profile.windows_configuration.winrm_listener != null ? jsonencode([for listener in var.os_profile.windows_configuration.winrm_listener : listener.protocol]) : ""
     }
     windows_configuration_winrm_listener_certificate_url = {
       value = var.os_profile != null && var.os_profile.windows_configuration != null && var.os_profile.windows_configuration.winrm_listener != null ? jsonencode([for listener in var.os_profile.windows_configuration.winrm_listener : listener.certificate_url]) : ""
     }
-    plan_name = { value = var.plan != null ? var.plan.name : "" }
-    plan_product = { value = var.plan != null ? var.plan.product : "" }
-    plan_publisher = { value = var.plan != null ? var.plan.publisher : "" }
-    priority_mix_base_regular_count = { value = var.priority_mix != null ? var.priority_mix.base_regular_count : 0 }
+    plan_name                                  = { value = var.plan != null ? var.plan.name : "" }
+    plan_product                               = { value = var.plan != null ? var.plan.product : "" }
+    plan_publisher                             = { value = var.plan != null ? var.plan.publisher : "" }
+    priority_mix_base_regular_count            = { value = var.priority_mix != null ? var.priority_mix.base_regular_count : 0 }
     priority_mix_regular_percentage_above_base = { value = var.priority_mix != null ? var.priority_mix.regular_percentage_above_base : 0 }
-    rolling_upgrade_policy = { value = var.rolling_upgrade_policy != null ? jsonencode(var.rolling_upgrade_policy) : "" }
-    sku_profile_allocation_strategy     = { value = var.sku_profile != null ? var.sku_profile.allocation_strategy : "" }
-    sku_profile_vm_sizes                = { value = var.sku_profile != null ? jsonencode(var.sku_profile.vm_sizes) : "" }
-    source_image_reference_offer        = { value = var.source_image_reference != null ? var.source_image_reference.offer : "" }
-    source_image_reference_publisher    = { value = var.source_image_reference != null ? var.source_image_reference.publisher : "" }
+    rolling_upgrade_policy                     = { value = var.rolling_upgrade_policy != null ? jsonencode(var.rolling_upgrade_policy) : "" }
+    sku_profile_allocation_strategy            = { value = var.sku_profile != null ? var.sku_profile.allocation_strategy : "" }
+    sku_profile_vm_sizes                       = { value = var.sku_profile != null ? jsonencode(var.sku_profile.vm_sizes) : "" }
+    source_image_reference_offer               = { value = var.source_image_reference != null ? var.source_image_reference.offer : "" }
+    source_image_reference_publisher           = { value = var.source_image_reference != null ? var.source_image_reference.publisher : "" }
   }
 
   body = merge(
@@ -211,18 +223,22 @@ locals {
         } : {},
         var.priority_mix != null ? {
           priorityMixPolicy = {
-            baseRegularPriorityCount = var.priority_mix.base_regular_count
+            baseRegularPriorityCount           = var.priority_mix.base_regular_count
             regularPriorityPercentageAboveBase = var.priority_mix.regular_percentage_above_base
           }
         } : {},
-        var.rolling_upgrade_policy != null ? {
-          upgradePolicy = {
-            rollingUpgradePolicy = merge(
+        {
+          upgradePolicy = merge(
+            {
+              mode = var.upgrade_mode
+            },
+            var.rolling_upgrade_policy != null ? {
+              rollingUpgradePolicy = merge(
               {
-                maxBatchInstancePercent = var.rolling_upgrade_policy.max_batch_instance_percent
-                maxUnhealthyInstancePercent = var.rolling_upgrade_policy.max_unhealthy_instance_percent
+                maxBatchInstancePercent             = var.rolling_upgrade_policy.max_batch_instance_percent
+                maxUnhealthyInstancePercent         = var.rolling_upgrade_policy.max_unhealthy_instance_percent
                 maxUnhealthyUpgradedInstancePercent = var.rolling_upgrade_policy.max_unhealthy_upgraded_instance_percent
-                pauseTimeBetweenBatches = var.rolling_upgrade_policy.pause_time_between_batches
+                pauseTimeBetweenBatches             = var.rolling_upgrade_policy.pause_time_between_batches
               },
               (var.zones != null && length(var.zones) > 0) ? {
                 enableCrossZoneUpgrade = coalesce(var.rolling_upgrade_policy.cross_zone_upgrades_enabled, false)
@@ -234,8 +250,9 @@ locals {
                 prioritizeUnhealthyInstances = var.rolling_upgrade_policy.prioritize_unhealthy_instances_enabled
               } : {}
             )
-          }
-        } : {},
+          } : {}
+          )
+        },
         var.sku_profile != null ? {
           skuProfile = {
             allocationStrategy = var.sku_profile.allocation_strategy
@@ -269,118 +286,118 @@ locals {
             var.network_interface != null || var.sku_name != null ? {
               networkProfile = var.network_interface != null ? {
                 networkInterfaceConfigurations = [
-                    for nic in var.network_interface : {
-                      name = nic.name # Task #61
-                      properties = merge(
-                        nic.auxiliary_mode != null ? {
-                          auxiliaryMode = nic.auxiliary_mode
-                        } : {},
-                        nic.auxiliary_sku != null ? {
-                          auxiliarySku = nic.auxiliary_sku
-                        } : {},
-                        nic.dns_servers != null ? {
-                          dnsSettings = {
-                            dnsServers = nic.dns_servers
-                          }
-                        } : {},
-                        {
-                          enableAcceleratedNetworking = nic.enable_accelerated_networking
-                          enableIPForwarding          = nic.enable_ip_forwarding
-                        },
-                        nic.network_security_group_id != null && nic.network_security_group_id != "" ? {
-                          networkSecurityGroup = {
-                            id = nic.network_security_group_id
-                          }
-                        } : {},
-                        {
-                          primary = nic.primary
-                          ipConfigurations = [
-                            for ip_config in nic.ip_configuration : {
-                              name = ip_config.name # Task #70
-                              properties = merge(
-                                ip_config.application_gateway_backend_address_pool_ids != null && length(ip_config.application_gateway_backend_address_pool_ids) > 0 ? {
-                                  applicationGatewayBackendAddressPools = [
-                                    for id in ip_config.application_gateway_backend_address_pool_ids : {
-                                      id = id
-                                    }
-                                  ]
-                                } : {},
-                                ip_config.application_security_group_ids != null && length(ip_config.application_security_group_ids) > 0 ? {
-                                  applicationSecurityGroups = [
-                                    for id in ip_config.application_security_group_ids : {
-                                      id = id
-                                    }
-                                  ]
-                                } : {},
-                                ip_config.load_balancer_backend_address_pool_ids != null && length(ip_config.load_balancer_backend_address_pool_ids) > 0 ? {
-                                  loadBalancerBackendAddressPools = [
-                                    for id in ip_config.load_balancer_backend_address_pool_ids : {
-                                      id = id
-                                    }
-                                  ]
-                                } : {},
-                                merge(
-                                  {
-                                    primary = ip_config.primary
-                                  },
-                                  ip_config.subnet_id != null && ip_config.subnet_id != "" ? {
-                                    subnet = {
-                                      id = ip_config.subnet_id
-                                    }
-                                  } : {},
-                                  {
-                                    privateIPAddressVersion = ip_config.version
-                                  },
-                                  ip_config.public_ip_address != null && length(ip_config.public_ip_address) > 0 ? {
-                                    publicIPAddressConfiguration = merge(
-                                      {
-                                        name = ip_config.public_ip_address[0].name
-                                      },
-                                      {
-                                        properties = merge(
-                                          ip_config.public_ip_address[0].domain_name_label != null && ip_config.public_ip_address[0].domain_name_label != "" ? {
-                                            dnsSettings = {
-                                              domainNameLabel = ip_config.public_ip_address[0].domain_name_label
-                                            }
-                                          } : {},
-                                          ip_config.public_ip_address[0].idle_timeout_in_minutes != null && ip_config.public_ip_address[0].idle_timeout_in_minutes > 0 ? {
-                                            idleTimeoutInMinutes = ip_config.public_ip_address[0].idle_timeout_in_minutes
-                                          } : {},
-                                          ip_config.public_ip_address[0].public_ip_prefix_id != null && ip_config.public_ip_address[0].public_ip_prefix_id != "" ? {
-                                            publicIPPrefix = {
-                                              id = ip_config.public_ip_address[0].public_ip_prefix_id
-                                            }
-                                          } : {},
-                                          {
-                                            publicIPAddressVersion = ip_config.public_ip_address[0].version
-                                          },
-                                          ip_config.public_ip_address[0].ip_tag != null && length(ip_config.public_ip_address[0].ip_tag) > 0 ? {
-                                            ipTags = [
-                                              for ip_tag in ip_config.public_ip_address[0].ip_tag : {
-                                                tag       = ip_tag.tag
-                                                ipTagType = ip_tag.type
-                                              }
-                                            ]
-                                          } : {}
-                                        )
-                                      },
-                                      ip_config.public_ip_address[0].sku_name != null && ip_config.public_ip_address[0].sku_name != "" ? {
-                                        sku = {
-                                          name = split("_", ip_config.public_ip_address[0].sku_name)[0]
-                                          tier = split("_", ip_config.public_ip_address[0].sku_name)[1]
-                                        }
-                                      } : {}
-                                    )
-                                  } : {}
-                                )
-                              )
-                            }
-                          ]
+                  for nic in var.network_interface : {
+                    name = nic.name # Task #61
+                    properties = merge(
+                      nic.auxiliary_mode != null ? {
+                        auxiliaryMode = nic.auxiliary_mode
+                      } : {},
+                      nic.auxiliary_sku != null ? {
+                        auxiliarySku = nic.auxiliary_sku
+                      } : {},
+                      nic.dns_servers != null ? {
+                        dnsSettings = {
+                          dnsServers = nic.dns_servers
                         }
-                      )
-                    }
-                  ]
-                } : {}
+                      } : {},
+                      {
+                        enableAcceleratedNetworking = nic.enable_accelerated_networking
+                        enableIPForwarding          = nic.enable_ip_forwarding
+                      },
+                      nic.network_security_group_id != null && nic.network_security_group_id != "" ? {
+                        networkSecurityGroup = {
+                          id = nic.network_security_group_id
+                        }
+                      } : {},
+                      {
+                        primary = nic.primary
+                        ipConfigurations = [
+                          for ip_config in nic.ip_configuration : {
+                            name = ip_config.name # Task #70
+                            properties = merge(
+                              ip_config.application_gateway_backend_address_pool_ids != null && length(ip_config.application_gateway_backend_address_pool_ids) > 0 ? {
+                                applicationGatewayBackendAddressPools = [
+                                  for id in ip_config.application_gateway_backend_address_pool_ids : {
+                                    id = id
+                                  }
+                                ]
+                              } : {},
+                              ip_config.application_security_group_ids != null && length(ip_config.application_security_group_ids) > 0 ? {
+                                applicationSecurityGroups = [
+                                  for id in ip_config.application_security_group_ids : {
+                                    id = id
+                                  }
+                                ]
+                              } : {},
+                              ip_config.load_balancer_backend_address_pool_ids != null && length(ip_config.load_balancer_backend_address_pool_ids) > 0 ? {
+                                loadBalancerBackendAddressPools = [
+                                  for id in ip_config.load_balancer_backend_address_pool_ids : {
+                                    id = id
+                                  }
+                                ]
+                              } : {},
+                              merge(
+                                {
+                                  primary = ip_config.primary
+                                },
+                                ip_config.subnet_id != null && ip_config.subnet_id != "" ? {
+                                  subnet = {
+                                    id = ip_config.subnet_id
+                                  }
+                                } : {},
+                                {
+                                  privateIPAddressVersion = ip_config.version
+                                },
+                                ip_config.public_ip_address != null && length(ip_config.public_ip_address) > 0 ? {
+                                  publicIPAddressConfiguration = merge(
+                                    {
+                                      name = ip_config.public_ip_address[0].name
+                                    },
+                                    {
+                                      properties = merge(
+                                        ip_config.public_ip_address[0].domain_name_label != null && ip_config.public_ip_address[0].domain_name_label != "" ? {
+                                          dnsSettings = {
+                                            domainNameLabel = ip_config.public_ip_address[0].domain_name_label
+                                          }
+                                        } : {},
+                                        ip_config.public_ip_address[0].idle_timeout_in_minutes != null && ip_config.public_ip_address[0].idle_timeout_in_minutes > 0 ? {
+                                          idleTimeoutInMinutes = ip_config.public_ip_address[0].idle_timeout_in_minutes
+                                        } : {},
+                                        ip_config.public_ip_address[0].public_ip_prefix_id != null && ip_config.public_ip_address[0].public_ip_prefix_id != "" ? {
+                                          publicIPPrefix = {
+                                            id = ip_config.public_ip_address[0].public_ip_prefix_id
+                                          }
+                                        } : {},
+                                        {
+                                          publicIPAddressVersion = ip_config.public_ip_address[0].version
+                                        },
+                                        ip_config.public_ip_address[0].ip_tag != null && length(ip_config.public_ip_address[0].ip_tag) > 0 ? {
+                                          ipTags = [
+                                            for ip_tag in ip_config.public_ip_address[0].ip_tag : {
+                                              tag       = ip_tag.tag
+                                              ipTagType = ip_tag.type
+                                            }
+                                          ]
+                                        } : {}
+                                      )
+                                    },
+                                    ip_config.public_ip_address[0].sku_name != null && ip_config.public_ip_address[0].sku_name != "" ? {
+                                      sku = {
+                                        name = split("_", ip_config.public_ip_address[0].sku_name)[0]
+                                        tier = split("_", ip_config.public_ip_address[0].sku_name)[1]
+                                      }
+                                    } : {}
+                                  )
+                                } : {}
+                              )
+                            )
+                          }
+                        ]
+                      }
+                    )
+                  }
+                ]
+              } : {}
             } : {},
             var.boot_diagnostics != null ? {
               diagnosticsProfile = {
@@ -576,7 +593,7 @@ locals {
                 }
               }
             } : {},
-            var.data_disk != null || var.os_disk != null || var.source_image_reference != null ? {
+            var.data_disk != null || var.os_disk != null || var.source_image_reference != null || var.source_image_id != null ? {
               storageProfile = merge(
                 var.data_disk != null ? {
                   dataDisks = [
@@ -592,12 +609,12 @@ locals {
                           }
                         } : {}
                       )
-                      createOption = data_disk.create_option
+                      createOption            = data_disk.create_option
                       diskSizeGB              = data_disk.disk_size_gb != null && data_disk.disk_size_gb > 0 ? data_disk.disk_size_gb : null
                       lun                     = data_disk.lun
                       writeAcceleratorEnabled = data_disk.write_accelerator_enabled
                       diskIOPSReadWrite       = data_disk.ultra_ssd_disk_iops_read_write != null && data_disk.ultra_ssd_disk_iops_read_write > 0 ? data_disk.ultra_ssd_disk_iops_read_write : null
-                      diskMBpsReadWrite = data_disk.ultra_ssd_disk_mbps_read_write != null && data_disk.ultra_ssd_disk_mbps_read_write > 0 ? data_disk.ultra_ssd_disk_mbps_read_write : null
+                      diskMBpsReadWrite       = data_disk.ultra_ssd_disk_mbps_read_write != null && data_disk.ultra_ssd_disk_mbps_read_write > 0 ? data_disk.ultra_ssd_disk_mbps_read_write : null
                     }
                   ]
                 } : {},
@@ -605,7 +622,7 @@ locals {
                   osDisk = merge(
                     {
                       createOption = "FromImage"
-                      caching = var.os_disk.caching
+                      caching      = var.os_disk.caching
                       managedDisk = merge(
                         {
                           storageAccountType = var.os_disk.storage_account_type
@@ -616,18 +633,21 @@ locals {
                           }
                         } : {}
                       )
-                      diskSizeGB = var.os_disk.disk_size_gb != null && var.os_disk.disk_size_gb > 0 ? var.os_disk.disk_size_gb : null
+                      diskSizeGB              = var.os_disk.disk_size_gb != null && var.os_disk.disk_size_gb > 0 ? var.os_disk.disk_size_gb : null
                       writeAcceleratorEnabled = var.os_disk.write_accelerator_enabled
+                      osType                  = var.os_profile != null && var.os_profile.linux_configuration != null ? "Linux" : (var.os_profile != null && var.os_profile.windows_configuration != null ? "Windows" : null)
                     },
                     var.os_disk.diff_disk_settings != null ? {
                       diffDiskSettings = {
-                        option = var.os_disk.diff_disk_settings.option
+                        option    = var.os_disk.diff_disk_settings.option
                         placement = var.os_disk.diff_disk_settings.placement
                       }
                     } : {}
                   )
                 } : {},
-                var.source_image_reference != null ? {
+                var.source_image_id != null ? {
+                  imageReference = local.source_image_reference_from_id
+                  } : var.source_image_reference != null ? {
                   imageReference = {
                     offer     = var.source_image_reference.offer
                     publisher = var.source_image_reference.publisher
@@ -653,8 +673,8 @@ locals {
     } : {},
     var.plan != null ? {
       plan = {
-        name = var.plan.name
-        product = var.plan.product
+        name      = var.plan.name
+        product   = var.plan.product
         publisher = var.plan.publisher
       }
     } : {}
@@ -722,14 +742,14 @@ locals {
   }
 
   sensitive_body_version = {
-    "properties.proximityPlacementGroup.id"                                                           = "null"
-    "properties.virtualMachineProfile.osProfile.customData"                                           = try(tostring(var.os_profile_custom_data_version), "null")
-    "properties.virtualMachineProfile.osProfile.adminPassword"                                        = var.os_profile != null && var.os_profile.linux_configuration != null ? try(tostring(var.os_profile_linux_configuration_admin_password_version), "null") : var.os_profile != null && var.os_profile.windows_configuration != null ? try(tostring(var.os_profile_windows_configuration_admin_password_version), "null") : "null"
-    "properties.virtualMachineProfile.userData"                                                       = try(tostring(var.user_data_base64_version), "null")
-    "properties.virtualMachineProfile.licenseType"                                                    = "null"
-    "properties.virtualMachineProfile.networkProfile.networkApiVersion"                               = "null"
-    "properties.virtualMachineProfile.extensionProfile.protectedSettings"                             = try(tostring(var.extension_protected_settings_version), "null")
-    "properties.virtualMachineProfile.osProfile.windowsConfiguration.additionalUnattendContent"       = try(tostring(var.os_profile_windows_configuration_additional_unattend_content_content_version), "null")
+    "properties.proximityPlacementGroup.id"                                                     = "null"
+    "properties.virtualMachineProfile.osProfile.customData"                                     = try(tostring(var.os_profile_custom_data_version), "null")
+    "properties.virtualMachineProfile.osProfile.adminPassword"                                  = var.os_profile != null && var.os_profile.linux_configuration != null ? try(tostring(var.os_profile_linux_configuration_admin_password_version), "null") : var.os_profile != null && var.os_profile.windows_configuration != null ? try(tostring(var.os_profile_windows_configuration_admin_password_version), "null") : "null"
+    "properties.virtualMachineProfile.userData"                                                 = try(tostring(var.user_data_base64_version), "null")
+    "properties.virtualMachineProfile.licenseType"                                              = "null"
+    "properties.virtualMachineProfile.networkProfile.networkApiVersion"                         = "null"
+    "properties.virtualMachineProfile.extensionProfile.protectedSettings"                       = try(tostring(var.extension_protected_settings_version), "null")
+    "properties.virtualMachineProfile.osProfile.windowsConfiguration.additionalUnattendContent" = try(tostring(var.os_profile_windows_configuration_additional_unattend_content_content_version), "null")
   }
 
   retry = {
@@ -775,6 +795,7 @@ locals {
         license_type                 = local.license_type_update_trigger
         network_api_version          = local.network_api_version_update_trigger
       }
+      locks = local.locks
     }
   ]
 

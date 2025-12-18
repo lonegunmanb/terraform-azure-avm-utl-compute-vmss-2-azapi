@@ -30,11 +30,11 @@ module "vmss_replicator" {
           primary   = true
           subnet_id = azurerm_subnet.test.id
 
-          public_ip_address = {
+          public_ip_address = [{
             name                    = "TestPublicIPConfiguration"
             domain_name_label       = "test-domain-label"
             idle_timeout_in_minutes = 4
-          }
+          }]
         }
       ]
     }
@@ -125,7 +125,4 @@ resource "azapi_update_resource" "update0" {
   body           = module.vmss_replicator.post_creation_updates[0].body
   sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
   depends_on     = [azapi_resource.this]
-  lifecycle {
-    ignore_changes = [all]
-  }
 }

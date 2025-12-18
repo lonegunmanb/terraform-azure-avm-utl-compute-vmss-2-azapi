@@ -11,9 +11,9 @@ module "vmss_replicator" {
 
   os_profile = {
     linux_configuration = {
-      computer_name_prefix                = "testvm-${random_integer.number.result}"
-      admin_username                      = "myadmin"
-      disable_password_authentication     = false
+      computer_name_prefix            = "testvm-${random_integer.number.result}"
+      admin_username                  = "myadmin"
+      disable_password_authentication = false
     }
   }
 
@@ -27,10 +27,10 @@ module "vmss_replicator" {
 
       ip_configuration = [
         {
-          name                                       = "TestIPConfiguration"
-          primary                                    = true
-          subnet_id                                  = azurerm_subnet.test.id
-          load_balancer_backend_address_pool_ids     = [azurerm_lb_backend_address_pool.test.id]
+          name                                   = "TestIPConfiguration"
+          primary                                = true
+          subnet_id                              = azurerm_subnet.test.id
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
         }
       ]
     }
@@ -100,6 +100,6 @@ resource "azapi_update_resource" "update0" {
   sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
   depends_on     = [azapi_resource.this]
   lifecycle {
-    ignore_changes = [all]
+    ignore_changes = all
   }
 }

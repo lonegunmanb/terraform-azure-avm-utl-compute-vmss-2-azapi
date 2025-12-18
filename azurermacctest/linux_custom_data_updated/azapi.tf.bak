@@ -39,12 +39,12 @@ module "vmss_replicator" {
     }
   ]
 
-  orchestrated_virtual_machine_scale_set_os_disk = {
+  os_disk = {
     storage_account_type = "Standard_LRS"
     caching              = "ReadWrite"
   }
 
-  orchestrated_virtual_machine_scale_set_source_image_reference = {
+  source_image_reference = {
     publisher = "Canonical"
     offer     = "0001-com-ubuntu-server-jammy"
     sku       = "22_04-lts"
@@ -53,36 +53,36 @@ module "vmss_replicator" {
 }
 
 resource "azapi_resource" "this" {
-  type                                 = module.vmss_replicator.azapi_header.type
-  name                                 = module.vmss_replicator.azapi_header.name
-  location                             = module.vmss_replicator.azapi_header.location
-  parent_id                            = module.vmss_replicator.azapi_header.parent_id
-  tags                                 = module.vmss_replicator.azapi_header.tags
-  ignore_null_property = module.vmss_replicator.azapi_header.ignore_null_property
-  body                                 = module.vmss_replicator.body
-  sensitive_body                       = module.vmss_replicator.sensitive_body
-  sensitive_body_version               = module.vmss_replicator.sensitive_body_version
-  replace_triggers_external_values     = module.vmss_replicator.replace_triggers_external_values
-  locks                                = module.vmss_replicator.locks
+  type                             = module.vmss_replicator.azapi_header.type
+  name                             = module.vmss_replicator.azapi_header.name
+  location                         = module.vmss_replicator.azapi_header.location
+  parent_id                        = module.vmss_replicator.azapi_header.parent_id
+  tags                             = module.vmss_replicator.azapi_header.tags
+  ignore_null_property             = module.vmss_replicator.azapi_header.ignore_null_property
+  body                             = module.vmss_replicator.body
+  sensitive_body                   = module.vmss_replicator.sensitive_body
+  sensitive_body_version           = module.vmss_replicator.sensitive_body_version
+  replace_triggers_external_values = module.vmss_replicator.replace_triggers_external_values
+  locks                            = module.vmss_replicator.locks
   dynamic "identity" {
     for_each = can(module.vmss_replicator.azapi_header.identity) ? [module.vmss_replicator.identity] : []
-     content {
-       type = identity.value.type
-       identity_ids = try(identity.value.identity_ids, null)
+    content {
+      type         = identity.value.type
+      identity_ids = try(identity.value.identity_ids, null)
     }
   }
 
   retry = module.vmss_replicator.retry
 
   dynamic "timeouts" {
-        for_each = module.vmss_replicator.timeouts != null ? [module.vmss_replicator.timeouts] : []
-        content {
-          create = timeouts.value.create
-          delete = timeouts.value.delete
-          read   = timeouts.value.read
-          update = timeouts.value.update
-        }
-       }
+    for_each = module.vmss_replicator.timeouts != null ? [module.vmss_replicator.timeouts] : []
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 resource "azapi_update_resource" "update0" {
@@ -92,7 +92,4 @@ resource "azapi_update_resource" "update0" {
   body           = module.vmss_replicator.post_creation_updates[0].body
   sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
   depends_on     = [azapi_resource.this]
-  lifecycle {
-    ignore_changes = [all]
-  }
 }

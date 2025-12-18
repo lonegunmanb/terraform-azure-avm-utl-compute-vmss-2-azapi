@@ -28,11 +28,72 @@ module "vmss" {
           name      = "TestIPConfiguration"
           primary   = true
           subnet_id = azurerm_subnet.test.id
-          public_ip_address = {
-            name                    = "TestPublicIPConfiguration"
-            domain_name_label       = "test-domain-label"
-            idle_timeout_in_minutes = 4
-          }
+          public_ip_address = [
+            {
+              name                    = "TestPublicIPConfiguration"
+              domain_name_label       = "test-domain-label"
+              idle_timeout_in_minutes = 4
+            }
+          ]
+        }
+      ]
+    }
+  ]
+
+  os_disk = {
+    storage_account_type = "Standard_LRS"
+    caching              = "ReadOnly"
+    diff_disk_settings = {
+      option    = "Local"
+      placement = "ResourceDisk"
+    }
+  }
+
+  source_image_reference = {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts"
+    version   = "latest"
+  }
+}
+
+module "vmss_replicator" {
+  source = "../.."
+
+  name                        = "acctestOVMSS-${random_integer.number.result}"
+  location                    = azurerm_resource_group.test.location
+  resource_group_id           = azurerm_resource_group.test.id
+  platform_fault_domain_count = 2
+  instances                   = 1
+  sku_name                    = "Standard_F4s_v2"
+
+  os_profile = {
+    linux_configuration = {
+      admin_username                  = "myadmin"
+      computer_name_prefix            = "testvm-${random_integer.number.result}"
+      disable_password_authentication = false
+    }
+  }
+
+  os_profile_linux_configuration_admin_password         = "Passwword1234"
+  os_profile_linux_configuration_admin_password_version = 1
+
+  network_interface = [
+    {
+      name    = "TestNetworkProfile"
+      primary = true
+      ip_configuration = [
+        {
+          name      = "TestIPConfiguration"
+          primary   = true
+          subnet_id = azurerm_subnet.test.id
+          public_ip_address = [
+            {
+              name                    = "TestPublicIPConfiguration"
+              domain_name_label       = "test-domain-label"
+              idle_timeout_in_minutes = 4
+            }
+          ]
         }
       ]
     }
@@ -96,6 +157,6 @@ resource "azapi_update_resource" "update0" {
   sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
   depends_on     = [azapi_resource.this]
   lifecycle {
-    ignore_changes = [all]
+    ignore_changes = all
   }
 }

@@ -7,6 +7,7 @@ module "vmss_replicator" {
   platform_fault_domain_count = 2
   sku_name                    = "Standard_D1_v2"
   instances                   = 0
+  network_api_version         = "2020-11-01"
 
   os_profile = {
     linux_configuration = {
@@ -28,11 +29,11 @@ module "vmss_replicator" {
           name      = "TestIPConfiguration"
           primary   = true
           subnet_id = azurerm_subnet.test.id
-          public_ip_address = {
+          public_ip_address = [{
             name                    = "TestPublicIPConfiguration"
             domain_name_label       = "test-domain-label"
             idle_timeout_in_minutes = 4
-          }
+          }]
         }
       ]
     }
@@ -50,7 +51,7 @@ module "vmss_replicator" {
     version   = "latest"
   }
 
-  extension = toset([
+  extension = [
     {
       name                               = "CustomScript"
       publisher                          = "Microsoft.Azure.Extensions"
@@ -60,28 +61,28 @@ module "vmss_replicator" {
       settings = jsonencode({
         "commandToExecute" = "echo $HOSTNAME"
       })
-      protected_settings                            = null
-      auto_upgrade_minor_version                    = null
-      failure_suppression_enabled                   = null
-      force_extension_execution_on_change           = null
-      extensions_to_provision_after_vm_creation     = null
-      protected_settings_from_key_vault             = null
+      protected_settings                        = null
+      auto_upgrade_minor_version                = null
+      failure_suppression_enabled               = null
+      force_extension_execution_on_change       = null
+      extensions_to_provision_after_vm_creation = null
+      protected_settings_from_key_vault         = null
     },
     {
-      name                                          = "Docker"
-      publisher                                     = "Microsoft.Azure.Extensions"
-      type                                          = "DockerExtension"
-      type_handler_version                          = "1.0"
-      auto_upgrade_minor_version_enabled            = true
-      extensions_to_provision_after_vm_creation     = ["CustomScript"]
-      settings                                      = null
-      protected_settings                            = null
-      auto_upgrade_minor_version                    = null
-      failure_suppression_enabled                   = null
-      force_extension_execution_on_change           = null
-      protected_settings_from_key_vault             = null
+      name                                      = "Docker"
+      publisher                                 = "Microsoft.Azure.Extensions"
+      type                                      = "DockerExtension"
+      type_handler_version                      = "1.0"
+      auto_upgrade_minor_version_enabled        = true
+      extensions_to_provision_after_vm_creation = ["CustomScript"]
+      settings                                  = null
+      protected_settings                        = null
+      auto_upgrade_minor_version                = null
+      failure_suppression_enabled               = null
+      force_extension_execution_on_change       = null
+      protected_settings_from_key_vault         = null
     }
-  ])
+  ]
 
   extension_protected_settings = toset([
     {
@@ -135,6 +136,6 @@ resource "azapi_update_resource" "update0" {
   sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
   depends_on     = [azapi_resource.this]
   lifecycle {
-    ignore_changes = [all]
+    ignore_changes = all
   }
 }

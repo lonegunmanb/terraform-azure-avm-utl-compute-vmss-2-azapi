@@ -1,12 +1,12 @@
 module "vmss" {
   source = "../.."
 
-  name                        = "acctestOVMSS-${random_integer.number.result}"
-  location                    = azurerm_resource_group.test.location
-  resource_group_id           = azurerm_resource_group.test.id
-  platform_fault_domain_count = 2
-  sku_name                    = "Standard_D1_v2"
-  instances                   = 1
+  name                         = "acctestOVMSS-${random_integer.number.result}"
+  location                     = azurerm_resource_group.test.location
+  resource_group_id            = azurerm_resource_group.test.id
+  platform_fault_domain_count  = 2
+  sku_name                     = "Standard_D1_v2"
+  instances                    = 1
   extension_operations_enabled = false
 
   os_profile = {
@@ -34,11 +34,11 @@ module "vmss" {
           primary   = true
           subnet_id = azurerm_subnet.test.id
 
-          public_ip_address = {
+          public_ip_address = [{
             name                    = "TestPublicIPConfiguration"
             domain_name_label       = "test-domain-label"
             idle_timeout_in_minutes = 4
-          }
+          }]
         }
       ]
     }
@@ -58,18 +58,18 @@ module "vmss" {
 }
 
 resource "azapi_resource" "this" {
-  type                              = module.vmss.azapi_header.type
-  name                              = module.vmss.azapi_header.name
-  location                          = module.vmss.azapi_header.location
-  parent_id                         = module.vmss.azapi_header.parent_id
-  tags                              = module.vmss.azapi_header.tags
-  body                              = module.vmss.body
-  ignore_null_property              = module.vmss.azapi_header.ignore_null_property
-  sensitive_body                    = module.vmss.sensitive_body
-  sensitive_body_version            = module.vmss.sensitive_body_version
-  replace_triggers_external_values  = module.vmss.replace_triggers_external_values
-  locks                             = module.vmss.locks
-  retry                             = module.vmss.retry
+  type                             = module.vmss.azapi_header.type
+  name                             = module.vmss.azapi_header.name
+  location                         = module.vmss.azapi_header.location
+  parent_id                        = module.vmss.azapi_header.parent_id
+  tags                             = module.vmss.azapi_header.tags
+  body                             = module.vmss.body
+  ignore_null_property             = module.vmss.azapi_header.ignore_null_property
+  sensitive_body                   = module.vmss.sensitive_body
+  sensitive_body_version           = module.vmss.sensitive_body_version
+  replace_triggers_external_values = module.vmss.replace_triggers_external_values
+  locks                            = module.vmss.locks
+  retry                            = module.vmss.retry
 
   dynamic "identity" {
     for_each = can(module.vmss.azapi_header.identity) ? [module.vmss.azapi_header.identity] : []
@@ -91,13 +91,10 @@ resource "azapi_resource" "this" {
 }
 
 resource "azapi_update_resource" "update0" {
-  type           = module.vmss_replicator.post_creation_updates[0].azapi_header.type
-  name           = module.vmss_replicator.post_creation_updates[0].azapi_header.name
-  parent_id      = module.vmss_replicator.post_creation_updates[0].azapi_header.parent_id
-  body           = module.vmss_replicator.post_creation_updates[0].body
-  sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
+  type           = module.vmss.post_creation_updates[0].azapi_header.type
+  name           = module.vmss.post_creation_updates[0].azapi_header.name
+  parent_id      = module.vmss.post_creation_updates[0].azapi_header.parent_id
+  body           = module.vmss.post_creation_updates[0].body
+  sensitive_body = try(module.vmss.post_creation_updates[0].sensitive_body, null)
   depends_on     = [azapi_resource.this]
-  lifecycle {
-    ignore_changes = [all]
-  }
 }

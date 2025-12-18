@@ -24,26 +24,27 @@ resource "azapi_resource" "this" {
 
   dynamic "identity" {
     for_each = can(module.vmss_replicator.azapi_header.identity) ? [module.vmss_replicator.identity] : []
-     content {
-       type = identity.value.type
-       identity_ids = try(identity.value.identity_ids, null)
+    content {
+      type         = identity.value.type
+      identity_ids = try(identity.value.identity_ids, null)
     }
   }
 
   retry = module.vmss_replicator.retry
 
   dynamic "timeouts" {
-        for_each = module.vmss_replicator.timeouts != null ? [module.vmss_replicator.timeouts] : []
-        content {
-          create = timeouts.value.create
-          delete = timeouts.value.delete
-          read   = timeouts.value.read
-          update = timeouts.value.update
-        }
-       }
+    for_each = module.vmss_replicator.timeouts != null ? [module.vmss_replicator.timeouts] : []
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
 resource "azapi_update_resource" "update0" {
+  count          = length(module.vmss_replicator.post_creation_updates) > 0 && can(jsondecode(module.vmss_replicator.post_creation_updates[0].body).sku) ? 1 : 0
   type           = module.vmss_replicator.post_creation_updates[0].azapi_header.type
   name           = module.vmss_replicator.post_creation_updates[0].azapi_header.name
   parent_id      = module.vmss_replicator.post_creation_updates[0].azapi_header.parent_id
@@ -51,6 +52,6 @@ resource "azapi_update_resource" "update0" {
   sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
   depends_on     = [azapi_resource.this]
   lifecycle {
-    ignore_changes = [all]
+    ignore_changes = all
   }
 }

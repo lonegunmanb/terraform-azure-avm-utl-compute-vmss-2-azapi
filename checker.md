@@ -397,6 +397,42 @@ From `executor.md`:
 - Example: `set(string)` → `list(string)` using `tolist()`
 - Null handling correct
 
+#### 4.4.5 Root-Level Default Values
+
+**MANDATORY Check for Root/Top-Level Arguments with Defaults:**
+
+From `executor.md`: When a root/top-level argument has a default value in the provider schema, the variable definition MUST include:
+1. ✅ `default = value` - matching the provider schema default
+2. ✅ `nullable = false` - explicitly preventing null values
+
+**Check Pattern:**
+```hcl
+# ✅ CORRECT
+variable "upgrade_mode" {
+  type        = string
+  default     = "Manual"
+  nullable    = false  # <- MANDATORY when default is set
+  description = "..."
+}
+
+# ❌ VIOLATION - missing nullable = false
+variable "upgrade_mode" {
+  type        = string
+  default     = "Manual"  # Has default but missing nullable = false
+  description = "..."
+}
+```
+
+**Why This Matters:**
+- Without `nullable = false`, users can explicitly pass `null` and override the default
+- This breaks the guarantee that the field always has the default value
+- Provider schemas with `Default:` assume the field is never null
+
+**If Found Missing:**
+1. Add `nullable = false` to the variable definition
+2. Document in checker validation section
+3. Mark as CRITICAL VIOLATION if default exists without nullable = false
+
 #### 4.5 Validations
 
 From `executor.md`:

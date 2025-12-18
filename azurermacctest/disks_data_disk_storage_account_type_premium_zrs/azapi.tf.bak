@@ -87,6 +87,7 @@ resource "azapi_resource" "this" {
 }
 
 resource "azapi_update_resource" "update0" {
+  count          = length(module.vmss_replicator.post_creation_updates) > 0 && can(jsondecode(module.vmss_replicator.post_creation_updates[0].body).sku) ? 1 : 0
   type           = module.vmss_replicator.post_creation_updates[0].azapi_header.type
   name           = module.vmss_replicator.post_creation_updates[0].azapi_header.name
   parent_id      = module.vmss_replicator.post_creation_updates[0].azapi_header.parent_id
@@ -94,6 +95,6 @@ resource "azapi_update_resource" "update0" {
   sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
   depends_on     = [azapi_resource.this]
   lifecycle {
-    ignore_changes = [all]
+    ignore_changes = all
   }
 }
