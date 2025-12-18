@@ -61,6 +61,7 @@ resource "azapi_resource" "this" {
   parent_id                        = module.vmss_replicator.azapi_header.parent_id
   tags                             = module.vmss_replicator.azapi_header.tags
   body                             = module.vmss_replicator.body
+  ignore_null_property             = module.vmss_replicator.azapi_header.ignore_null_property
   sensitive_body                   = module.vmss_replicator.sensitive_body
   sensitive_body_version           = module.vmss_replicator.sensitive_body_version
   replace_triggers_external_values = module.vmss_replicator.replace_triggers_external_values

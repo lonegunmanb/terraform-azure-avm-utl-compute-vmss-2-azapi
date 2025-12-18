@@ -521,7 +521,8 @@ variable "max_bid_price" {
 
 variable "network_api_version" {
   type        = string
-  default     = null
+  default     = "2020-11-01"
+  nullable = false
   description = "(Optional) Specifies the Microsoft.Network API version used when creating networking resources in the Network Interface Configurations for Virtual Machine Scale Set. Possible values are `2020-11-01` and `2022-11-01`. Defaults to `2020-11-01`."
 
   validation {

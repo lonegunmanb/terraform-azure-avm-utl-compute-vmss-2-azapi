@@ -549,6 +549,7 @@ Before approving any task, you MUST verify completion of deferred work:
 
 **Nested Block Sensitive:**
 - [ ] Independent ephemeral variable exists in `migrate_variables.tf`
+- [ ] **If field is Required** in provider schema: ephemeral variable has validation block ensuring parent block presence requires field (e.g., `var.os_profile == null || var.os_profile_custom_data != null`)
 - [ ] Version variable exists with `type = number`
 - [ ] **Version variable has `default = null`** (NOT `default = 1`)
 - [ ] Version variable has validation ensuring both field and version set together

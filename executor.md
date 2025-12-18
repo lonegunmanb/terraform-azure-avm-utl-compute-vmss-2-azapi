@@ -307,6 +307,11 @@ locals {
    ```hcl
    variable "{nested_path}_{field}" {
      type = string; nullable = true; ephemeral = true; default = null
+     # If field is Required in provider schema, add validation:
+     validation {
+       condition     = try(var.{parent_block} == null, true) || var.{nested_path}_{field} != null
+       error_message = "When {parent_block} is set, {field} is required and must be provided."
+     }
    }
    variable "{nested_path}_{field}_version" {
      type = number; default = null
@@ -316,7 +321,9 @@ locals {
      }
    }
    ```
-   **⚠️ CRITICAL:** All new ephemeral variables for nested block sensitive/ephemeral fields MUST have `nullable = true`, regardless of whether the original field is Required or Optional in the provider schema.
+   **⚠️ CRITICAL:** 
+   - All new ephemeral variables for nested block sensitive/ephemeral fields MUST have `nullable = true`, regardless of whether the original field is Required or Optional in the provider schema.
+   - **If the field is Required** in the provider schema, the ephemeral variable MUST include a validation block that ensures: when the parent block is set, the required field must also be provided (e.g., `var.os_profile == null || var.os_profile_custom_data != null`).
 
 2. **Mark original field in `variables.tf`** (for code review):
    ```hcl
