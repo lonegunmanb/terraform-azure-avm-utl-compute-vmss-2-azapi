@@ -1,53 +1,346 @@
-Test Case: extension_template
-================================================================================
+[0m[1mrandom_string.name: Refreshing state... [id=otbjn0w6][0m
+[0m[1mrandom_integer.number: Refreshing state... [id=70666][0m
+[0m[1mazurerm_resource_group.test: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-70666][0m
+[0m[1mazurerm_nat_gateway.test: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-70666/providers/Microsoft.Network/natGateways/acctng-70666][0m
+[0m[1mazurerm_virtual_network.test: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-70666/providers/Microsoft.Network/virtualNetworks/acctvn-70666][0m
+[0m[1mazurerm_public_ip.test: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-70666/providers/Microsoft.Network/publicIPAddresses/acctpip-70666][0m
+[0m[1mmodule.vmss_replicator.data.azapi_resource.existing: Reading...[0m[0m
+[0m[1mazurerm_subnet.test: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-70666/providers/Microsoft.Network/virtualNetworks/acctvn-70666/subnets/acctsub-70666][0m
+[0m[1mazurerm_nat_gateway_public_ip_association.test: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-70666/providers/Microsoft.Network/natGateways/acctng-70666|/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-70666/providers/Microsoft.Network/publicIPAddresses/acctpip-70666][0m
+[0m[1mazurerm_subnet_nat_gateway_association.example: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-70666/providers/Microsoft.Network/virtualNetworks/acctvn-70666/subnets/acctsub-70666][0m
+[0m[1mmodule.vmss_replicator.data.azapi_resource.existing: Read complete after 1s [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-70666/providers/Microsoft.Compute/virtualMachineScaleSets/acctestOVMSS-70666][0m
+[0m[1mazapi_resource.this: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-70666/providers/Microsoft.Compute/virtualMachineScaleSets/acctestOVMSS-70666][0m
 
-Initial Error:
-╷
-│ Error: Missing required argument
-│
-│   on azapi.tf line 1, in module "vmss_replicator":
-│    1: module "vmss_replicator" {
-│
-│ The argument "resource_group_id" is required, but no definition was found.
-╵
-╷
-│ Error: Unsupported argument
-│
-│   on azapi.tf line 6, in module "vmss_replicator":
-│    6:   resource_group_name         = azurerm_resource_group.test.name
-│
-│ An argument named "resource_group_name" is not expected here.
-╵
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [32m+[0m create[0m
+  [33m~[0m update in-place[0m
 
-Fix Process:
+Terraform will perform the following actions:
 
-Attempt 1:
-- Problem Analysis: Module requires resource_group_id instead of resource_group_name
-- Fix Method: Replace resource_group_name with resource_group_id and use azurerm_resource_group.test.id
-- Changes Made: Changed line 6 from resource_group_name = azurerm_resource_group.test.name to resource_group_id = azurerm_resource_group.test.id
-- Result: Fixed, but new error - public_ip_address should be a list
+[1m  # azapi_resource.this[0m will be updated in-place
+  # [0m(moved from azurerm_orchestrated_virtual_machine_scale_set.test)
+[0m  [33m~[0m[0m resource "azapi_resource" "this" {
+      [33m~[0m[0m body                             = {
+          [33m~[0m[0m properties = {
+              [31m-[0m[0m constrainedMaximumCapacity     = false
+              [31m-[0m[0m highSpeedInterconnectPlacement = "None"
+              [31m-[0m[0m singlePlacementGroup           = false
+              [33m~[0m[0m virtualMachineProfile          = {
+                  [33m~[0m[0m extensionProfile = {
+                      [33m~[0m[0m extensions           = [
+                          [33m~[0m[0m {
+                                name       = "CustomScript"
+                              [33m~[0m[0m properties = {
+                                  [31m-[0m[0m forceUpdateTag           = ""
+                                  [31m-[0m[0m provisionAfterExtensions = []
+                                    [90m# (6 unchanged attributes hidden)[0m[0m
+                                }
+                            },
+                        ]
+                        [90m# (1 unchanged attribute hidden)[0m[0m
+                    }
+                  [33m~[0m[0m networkProfile   = {
+                      [33m~[0m[0m networkInterfaceConfigurations = [
+                          [33m~[0m[0m {
+                                name       = "TestNetworkProfile"
+                              [33m~[0m[0m properties = {
+                                  [31m-[0m[0m auxiliaryMode               = "None"
+                                  [31m-[0m[0m auxiliarySku                = "None"
+                                  [31m-[0m[0m deleteOption                = "Delete"
+                                  [31m-[0m[0m disableTcpStateTracking     = false
+                                  [31m-[0m[0m dnsSettings                 = {
+                                      [31m-[0m[0m dnsServers = []
+                                    }
+                                  [33m~[0m[0m ipConfigurations            = [
+                                      [33m~[0m[0m {
+                                            name       = "TestIPConfiguration"
+                                          [33m~[0m[0m properties = {
+                                              [31m-[0m[0m applicationGatewayBackendAddressPools = []
+                                              [31m-[0m[0m applicationSecurityGroups             = []
+                                              [31m-[0m[0m loadBalancerBackendAddressPools       = []
+                                              [33m~[0m[0m publicIPAddressConfiguration          = {
+                                                    name       = "TestPublicIPConfiguration"
+                                                  [33m~[0m[0m properties = {
+                                                      [31m-[0m[0m ipTags                 = []
+                                                        [90m# (3 unchanged attributes hidden)[0m[0m
+                                                    }
+                                                }
+                                                [90m# (3 unchanged attributes hidden)[0m[0m
+                                            }
+                                        },
+                                    ]
+                                    [90m# (3 unchanged attributes hidden)[0m[0m
+                                }
+                            },
+                        ]
+                        [90m# (1 unchanged attribute hidden)[0m[0m
+                    }
+                  [33m~[0m[0m osProfile        = {
+                      [31m-[0m[0m requireGuestProvisionSignal = true
+                      [31m-[0m[0m secrets                     = []
+                        [90m# (4 unchanged attributes hidden)[0m[0m
+                    }
+                  [33m~[0m[0m storageProfile   = {
+                      [33m~[0m[0m osDisk         = {
+                          [31m-[0m[0m deleteOption            = "Delete"
+                          [33m~[0m[0m diskSizeGB              = 30 [33m->[0m[0m [90mnull[0m[0m
+                            [90m# (5 unchanged attributes hidden)[0m[0m
+                        }
+                        [90m# (1 unchanged attribute hidden)[0m[0m
+                    }
+                    [90m# (1 unchanged attribute hidden)[0m[0m
+                }
+                [90m# (3 unchanged attributes hidden)[0m[0m
+            }
+            [90m# (1 unchanged attribute hidden)[0m[0m
+        }
+        id                               = "/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-70666/providers/Microsoft.Compute/virtualMachineScaleSets/acctestOVMSS-70666"
+      [33m~[0m[0m ignore_null_property             = false [33m->[0m[0m true
+      [32m+[0m[0m locks                            = []
+        name                             = "acctestOVMSS-70666"
+      [33m~[0m[0m output                           = {
+          [31m-[0m[0m id         = "/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-70666/providers/Microsoft.Compute/virtualMachineScaleSets/acctestOVMSS-70666"
+          [31m-[0m[0m properties = {
+              [31m-[0m[0m provisioningState     = "Succeeded"
+              [31m-[0m[0m timeCreated           = "2025-12-19T06:27:06.5425544+00:00"
+              [31m-[0m[0m uniqueId              = "ff6df350-e57e-4086-bd65-4cb42371e43f"
+              [31m-[0m[0m virtualMachineProfile = {
+                  [31m-[0m[0m extensionProfile = {
+                      [31m-[0m[0m extensions = [
+                          [31m-[0m[0m {
+                              [31m-[0m[0m properties = {
+                                  [31m-[0m[0m settings = {
+                                      [31m-[0m[0m commandToExecute = "echo $HOSTNAME"
+                                    }
+                                }
+                            },
+                        ]
+                    }
+                  [31m-[0m[0m networkProfile   = {
+                      [31m-[0m[0m networkInterfaceConfigurations = [
+                          [31m-[0m[0m {
+                              [31m-[0m[0m properties = {
+                                  [31m-[0m[0m ipConfigurations = [
+                                      [31m-[0m[0m {},
+                                    ]
+                                }
+                            },
+                        ]
+                    }
+                  [31m-[0m[0m osProfile        = {
+                      [31m-[0m[0m linuxConfiguration = {
+                          [31m-[0m[0m ssh = {
+                              [31m-[0m[0m publicKeys = [
+                                  [31m-[0m[0m {},
+                                ]
+                            }
+                        }
+                    }
+                  [31m-[0m[0m timeCreated      = "2025-12-19T06:27:06.5425544+00:00"
+                }
+            }
+          [31m-[0m[0m type       = "Microsoft.Compute/virtualMachineScaleSets"
+        } -> (known after apply)
+      [32m+[0m[0m replace_triggers_external_values = {
+          [32m+[0m[0m capacity_reservation_group_id                        = {
+              [32m+[0m[0m value = [90mnull[0m[0m
+            }
+          [32m+[0m[0m data_disk_disk_encryption_set_id                     = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m eviction_policy                                      = {
+              [32m+[0m[0m value = [90mnull[0m[0m
+            }
+          [32m+[0m[0m extension_operations_enabled                         = {
+              [32m+[0m[0m value = true
+            }
+          [32m+[0m[0m linux_configuration_admin_password_version           = {
+              [32m+[0m[0m value = [90mnull[0m[0m
+            }
+          [32m+[0m[0m linux_configuration_admin_username                   = {
+              [32m+[0m[0m value = "myadmin"
+            }
+          [32m+[0m[0m linux_configuration_computer_name_prefix             = {
+              [32m+[0m[0m value = "testvm-70666"
+            }
+          [32m+[0m[0m linux_configuration_provision_vm_agent               = {
+              [32m+[0m[0m value = true
+            }
+          [32m+[0m[0m location                                             = {
+              [32m+[0m[0m value = "eastus"
+            }
+          [32m+[0m[0m network_interface_name                               = {
+              [32m+[0m[0m value = jsonencode(
+                    [
+                      [32m+[0m[0m "TestNetworkProfile",
+                    ]
+                )
+            }
+          [32m+[0m[0m os_disk_diff_disk_settings_option                    = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m os_disk_diff_disk_settings_placement                 = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m os_disk_disk_encryption_set_id                       = {
+              [32m+[0m[0m value = [90mnull[0m[0m
+            }
+          [32m+[0m[0m os_disk_storage_account_type                         = {
+              [32m+[0m[0m value = "Standard_LRS"
+            }
+          [32m+[0m[0m plan_name                                            = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m plan_product                                         = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m plan_publisher                                       = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m platform_fault_domain_count                          = {
+              [32m+[0m[0m value = 2
+            }
+          [32m+[0m[0m priority                                             = {
+              [32m+[0m[0m value = "Regular"
+            }
+          [32m+[0m[0m priority_mix_base_regular_count                      = {
+              [32m+[0m[0m value = 0
+            }
+          [32m+[0m[0m priority_mix_regular_percentage_above_base           = {
+              [32m+[0m[0m value = 0
+            }
+          [32m+[0m[0m public_ip_ip_tag                                     = {
+              [32m+[0m[0m value = jsonencode(
+                    [
+                      [32m+[0m[0m [
+                          [32m+[0m[0m [90mnull[0m[0m,
+                        ],
+                    ]
+                )
+            }
+          [32m+[0m[0m public_ip_prefix_id                                  = {
+              [32m+[0m[0m value = jsonencode(
+                    [
+                      [32m+[0m[0m [
+                          [32m+[0m[0m [90mnull[0m[0m,
+                        ],
+                    ]
+                )
+            }
+          [32m+[0m[0m public_ip_sku_name                                   = {
+              [32m+[0m[0m value = jsonencode(
+                    [
+                      [32m+[0m[0m [
+                          [32m+[0m[0m [90mnull[0m[0m,
+                        ],
+                    ]
+                )
+            }
+          [32m+[0m[0m public_ip_version                                    = {
+              [32m+[0m[0m value = jsonencode(
+                    [
+                      [32m+[0m[0m [
+                          [32m+[0m[0m "IPv4",
+                        ],
+                    ]
+                )
+            }
+          [32m+[0m[0m rolling_upgrade_policy                               = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m single_placement_group                               = [90mnull[0m[0m
+          [32m+[0m[0m sku_profile_allocation_strategy                      = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m sku_profile_vm_sizes                                 = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m source_image_reference_offer                         = {
+              [32m+[0m[0m value = "0001-com-ubuntu-server-jammy"
+            }
+          [32m+[0m[0m source_image_reference_publisher                     = {
+              [32m+[0m[0m value = "Canonical"
+            }
+          [32m+[0m[0m ultra_ssd_enabled                                    = {
+              [32m+[0m[0m value = false
+            }
+          [32m+[0m[0m upgrade_mode                                         = {
+              [32m+[0m[0m value = "Manual"
+            }
+          [32m+[0m[0m windows_configuration_admin_password_version         = {
+              [32m+[0m[0m value = [90mnull[0m[0m
+            }
+          [32m+[0m[0m windows_configuration_admin_username                 = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m windows_configuration_computer_name_prefix           = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m windows_configuration_provision_vm_agent             = {
+              [32m+[0m[0m value = true
+            }
+          [32m+[0m[0m windows_configuration_winrm_listener_certificate_url = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m windows_configuration_winrm_listener_protocol        = {
+              [32m+[0m[0m value = ""
+            }
+          [32m+[0m[0m zone_balance                                         = {
+              [32m+[0m[0m value = [90mnull[0m[0m
+            }
+          [32m+[0m[0m zones                                                = [90mnull[0m[0m
+        }
+      [32m+[0m[0m retry                            = {
+          [32m+[0m[0m error_message_regex  = [
+              [32m+[0m[0m "retryable",
+              [32m+[0m[0m "RetryableError",
+              [32m+[0m[0m "try later",
+              [32m+[0m[0m "try again later",
+              [32m+[0m[0m "please retry",
+            ]
+          [32m+[0m[0m interval_seconds     = 10
+          [32m+[0m[0m max_interval_seconds = 180
+          [32m+[0m[0m multiplier           = 1.5
+          [32m+[0m[0m randomization_factor = 0.5
+        }
+      [32m+[0m[0m sensitive_body_version           = {
+          [32m+[0m[0m "properties.proximityPlacementGroup.id"                                                     = "null"
+          [32m+[0m[0m "properties.virtualMachineProfile.extensionProfile.protectedSettings"                       = "1"
+          [32m+[0m[0m "properties.virtualMachineProfile.licenseType"                                              = "null"
+          [32m+[0m[0m "properties.virtualMachineProfile.osProfile.adminPassword"                                  = [90mnull[0m[0m
+          [32m+[0m[0m "properties.virtualMachineProfile.osProfile.customData"                                     = [90mnull[0m[0m
+          [32m+[0m[0m "properties.virtualMachineProfile.osProfile.windowsConfiguration.additionalUnattendContent" = [90mnull[0m[0m
+          [32m+[0m[0m "properties.virtualMachineProfile.userData"                                                 = [90mnull[0m[0m
+        }
+      [33m~[0m[0m type                             = "Microsoft.Compute/virtualMachineScaleSets@2025-04-01" [33m->[0m[0m "Microsoft.Compute/virtualMachineScaleSets@2024-11-01"
+        [90m# (6 unchanged attributes hidden)[0m[0m
 
-Attempt 2:
-- Problem Analysis: public_ip_address in ip_configuration should be a list of objects, not a single object
-- Fix Method: Wrap public_ip_address object in square brackets to make it a list
-- Changes Made: Changed public_ip_address = {...} to public_ip_address = [{...}]
-- Result: Fixed, but new error - lifecycle ignore_changes invalid syntax
+      [32m+[0m[0m timeouts {
+          [32m+[0m[0m create = "60m"
+          [32m+[0m[0m delete = "60m"
+          [32m+[0m[0m read   = "5m"
+          [32m+[0m[0m update = "60m"
+        }
+    }
 
-Attempt 3:
-- Problem Analysis: lifecycle ignore_changes = [all] is not correct for azapi_update_resource
-- Fix Method: Remove the lifecycle block or fix the ignore_changes syntax
-- Changes Made: Changed ignore_changes = [all] to ignore_changes = all (without brackets)
-- Result: Success - plan shows acceptable drift (API version change from @2025-04-01 to @2024-11-01), but second plan shows extension drift
+[1m  # azapi_update_resource.update0[0m will be created
+[0m  [32m+[0m[0m resource "azapi_update_resource" "update0" {
+      [32m+[0m[0m body                    = (sensitive value)
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m ignore_casing           = false
+      [32m+[0m[0m ignore_missing_property = true
+      [32m+[0m[0m name                    = (sensitive value)
+      [32m+[0m[0m output                  = (known after apply)
+      [32m+[0m[0m parent_id               = (sensitive value)
+      [32m+[0m[0m resource_id             = (known after apply)
+      [32m+[0m[0m sensitive_body          = (write-only attribute)
+      [32m+[0m[0m type                    = (sensitive value)
+    }
 
-Attempt 4:
-- Problem Analysis: Second plan shows extensions need to be added to body, causing error: "Network api version must be specified if network interface configurations are specified"
-- Fix Method: Add network_api_version parameter to module call
-- Changes Made: Added network_api_version = "2020-11-01" to module parameters
-- Result: Failed - same error persists
+[1mPlan:[0m [0m1 to add, 1 to change, 0 to destroy.
+[90m
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[0m
 
-Attempt 5:
-- Problem Analysis: The module design has a fundamental issue - extensions with protected_settings cause continuous drift. On first apply with state migration, azapi_update_resource handles the protected settings, but subsequent plans try to add the extension to the main azapi_resource body, which triggers Azure API validation errors requiring network_api_version to be in the request body (not just the module parameter). This is a module implementation bug where extension handling doesn't properly maintain idempotency after state migration.
-- Fix Method: This requires module-level fixes to how extensions are handled in post_creation_updates vs main body
-- Result: Cannot fix at test configuration level - this is a module implementation error
-
-Final Result: Test failed after 5 fix attempts - module implementation error with extension handling
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.

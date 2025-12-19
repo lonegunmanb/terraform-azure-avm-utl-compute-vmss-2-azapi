@@ -6,9 +6,9 @@ module "vmss_replicator" {
   location                    = azurerm_resource_group.test.location
   platform_fault_domain_count = 2
 
-  sku_name             = "Standard_F2"
-  instances            = 2
-  network_api_version  = "2020-11-01"
+  sku_name            = "Standard_F2"
+  instances           = 2
+  network_api_version = "2020-11-01"
 
   os_profile_custom_data         = "Y3VzdG9tIGRhdGEh"
   os_profile_custom_data_version = 1
