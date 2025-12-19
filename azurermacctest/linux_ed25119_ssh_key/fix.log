@@ -1,0 +1,36 @@
+Test Case: linux_ed25119_ssh_key
+================================================================================
+
+Initial Error:
+│ Error: Unsupported attribute
+│
+│   on azapi.tf line 96, in resource "azapi_update_resource" "update0":
+│   96:     ignore_changes = [all]
+│
+│ This object has no argument, nested block, or exported attribute named "all".
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The lifecycle block uses ignore_changes = [all] with brackets, but Terraform requires ignore_changes = all without brackets when ignoring all attributes.
+- Fix Method: Change ignore_changes = [all] to ignore_changes = all
+- Changes Made: Modified azapi.tf line 96 from 'ignore_changes = [all]' to 'ignore_changes = all'
+- Result: Success - Plan shows acceptable drift (API version change, azapi_update_resource creation, metadata changes)
+
+Attempt 2:
+- Problem Analysis: On apply, encountered Azure API error "NetworkApiVersionMustBeSpecifiedWithNetworkInterfaceConfigurations". When AzAPI tries to update the resource to remove computed values like diskSizeGB, Azure requires networkApiVersion to be explicitly specified. The azurerm provider has a default of "2020-11-01" which was automatically set, but AzAPI requires explicit specification.
+- Fix Method: Add network_api_version = "2020-11-01" to the module call to match azurerm provider's default
+- Changes Made: Added 'network_api_version = "2020-11-01"' to azapi.tf line 10 in module parameters
+- Result: Failed - Same error persists. Module isn't properly including networkApiVersion in the request body.
+
+Attempt 3:
+- Problem Analysis: The issue is that Azure populated diskSizeGB=30 when the resource was created, but the azapi.tf doesn't specify it explicitly. When AzAPI with ignore_null_property tries to remove it, Azure rejects the update. Instead of removing it, preserve the value by explicitly setting it.
+- Fix Method: Add disk_size_gb = 30 to the os_disk block to match the value Azure assigned
+- Changes Made: Added 'disk_size_gb = 30' to azapi.tf line 45 in os_disk configuration
+- Result: Success - Plan shows no changes, idempotency achieved
+
+Final Result: Fix successful
+
+
+
+

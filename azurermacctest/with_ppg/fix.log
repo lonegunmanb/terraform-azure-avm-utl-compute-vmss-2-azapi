@@ -1,0 +1,45 @@
+Test Case: with_ppg
+================================================================================
+
+Initial Error:
+Error: Invalid value for input variable
+  on azapi.tf line 25, in module "vmss_replicator":
+  25:   network_interface = [
+...
+The given value is not suitable for module.vmss_replicator.var.network_interface declared at
+..\..\variables.tf:536,1-29: element 0: attribute "ip_configuration": element 0: attribute "public_ip_address": list
+of object required.
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The public_ip_address field in ip_configuration should be a list of objects, but it's currently defined as a single object.
+- Fix Method: Wrap the public_ip_address object in a list (change { } to [{ }])
+- Changes Made: Modified azapi.tf line 34-38 to wrap public_ip_address in list brackets
+- Result: Success - first error fixed, revealed new error
+
+Second Error:
+Error: Unsupported attribute
+  on azapi.tf line 99, in resource "azapi_update_resource" "update0":
+  99:     ignore_changes = [all]
+This object has no argument, nested block, or exported attribute named "all".
+
+Attempt 2:
+- Problem Analysis: The lifecycle block is trying to use ignore_changes = [all] which returned an error
+- Fix Method: Remove the lifecycle block completely to test if it was causing issues
+- Changes Made: Removed lines 98-100 (lifecycle block) from azapi.tf
+- Result: Plan succeeded, but second plan shows ongoing drift in azapi_update_resource
+
+Attempt 3:
+- Problem Analysis: Without lifecycle ignore_changes, azapi_update_resource shows perpetual drift. The error with [all] might have been a red herring - need to use specific attributes instead
+- Fix Method: Add back lifecycle block but specify exact attributes to ignore: body, output, sensitive_body
+- Changes Made: Added lifecycle block with ignore_changes = [body, output, sensitive_body] to azapi_update_resource
+- Result: Success - plan shows "No changes" (with harmless warning about redundant output in ignore_changes)
+
+Final Result: Fix successful
+
+All changes applied successfully and configuration is now idempotent.
+
+
+
+

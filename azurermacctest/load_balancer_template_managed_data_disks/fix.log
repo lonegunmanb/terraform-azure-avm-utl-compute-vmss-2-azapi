@@ -1,0 +1,24 @@
+Test Case: load_balancer_template_managed_data_disks
+================================================================================
+
+Initial Error:
+Error: Unsupported attribute
+  on azapi.tf line 102, in resource "azapi_update_resource" "update0":
+ 102:     ignore_changes = [all]
+This object has no argument, nested block, or exported attribute named "all".
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The lifecycle ignore_changes syntax is incorrect. In Terraform, `ignore_changes = all` should not have brackets when using the special `all` keyword.
+- Fix Method: Changed `ignore_changes = [all]` to `ignore_changes = all` (removed brackets)
+- Changes Made: Modified azapi.tf line 102 to use correct syntax
+- Result: Success - Plan now runs successfully. Detected drifts are all acceptable per acceptable_drift_patterns.md:
+  - replace_triggers_external_values changes (acceptable)
+  - sensitive_body_version changes (acceptable)
+  - type/API version change (acceptable)
+  - timeouts addition (acceptable)
+  - azapi_update_resource.update0 creation (acceptable)
+
+Final Result: Fix successful
+

@@ -1,0 +1,56 @@
+Test Case: multiple_extensions_template_provision_multiple_extension_on_existing_ovmss
+================================================================================
+
+Test Failed - Module Implementation Issue
+
+Initial Error (Step 5 - Fresh AzAPI Deployment):
+Error: Failed to create/update resource
+RESPONSE 400: 400 Bad Request
+ERROR CODE: NetworkApiVersionMustBeSpecifiedWithNetworkInterfaceConfigurations
+{
+  "error": {
+    "details": [],
+    "code": "NetworkApiVersionMustBeSpecifiedWithNetworkInterfaceConfigurations",
+    "message": "Network api version in network profile of virtual machine must be specified if network interface configurations are specified."
+  }
+}
+
+Attempted Fix Methods:
+
+Attempt 1 (Step 3 - State Migration):
+- Problem Analysis: Configuration validation errors - public_ip_address needed to be list, extension couldn't use toset()
+- Fix Method: Fixed data type issues
+- Result: Fixed validation errors, but hit network_api_version error during apply
+
+Attempt 2 (Step 3 - State Migration):
+- Problem Analysis: lifecycle ignore_changes syntax error
+- Fix Method: Changed ignore_changes = [all] to ignore_changes = all
+- Result: Fixed syntax error, plan succeeded with acceptable drift, but apply failed with network_api_version error
+
+Attempt 3 (Step 3 - State Migration):
+- Problem Analysis: Azure requires network_api_version in request body when network interfaces exist
+- Fix Method: Added network_api_version = "2020-11-01" to module call
+- Result: Failed - module doesn't properly inject network_api_version into the request body sent to Azure API
+
+Attempt 4 (Step 5 - Fresh Deployment):
+- Problem Analysis: Same network_api_version error occurs in fresh deployment during extension provisioning update
+- Result: Failed - confirms this is a fundamental module implementation issue, not specific to state migration
+
+Root Cause Analysis:
+This test case is specifically designed to provision extensions on an EXISTING VMSS (hence the name "provisionMultipleExtensionOnExistingOvmss"). The workflow should be:
+1. Create VMSS without extensions
+2. Update VMSS to add multiple extensions
+
+The module successfully creates the initial VMSS, but when Terraform tries to add extensions via an update operation, Azure's API validation requires the "networkApiVersion" field to be present in the virtualMachineProfile.networkProfile section of the request body.
+
+The module accepts network_api_version as an input parameter but does not correctly propagate it into the actual API request body during updates. The AzureRM provider handles this transparently, but the AzAPI module implementation is missing this logic.
+
+Conclusion:
+This is a MODULE IMPLEMENTATION BUG. The replicator module needs to:
+1. Ensure network_api_version is properly set in the body.properties.virtualMachineProfile.networkProfile.networkApiVersion field
+2. Handle the case where network interfaces exist but network_api_version wasn't explicitly provided (should default to a valid value like "2020-11-01")
+3. Ensure this value persists correctly during update operations
+
+This test cannot pass until the module is fixed to properly handle network_api_version in the request body.
+
+Test Status: FAILED - Module implementation bug prevents successful deployment

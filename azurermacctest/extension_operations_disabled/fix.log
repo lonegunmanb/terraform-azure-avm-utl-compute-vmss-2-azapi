@@ -1,0 +1,33 @@
+Test Case: extension_operations_disabled
+================================================================================
+
+Initial Error:
+Error: Invalid value for input variable
+  on azapi.tf line 26, in module "vmss":
+  26:   network_interface = [
+The given value is not suitable for module.vmss.var.network_interface declared at ..\..\variables.tf:536,1-29:
+element 0: attribute "ip_configuration": element 0: attribute "public_ip_address": list of object required.
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The error indicates that public_ip_address expects a list of objects, but a single object is provided
+- Fix Method: Wrap the public_ip_address object in a list (array brackets)
+- Changes Made: Changed public_ip_address = { ... } to public_ip_address = [{ ... }]
+- Result: Fixed, but revealed new error about undeclared module "vmss_replicator"
+
+Attempt 2:
+- Problem Analysis: The azapi_update_resource references module.vmss_replicator but the actual module is named "vmss"
+- Fix Method: Replace all references to module.vmss_replicator with module.vmss
+- Changes Made: Updated lines 94-98 in azapi.tf to reference module.vmss instead of module.vmss_replicator
+- Result: Fixed, but revealed new error about ignore_changes = [all]
+
+Attempt 3:
+- Problem Analysis: lifecycle ignore_changes = [all] is invalid syntax, should be a specific list of attributes or remove the lifecycle block entirely
+- Fix Method: Remove the invalid lifecycle block since it's attempting to ignore all changes which doesn't make sense for an update resource
+- Changes Made: Removed lines 100-102 (lifecycle block) from azapi.tf
+- Result: Success - Plan shows only acceptable drift patterns (ignore_null_property, locks, replace_triggers_external_values, sensitive_body_version, retry, output, type API version, timeouts) plus creation of azapi_update_resource.update0
+
+Final Result: Fix successful
+
+

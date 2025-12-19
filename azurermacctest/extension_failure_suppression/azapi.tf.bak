@@ -1,0 +1,123 @@
+module "vmss_replicator" {
+  source = "../.."
+
+  name                        = "acctestOVMSS-${random_integer.number.result}"
+  location                    = azurerm_resource_group.test.location
+  resource_group_id           = azurerm_resource_group.test.id
+  platform_fault_domain_count = 2
+  sku_name                    = "Standard_D1_v2"
+  instances                   = 0
+
+  os_profile = {
+    linux_configuration = {
+      computer_name_prefix = "testvm-${random_integer.number.result}"
+      admin_username       = "myadmin"
+      admin_ssh_key = [
+        {
+          username   = "myadmin"
+          public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDCsTcryUl51Q2VSEHqDRNmceUFo55ZtcIwxl2QITbN1RREti5ml/VTytC0yeBOvnZA4x4CFpdw/lCDPk0yrH9Ei5vVkXmOrExdTlT3qI7YaAzj1tUVlBd4S6LX1F7y6VLActvdHuDDuXZXzCDd/97420jrDfWZqJMlUK/EmCE5ParCeHIRIvmBxcEnGfFIsw8xQZl0HphxWOtJil8qsUWSdMyCiJYYQpMoMliO99X40AUc4/AlsyPyT5ddbKk08YrZ+rKDVHF7o29rh4vi5MmHkVgVQHKiKybWlHq+b71gIAUQk9wrJxD+dqt4igrmDSpIjfjwnd+l5UIn5fJSO5DYV4YT/4hwK7OKmuo7OFHD0WyY5YnkYEMtFgzemnRBdE8ulcT60DQpVgRMXFWHvhyCWy0L6sgj1QWDZlLpvsIvNfHsyhKFMG1frLnMt/nP0+YCcfg+v1JYeCKjeoJxB8DWcRBsjzItY0CGmzP8UYZiYKl/2u+2TgFS5r7NWH11bxoUzjKdaa1NLw+ieA8GlBFfCbfWe6YVB9ggUte4VtYFMZGxOjS2bAiYtfgTKFJv+XqORAwExG6+G2eDxIDyo80/OA9IG7Xv/jwQr7D6KDjDuULFcN/iTxuttoKrHeYz1hf5ZQlBdllwJHYx6fK2g8kha6r2JIQKocvsAXiiONqSfw== hello@world.com"
+        }
+      ]
+    }
+  }
+
+  network_interface = [
+    {
+      name    = "TestNetworkProfile"
+      primary = true
+      ip_configuration = [
+        {
+          name      = "TestIPConfiguration"
+          primary   = true
+          subnet_id = azurerm_subnet.test.id
+          public_ip_address = [{
+            name                    = "TestPublicIPConfiguration"
+            domain_name_label       = "test-domain-label"
+            idle_timeout_in_minutes = 4
+          }]
+        }
+      ]
+    }
+  ]
+
+  os_disk = {
+    storage_account_type = "Standard_LRS"
+    caching              = "ReadWrite"
+  }
+
+  source_image_reference = {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts"
+    version   = "latest"
+  }
+
+  extension = [
+    {
+      name                               = "CustomScript"
+      publisher                          = "Microsoft.Azure.Extensions"
+      type                               = "CustomScript"
+      type_handler_version               = "2.0"
+      auto_upgrade_minor_version_enabled = true
+      settings = jsonencode({
+        "commandToExecute" = "echo $HOSTNAME"
+      })
+      failure_suppression_enabled = true
+    }
+  ]
+
+  extension_protected_settings = [
+    {
+      name = "CustomScript"
+      protected_settings = jsonencode({
+        "managedIdentity" = {}
+      })
+    }
+  ]
+  extension_protected_settings_version = 1
+}
+
+resource "azapi_resource" "this" {
+  type                             = module.vmss_replicator.azapi_header.type
+  name                             = module.vmss_replicator.azapi_header.name
+  location                         = module.vmss_replicator.azapi_header.location
+  parent_id                        = module.vmss_replicator.azapi_header.parent_id
+  tags                             = module.vmss_replicator.azapi_header.tags
+  body                             = module.vmss_replicator.body
+  ignore_null_property             = module.vmss_replicator.azapi_header.ignore_null_property
+  sensitive_body                   = module.vmss_replicator.sensitive_body
+  sensitive_body_version           = module.vmss_replicator.sensitive_body_version
+  replace_triggers_external_values = module.vmss_replicator.replace_triggers_external_values
+  locks                            = module.vmss_replicator.locks
+  retry                            = module.vmss_replicator.retry
+
+  dynamic "identity" {
+    for_each = can(module.vmss_replicator.azapi_header.identity) ? [module.vmss_replicator.azapi_header.identity] : []
+    content {
+      type         = identity.value.type
+      identity_ids = try(identity.value.identity_ids, null)
+    }
+  }
+
+  dynamic "timeouts" {
+    for_each = module.vmss_replicator.timeouts != null ? [module.vmss_replicator.timeouts] : []
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
+}
+
+resource "azapi_update_resource" "update0" {
+  type           = module.vmss_replicator.post_creation_updates[0].azapi_header.type
+  name           = module.vmss_replicator.post_creation_updates[0].azapi_header.name
+  parent_id      = module.vmss_replicator.post_creation_updates[0].azapi_header.parent_id
+  body           = module.vmss_replicator.post_creation_updates[0].body
+  sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
+  depends_on     = [azapi_resource.this]
+  lifecycle {
+    ignore_changes = all
+  }
+}

@@ -1,0 +1,31 @@
+Test Case: disks_os_disk_storage_account_type_standard_ssd_lrs
+================================================================================
+
+Initial Error:
+│ Error: Unsupported attribute
+│
+│   on azapi.tf line 97, in resource "azapi_update_resource" "update0":
+│   97:     ignore_changes = [all]
+│
+│ This object has no argument, nested block, or exported attribute named "all".
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The lifecycle block uses incorrect syntax for ignore_changes. The syntax `ignore_changes = [all]` treats "all" as a string in a list, but it should be `ignore_changes = all` without brackets to reference the special "all" keyword.
+- Fix Method: Remove the brackets around "all" in the ignore_changes statement
+- Changes Made: Changed `ignore_changes = [all]` to `ignore_changes = all` in azapi.tf line 97
+- Result: Success
+
+Plan detected the following changes, all acceptable per acceptable_drift_patterns.md:
+- ignore_null_property: false -> true (acceptable - AzAPI behavior setting)
+- output: changes (acceptable - computed output values)
+- replace_triggers_external_values: added (acceptable - module replacement tracking)
+- sensitive_body_version: added (acceptable - sensitive data versioning)
+- type: API version @2025-04-01 -> @2024-11-01 (acceptable - API version changes)
+- retry: added (acceptable - AzAPI implementation detail)
+- timeouts: added (acceptable - AzAPI implementation detail)
+
+All changes match Pattern 1 in acceptable_drift_patterns.md.
+
+Final Result: Fix successful

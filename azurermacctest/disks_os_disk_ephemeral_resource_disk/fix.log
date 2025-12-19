@@ -1,0 +1,48 @@
+Test Case: disks_os_disk_ephemeral_resource_disk
+================================================================================
+
+Initial Error:
+Error: Invalid value for input variable
+  on azapi.tf line 22, in module "vmss":
+  22:   network_interface = [
+  23:     {
+  24:       name    = "TestNetworkProfile"
+  25:       primary = true
+  26:       ip_configuration = [
+  27:         {
+  28:           name      = "TestIPConfiguration"
+  29:           primary   = true
+  30:           subnet_id = azurerm_subnet.test.id
+  31:           public_ip_address = {
+  32:             name                    = "TestPublicIPConfiguration"
+  33:             domain_name_label       = "test-domain-label"
+  34:             idle_timeout_in_minutes = 4
+  35:           }
+  36:         }
+  37:       ]
+  38:     }
+  39:   ]
+
+The given value is not suitable for module.vmss.var.network_interface declared at ..\..\variables.tf:536,1-29:
+element 0: attribute "ip_configuration": element 0: attribute "public_ip_address": list of object required.
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The public_ip_address attribute expects a list of objects, but was provided as a single object.
+- Fix Method: Convert public_ip_address from object to list by wrapping it in square brackets. Also added vmss_replicator module which was referenced in the azapi_update_resource block.
+- Changes Made: 
+  1. Changed public_ip_address = { ... } to public_ip_address = [ { ... } ]
+  2. Added module "vmss_replicator" with identical configuration to module "vmss"
+- Result: Testing...
+
+
+Attempt 2:
+- Problem Analysis: The ignore_changes syntax was incorrect - should be 'all' not '[all]'
+- Fix Method: Changed ignore_changes = [all] to ignore_changes = all
+- Changes Made: Updated lifecycle block in azapi_update_resource resource
+- Result: Testing...
+
+- Result: Success - plan shows only acceptable drifts
+
+Final Result: Fix successful

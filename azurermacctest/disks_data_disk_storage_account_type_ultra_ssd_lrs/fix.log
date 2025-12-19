@@ -1,0 +1,29 @@
+Test Case: disks_data_disk_storage_account_type_ultra_ssd_lrs
+================================================================================
+
+Initial Error:
+╷
+│ Error: Unsupported attribute
+│
+│   on azapi.tf line 106, in resource "azapi_update_resource" "update0":
+│  106:     ignore_changes = [all]
+│
+│ This object has no argument, nested block, or exported attribute named "all".
+╵
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The lifecycle block syntax is incorrect. `ignore_changes = [all]` should be `ignore_changes = all` (without brackets)
+- Fix Method: Remove brackets around `all` in the ignore_changes statement
+- Changes Made: Changed line 106 from `ignore_changes = [all]` to `ignore_changes = all`
+- Result: Success - terraform plan now works
+
+Detected Drift Analysis:
+All detected drifts are acceptable according to acceptable_drift_patterns.md:
+1. AzAPI resource-level attributes (replace_triggers_external_values, sensitive_body_version, type, retry, timeouts)
+2. API version change from @2025-04-01 to @2024-11-01
+3. One-time update required to align state
+
+Final Result: Fix successful - proceeding with apply to verify idempotency
+

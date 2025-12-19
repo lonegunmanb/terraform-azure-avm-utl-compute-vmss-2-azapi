@@ -1,0 +1,21 @@
+Test Case: disks_data_disk_storage_account_type_premium_v2_lrs
+================================================================================
+
+Initial Error:
+Error: Unsupported attribute
+
+  on azapi.tf line 102, in resource "azapi_update_resource" "update0":
+ 102:     ignore_changes = [all]
+
+This object has no argument, nested block, or exported attribute named "all".
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The lifecycle ignore_changes block uses [all] which requires Terraform 1.8+ but the syntax is incorrect. The correct syntax is just "all" without brackets.
+- Fix Method: Change ignore_changes = [all] to ignore_changes = all
+- Changes Made: Modified azapi.tf line 102
+- Result: Success - terraform plan now runs successfully and shows acceptable drifts (API version change, computed fields, azapi_update_resource creation)
+
+Final Result: Fix successful
+

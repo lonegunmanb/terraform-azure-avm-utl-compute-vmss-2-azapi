@@ -1,0 +1,49 @@
+Test Case: extension_failure_suppression_updated
+================================================================================
+
+Initial Error:
+Error: Unsupported argument
+
+  on azapi.tf line 72, in module "vmss_replicator":
+  72:   migrate_orchestrated_virtual_machine_scale_set_extension_protected_settings = [
+
+An argument named "migrate_orchestrated_virtual_machine_scale_set_extension_protected_settings" is not expected here.
+
+Error: Unsupported argument
+
+  on azapi.tf line 80, in module "vmss_replicator":
+  80:   migrate_orchestrated_virtual_machine_scale_set_extension_protected_settings_version = 1
+
+An argument named "migrate_orchestrated_virtual_machine_scale_set_extension_protected_settings_version" is not expected here.
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The azapi.tf incorrectly separated protected_settings into a migration-specific parameter. Looking at azurerm.tf.bak (lines 65-67), the protected_settings is part of the extension block itself.
+- Fix Method: Move protected_settings back into the extension block where it belongs, matching the azurerm.tf structure
+- Changes Made: 
+  * Removed lines 72-80 (migrate_orchestrated_virtual_machine_scale_set_extension_protected_settings and version parameters)
+  * Added protected_settings field inside the extension block at line 68-70
+- Result: Testing...
+
+Result: Fix successful - resolved unsupported argument errors
+
+================================================================================
+
+New Error:
+Error: Invalid value for input variable
+
+  on azapi.tf line 27, in module "vmss_replicator":
+  27:   network_interface = [
+...
+The given value is not suitable for module.vmss_replicator.var.network_interface declared at
+..\..\variables.tf:536,1-29: element 0: attribute "ip_configuration": element 0: attribute "public_ip_address": list
+of object required.
+
+Fix Process:
+
+Attempt 2:
+- Problem Analysis: The public_ip_address is defined as an object but the module expects it to be a list of objects
+- Fix Method: Wrap the public_ip_address object in a list
+- Changes Made: Change public_ip_address = { ... } to public_ip_address = [{ ... }]
+- Result: Testing...

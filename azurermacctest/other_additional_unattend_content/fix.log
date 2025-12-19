@@ -1,0 +1,56 @@
+Test Case: other_additional_unattend_content
+================================================================================
+
+Initial Error:
+╷
+│ Error: Invalid value for input variable
+│
+│   on azapi.tf line 11, in module "vmss_replicator":
+│   11:   os_profile = {
+│   12:     windows_configuration = {
+│   13:       admin_username           = "myadmin"
+│   14:       computer_name_prefix     = "testvm"
+│   15:       enable_automatic_updates = true
+│   16:       provision_vm_agent       = true
+│   17:       timezone                 = "W. Europe Standard Time"
+│   18:       winrm_listener = toset([
+│   19:         {
+│   20:           protocol = "Http"
+│   21:         }
+│   22:       ])
+│   23:       additional_unattend_content = [
+│   24:         {
+│   25:           setting = "FirstLogonCommands"
+│   26:         }
+│   27:       ]
+│   28:     }
+│   29:   }
+│
+│ The given value is not suitable for module.vmss_replicator.var.os_profile declared at ..\..\variables.tf:896,1-22:
+│ attribute "windows_configuration": attribute "additional_unattend_content": element 0: attribute "content" is
+│ required.
+╵
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The azapi.tf configuration has the `content` attribute defined separately via the `os_profile_windows_configuration_additional_unattend_content_content` variable (lines 36-42), but it's missing from the inline `additional_unattend_content` array (lines 25-29). The module requires `content` to be present in the array.
+- Fix Method: Add the `content` attribute directly to the `additional_unattend_content` array element, matching the value from the original azurerm.tf configuration.
+- Changes Made: Modified azapi.tf line 25-29 to include content attribute in the additional_unattend_content array
+- Result: Testing...
+
+Attempt 1 Result: New error found
+╷
+│ Error: Unsupported attribute
+│
+│   on azapi.tf line 122, in resource "azapi_update_resource" "update0":
+│  122:     ignore_changes = [all]
+│
+│ This object has no argument, nested block, or exported attribute named "all".
+╵
+
+Attempt 2:
+- Problem Analysis: The lifecycle block has `ignore_changes = [all]` which is incorrect syntax. In Terraform, `all` should not be in brackets. Should be `ignore_changes = all` without brackets.
+- Fix Method: Remove brackets around `all` in the lifecycle ignore_changes block
+- Changes Made: Modified azapi.tf line 122 from `ignore_changes = [all]` to `ignore_changes = all`
+- Result: Testing...

@@ -1,0 +1,36 @@
+Test Case: extension_operations_enabled
+================================================================================
+
+Initial Error:
+During Step 3 (state migration test), after successfully applying the first drift update, a second terraform plan still shows drift:
+
+The extension is being added to body.properties.virtualMachineProfile.extensionProfile.extensions array, even though it's already managed via azapi_update_resource.update0 with ignore_changes = all.
+
+Terraform plan shows:
+  # azapi_resource.this will be updated in-place
+  ~ resource "azapi_resource" "this" {
+      ~ body = {
+          ~ properties = {
+              ~ virtualMachineProfile = {
+                  ~ extensionProfile = {
+                      ~ extensions = [
+                          + {
+                              + name = "CustomScript"
+                              + properties = { ... }
+                            },
+                        ]
+                    }
+                }
+            }
+        }
+    }
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The module generates body content without the extension, but Azure API includes it in the resource after azapi_update_resource.update0 runs. Since azapi_resource.this doesn't have ignore_changes on body, it detects this as drift.
+- Fix Method: Add lifecycle block to azapi_resource.this to ignore changes to the extension configuration within the body
+- Changes Made: Add lifecycle block with ignore_changes targeting the specific path where extensions are added
+- Result: Success - terraform plan now shows "No changes"
+
+Final Result: Fix successful

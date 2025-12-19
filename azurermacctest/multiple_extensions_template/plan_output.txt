@@ -1,0 +1,348 @@
+random_integer.number: Refreshing state... [id=13889]
+random_string.name: Refreshing state... [id=dgveyqte]
+azurerm_resource_group.test: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-13889]
+azurerm_nat_gateway.test: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-13889/providers/Microsoft.Network/natGateways/acctng-13889]
+azurerm_public_ip.test: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-13889/providers/Microsoft.Network/publicIPAddresses/acctpip-13889]
+azurerm_virtual_network.test: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-13889/providers/Microsoft.Network/virtualNetworks/acctvn-13889]
+module.vmss_replicator.data.azapi_resource.existing: Reading...
+azurerm_subnet.test: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-13889/providers/Microsoft.Network/virtualNetworks/acctvn-13889/subnets/acctsub-13889]
+azurerm_nat_gateway_public_ip_association.test: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-13889/providers/Microsoft.Network/natGateways/acctng-13889|/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-13889/providers/Microsoft.Network/publicIPAddresses/acctpip-13889]
+module.vmss_replicator.data.azapi_resource.existing: Read complete after 1s [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-13889/providers/Microsoft.Compute/virtualMachineScaleSets/acctestOVMSS-13889]
+azurerm_subnet_nat_gateway_association.example: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-13889/providers/Microsoft.Network/virtualNetworks/acctvn-13889/subnets/acctsub-13889]
+azapi_resource.this: Refreshing state... [id=/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-13889/providers/Microsoft.Compute/virtualMachineScaleSets/acctestOVMSS-13889]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # azapi_resource.this will be updated in-place
+  # (moved from azurerm_orchestrated_virtual_machine_scale_set.test)
+  ~ resource "azapi_resource" "this" {
+      ~ body                             = {
+          ~ properties = {
+              - constrainedMaximumCapacity     = false
+              - highSpeedInterconnectPlacement = "None"
+              - singlePlacementGroup           = false
+              - upgradePolicy                  = {
+                  - mode = "Manual"
+                }
+              ~ virtualMachineProfile          = {
+                  ~ extensionProfile = {
+                      ~ extensions           = [
+                          ~ {
+                                name       = "CustomScript"
+                              ~ properties = {
+                                  - forceUpdateTag           = ""
+                                  - provisionAfterExtensions = []
+                                    # (6 unchanged attributes hidden)
+                                }
+                            },
+                          ~ {
+                                name       = "Docker"
+                              ~ properties = {
+                                  - forceUpdateTag           = ""
+                                  - provisionAfterExtensions = []
+                                    # (5 unchanged attributes hidden)
+                                }
+                            },
+                        ]
+                        # (1 unchanged attribute hidden)
+                    }
+                  ~ networkProfile   = {
+                      - networkApiVersion              = "2020-11-01"
+                      ~ networkInterfaceConfigurations = [
+                          ~ {
+                                name       = "TestNetworkProfile"
+                              ~ properties = {
+                                  - auxiliaryMode               = "None"
+                                  - auxiliarySku                = "None"
+                                  - deleteOption                = "Delete"
+                                  - disableTcpStateTracking     = false
+                                  - dnsSettings                 = {
+                                      - dnsServers = []
+                                    }
+                                  ~ ipConfigurations            = [
+                                      ~ {
+                                            name       = "TestIPConfiguration"
+                                          ~ properties = {
+                                              - applicationGatewayBackendAddressPools = []
+                                              - applicationSecurityGroups             = []
+                                              - loadBalancerBackendAddressPools       = []
+                                              ~ publicIPAddressConfiguration          = {
+                                                    name       = "TestPublicIPConfiguration"
+                                                  ~ properties = {
+                                                      - ipTags                 = []
+                                                        # (3 unchanged attributes hidden)
+                                                    }
+                                                }
+                                                # (3 unchanged attributes hidden)
+                                            }
+                                        },
+                                    ]
+                                    # (3 unchanged attributes hidden)
+                                }
+                            },
+                        ]
+                    }
+                  ~ osProfile        = {
+                      - requireGuestProvisionSignal = true
+                      - secrets                     = []
+                        # (4 unchanged attributes hidden)
+                    }
+                  ~ storageProfile   = {
+                      ~ osDisk         = {
+                          - deleteOption            = "Delete"
+                          ~ diskSizeGB              = 30 -> null
+                          - osType                  = "Linux"
+                            # (4 unchanged attributes hidden)
+                        }
+                        # (1 unchanged attribute hidden)
+                    }
+                    # (1 unchanged attribute hidden)
+                }
+                # (2 unchanged attributes hidden)
+            }
+            # (1 unchanged attribute hidden)
+        }
+        id                               = "/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-13889/providers/Microsoft.Compute/virtualMachineScaleSets/acctestOVMSS-13889"
+      ~ ignore_null_property             = false -> true
+      + locks                            = []
+        name                             = "acctestOVMSS-13889"
+      ~ output                           = {
+          - id         = "/subscriptions/f7a632a5-49db-4c5e-9828-cd62cb753971/resourceGroups/acctestRG-OVMSS-13889/providers/Microsoft.Compute/virtualMachineScaleSets/acctestOVMSS-13889"
+          - properties = {
+              - provisioningState     = "Succeeded"
+              - timeCreated           = "2025-12-17T16:45:44.1456908+00:00"
+              - uniqueId              = "37a3a98b-5ebe-4405-88dc-c1127321640a"
+              - virtualMachineProfile = {
+                  - extensionProfile = {
+                      - extensions = [
+                          - {
+                              - properties = {
+                                  - settings = {
+                                      - commandToExecute = "echo $HOSTNAME"
+                                    }
+                                }
+                            },
+                          - {},
+                        ]
+                    }
+                  - networkProfile   = {
+                      - networkInterfaceConfigurations = [
+                          - {
+                              - properties = {
+                                  - ipConfigurations = [
+                                      - {},
+                                    ]
+                                }
+                            },
+                        ]
+                    }
+                  - timeCreated      = "2025-12-17T16:45:44.1456908+00:00"
+                }
+            }
+          - type       = "Microsoft.Compute/virtualMachineScaleSets"
+        } -> (known after apply)
+      + replace_triggers_external_values = {
+          + capacity_reservation_group_id                        = {
+              + value = null
+            }
+          + data_disk_disk_encryption_set_id                     = {
+              + value = ""
+            }
+          + eviction_policy                                      = {
+              + value = null
+            }
+          + extension_operations_enabled                         = {
+              + value = true
+            }
+          + linux_configuration_admin_password_version           = {
+              + value = 1
+            }
+          + linux_configuration_admin_username                   = {
+              + value = "myadmin"
+            }
+          + linux_configuration_computer_name_prefix             = {
+              + value = "testvm-13889"
+            }
+          + linux_configuration_provision_vm_agent               = {
+              + value = true
+            }
+          + location                                             = {
+              + value = "eastus"
+            }
+          + network_interface_name                               = {
+              + value = jsonencode(
+                    [
+                      + "TestNetworkProfile",
+                    ]
+                )
+            }
+          + os_disk_diff_disk_settings_option                    = {
+              + value = ""
+            }
+          + os_disk_diff_disk_settings_placement                 = {
+              + value = ""
+            }
+          + os_disk_disk_encryption_set_id                       = {
+              + value = null
+            }
+          + os_disk_storage_account_type                         = {
+              + value = "Standard_LRS"
+            }
+          + plan_name                                            = {
+              + value = ""
+            }
+          + plan_product                                         = {
+              + value = ""
+            }
+          + plan_publisher                                       = {
+              + value = ""
+            }
+          + platform_fault_domain_count                          = {
+              + value = 2
+            }
+          + priority                                             = {
+              + value = "Regular"
+            }
+          + priority_mix_base_regular_count                      = {
+              + value = 0
+            }
+          + priority_mix_regular_percentage_above_base           = {
+              + value = 0
+            }
+          + public_ip_ip_tag                                     = {
+              + value = jsonencode(
+                    [
+                      + [
+                          + null,
+                        ],
+                    ]
+                )
+            }
+          + public_ip_prefix_id                                  = {
+              + value = jsonencode(
+                    [
+                      + [
+                          + null,
+                        ],
+                    ]
+                )
+            }
+          + public_ip_sku_name                                   = {
+              + value = jsonencode(
+                    [
+                      + [
+                          + null,
+                        ],
+                    ]
+                )
+            }
+          + public_ip_version                                    = {
+              + value = jsonencode(
+                    [
+                      + [
+                          + "IPv4",
+                        ],
+                    ]
+                )
+            }
+          + rolling_upgrade_policy                               = {
+              + value = ""
+            }
+          + single_placement_group                               = null
+          + sku_profile_allocation_strategy                      = {
+              + value = ""
+            }
+          + sku_profile_vm_sizes                                 = {
+              + value = ""
+            }
+          + source_image_reference_offer                         = {
+              + value = "0001-com-ubuntu-server-jammy"
+            }
+          + source_image_reference_publisher                     = {
+              + value = "Canonical"
+            }
+          + ultra_ssd_enabled                                    = {
+              + value = false
+            }
+          + windows_configuration_admin_password_version         = {
+              + value = null
+            }
+          + windows_configuration_admin_username                 = {
+              + value = ""
+            }
+          + windows_configuration_computer_name_prefix           = {
+              + value = ""
+            }
+          + windows_configuration_provision_vm_agent             = {
+              + value = true
+            }
+          + windows_configuration_winrm_listener_certificate_url = {
+              + value = ""
+            }
+          + windows_configuration_winrm_listener_protocol        = {
+              + value = ""
+            }
+          + zone_balance                                         = {
+              + value = null
+            }
+          + zones                                                = null
+        }
+      + retry                            = {
+          + error_message_regex  = [
+              + "retryable",
+              + "RetryableError",
+              + "try later",
+              + "try again later",
+              + "please retry",
+            ]
+          + interval_seconds     = 10
+          + max_interval_seconds = 180
+          + multiplier           = 1.5
+          + randomization_factor = 0.5
+        }
+      + sensitive_body_version           = {
+          + "properties.proximityPlacementGroup.id"                                                     = "null"
+          + "properties.virtualMachineProfile.extensionProfile.protectedSettings"                       = "1"
+          + "properties.virtualMachineProfile.licenseType"                                              = "null"
+          + "properties.virtualMachineProfile.networkProfile.networkApiVersion"                         = "null"
+          + "properties.virtualMachineProfile.osProfile.adminPassword"                                  = "1"
+          + "properties.virtualMachineProfile.osProfile.customData"                                     = null
+          + "properties.virtualMachineProfile.osProfile.windowsConfiguration.additionalUnattendContent" = null
+          + "properties.virtualMachineProfile.userData"                                                 = null
+        }
+      ~ type                             = "Microsoft.Compute/virtualMachineScaleSets@2025-04-01" -> "Microsoft.Compute/virtualMachineScaleSets@2024-11-01"
+        # (6 unchanged attributes hidden)
+
+      + timeouts {
+          + create = "60m"
+          + delete = "60m"
+          + read   = "5m"
+          + update = "60m"
+        }
+    }
+
+  # azapi_update_resource.update0 will be created
+  + resource "azapi_update_resource" "update0" {
+      + body                    = (sensitive value)
+      + id                      = (known after apply)
+      + ignore_casing           = false
+      + ignore_missing_property = true
+      + name                    = (sensitive value)
+      + output                  = (known after apply)
+      + parent_id               = (sensitive value)
+      + resource_id             = (known after apply)
+      + sensitive_body          = (write-only attribute)
+      + type                    = (sensitive value)
+    }
+
+Plan: 1 to add, 1 to change, 0 to destroy.
+
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.

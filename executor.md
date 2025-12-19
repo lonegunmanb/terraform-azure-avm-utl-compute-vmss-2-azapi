@@ -346,6 +346,32 @@ locals {
 
 **Proof must show:** `Sensitive: true`, `Required/Optional`, independent var, version var with validation, TODO comment in variables.tf, usage in both locals.
 
+### List/Array Sensitive Fields (MANDATORY)
+**When sensitive field is inside a list (without `MaxItems: 1`):** `merge()` replaces entire arrays, not elements. The array must exist in EITHER `body` OR `sensitive_body`—never split.
+
+**Pattern:** Route entire array based on whether sensitive data exists:
+```hcl
+# 1. Build lookup map for sensitive values
+extension_protected_settings_map = { for k, v in var.extension_protected_settings : k => v if v != null }
+
+# 2. In sensitive_body: full array structure when sensitive data exists
+sensitive_body = {
+  extensionProfile = length(local.extension_protected_settings_map) > 0 ? {
+    extensions = [for ext in local.extension : {
+      name = ext.name
+      properties = { publisher = ext.publisher, /* ALL fields */, protectedSettings = try(local.extension_protected_settings_map[ext.name], null) }
+    }]
+  } : {}
+}
+
+# 3. In body: full array structure ONLY when NO sensitive data
+body = {
+  extensionProfile = length(local.extension_protected_settings_map) > 0 ? {} : {
+    extensions = [for ext in local.extension : { /* full structure */ }]
+  }
+}
+```
+
 ## Task Types
 
 ### Type 1: Root-Level Argument

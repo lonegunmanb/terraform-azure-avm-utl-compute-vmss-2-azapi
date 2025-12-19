@@ -1,0 +1,19 @@
+Test Case: disks_os_disk_storage_account_type_premium_lrs
+================================================================================
+
+Initial Error:
+Error: Unsupported attribute
+  on azapi.tf line 97, in resource "azapi_update_resource" "update0":
+  97:     ignore_changes = [all]
+This object has no argument, nested block, or exported attribute named "all".
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The ignore_changes lifecycle meta-argument syntax is incorrect. When using "all", it should not be wrapped in brackets.
+- Fix Method: Changed `ignore_changes = [all]` to `ignore_changes = all`
+- Changes Made: Modified line 97 in azapi.tf from `ignore_changes = [all]` to `ignore_changes = all`
+- Result: Success - terraform plan now works. Plan shows acceptable drifts only (ignore_null_property, locks, output, replace_triggers_external_values, sensitive_body_version, type API version, timeouts). All changes match acceptable drift patterns per acceptable_drift_patterns.md.
+
+Final Result: Fix successful
+

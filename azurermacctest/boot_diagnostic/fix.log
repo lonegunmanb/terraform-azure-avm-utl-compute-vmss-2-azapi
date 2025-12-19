@@ -1,0 +1,24 @@
+Test Case: boot_diagnostic
+================================================================================
+
+Initial Error:
+The given value is not suitable for module.vmss_replicator.var.network_interface declared at
+..\..\variables.tf:536,1-29: element 0: attribute "ip_configuration": element 0: attribute "public_ip_address": list
+of object required.
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The public_ip_address attribute is defined as an object, but should be a list of objects
+- Fix Method: Wrap the public_ip_address object in square brackets to make it a list
+- Changes Made: Changed public_ip_address = { ... } to public_ip_address = [{ ... }]
+- Result: Success - Revealed next error: ignore_changes = [all] is not supported in lifecycle block
+
+Attempt 2:
+- Problem Analysis: The azapi_update_resource doesn't support `all` in ignore_changes; need to remove the lifecycle block or specify exact attributes
+- Fix Method: Remove the entire lifecycle block since it's not valid syntax for azapi_update_resource
+- Changes Made: Removed lifecycle { ignore_changes = [all] } block from azapi_update_resource.update0
+- Result: Success - Plan shows acceptable drifts only (ignore_null_property, locks, replace_triggers_external_values, sensitive_body_version, output, type changes)
+
+Final Result: Fix successful
+

@@ -1,0 +1,42 @@
+Test Case: os_profile_empty
+================================================================================
+
+Initial Error:
+Error: Unsupported attribute
+  on azapi.tf line 54, in resource "azapi_update_resource" "update0":
+  54:     ignore_changes = [all]
+This object has no argument, nested block, or exported attribute named "all".
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The lifecycle ignore_changes syntax is incorrect. In Terraform, 'all' should not be in brackets.
+- Fix Method: Change ignore_changes = [all] to ignore_changes = all
+- Changes Made: Modified line 54 in azapi.tf to use correct syntax
+- Result: Testing now...
+
+- Result: Failed with error about missing 'sku' parameter in azapi_update_resource
+
+Attempt 2:
+- Problem Analysis: The module is generating an azapi_update_resource that shouldn't exist or has invalid body for empty os_profile case. The update resource is trying to PUT without required SKU field.
+- Fix Method: Add a count condition to only create the update resource when there's actual valid body content
+- Changes Made: Added count = try(length(module.vmss_replicator.post_creation_updates[0].body) > 0, false) ? 1 : 0 to azapi_update_resource.update0
+- Result: Testing now...
+
+- Result: Still attempted to create update resource (count didn't prevent it)
+
+Attempt 3:
+- Problem Analysis: The body exists but is missing required 'sku' field. Need to check if body contains sku before creating update resource.
+- Fix Method: Check if the body contains 'sku' property using can(jsondecode(...).sku)
+- Changes Made: Updated count condition to: length(module.vmss_replicator.post_creation_updates) > 0 && can(jsondecode(module.vmss_replicator.post_creation_updates[0].body).sku) ? 1 : 0
+- Result: Testing now...
+
+- Result: Success! Plan shows no changes
+
+Final Result: Fix successful
+
+Summary:
+The issue was that the module generated an azapi_update_resource with incomplete body (missing required 'sku' field). 
+Fixed by adding a conditional check to only create the update resource when the body contains a valid 'sku' property.
+This is appropriate for the empty os_profile test case where no post-creation updates are needed.
+

@@ -1,0 +1,20 @@
+Test Case: boot_diagnostic_no_storage
+================================================================================
+
+Initial Error:
+Error: Unsupported attribute
+
+  on azapi.tf line 100, in resource "azapi_update_resource" "update0":
+ 100:     ignore_changes = [all]
+
+This object has no argument, nested block, or exported attribute named "all".
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: The syntax `ignore_changes = [all]` is invalid in Terraform lifecycle blocks. The correct syntax is `ignore_changes = all` without brackets.
+- Fix Method: Change `ignore_changes = [all]` to `ignore_changes = all` in the lifecycle block
+- Changes Made: Modified line 100 in azapi.tf from `ignore_changes = [all]` to `ignore_changes = all`
+- Result: Success - plan now executes successfully. Detected drifts are all acceptable per acceptable_drift_patterns.md (AzAPI resource-level attributes like ignore_null_property, locks, output, replace_triggers_external_values, sensitive_body_version, type API version, and creation of azapi_update_resource)
+
+Final Result: Fix successful

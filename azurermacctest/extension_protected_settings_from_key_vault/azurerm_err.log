@@ -1,0 +1,36 @@
+Test Case: extension_protected_settings_from_key_vault
+================================================================================
+
+Test marked as INVALID - Failed at Step 2 (Baseline Verification)
+
+Failed Command:
+terraform init
+
+Error Message:
+╷
+│ Error: Terraform encountered problems during initialisation, including problems
+│ with the configuration, described below.
+│
+│ The Terraform configuration must be valid before initialization so that
+│ Terraform can determine which modules and providers need to be installed.
+│
+│
+╵
+╷
+│ Error: Argument or block definition required
+│
+│   on main.tf line 29:
+│   29: }
+│
+│ An argument or block definition is required here.
+╵
+
+Root Cause Analysis:
+The main.tf file contains a syntax error - there is an extra closing brace `}` on line 29 that doesn't match any opening block. 
+
+The provider "azurerm" block ends on line 27 with the correct closing brace, but line 29 contains an orphaned closing brace that causes the Terraform parser to fail.
+
+Conclusion:
+This is a pre-existing syntax error in the test case configuration. Since main.tf is marked as "Trusted, DO NOT MODIFY" according to the test workflow documentation, this test case cannot be fixed by the tester and must be marked as INVALID.
+
+The test case requires correction at the source (test case generation level) before it can be properly tested.

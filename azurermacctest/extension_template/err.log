@@ -1,0 +1,53 @@
+Test Case: extension_template
+================================================================================
+
+Initial Error:
+╷
+│ Error: Missing required argument
+│
+│   on azapi.tf line 1, in module "vmss_replicator":
+│    1: module "vmss_replicator" {
+│
+│ The argument "resource_group_id" is required, but no definition was found.
+╵
+╷
+│ Error: Unsupported argument
+│
+│   on azapi.tf line 6, in module "vmss_replicator":
+│    6:   resource_group_name         = azurerm_resource_group.test.name
+│
+│ An argument named "resource_group_name" is not expected here.
+╵
+
+Fix Process:
+
+Attempt 1:
+- Problem Analysis: Module requires resource_group_id instead of resource_group_name
+- Fix Method: Replace resource_group_name with resource_group_id and use azurerm_resource_group.test.id
+- Changes Made: Changed line 6 from resource_group_name = azurerm_resource_group.test.name to resource_group_id = azurerm_resource_group.test.id
+- Result: Fixed, but new error - public_ip_address should be a list
+
+Attempt 2:
+- Problem Analysis: public_ip_address in ip_configuration should be a list of objects, not a single object
+- Fix Method: Wrap public_ip_address object in square brackets to make it a list
+- Changes Made: Changed public_ip_address = {...} to public_ip_address = [{...}]
+- Result: Fixed, but new error - lifecycle ignore_changes invalid syntax
+
+Attempt 3:
+- Problem Analysis: lifecycle ignore_changes = [all] is not correct for azapi_update_resource
+- Fix Method: Remove the lifecycle block or fix the ignore_changes syntax
+- Changes Made: Changed ignore_changes = [all] to ignore_changes = all (without brackets)
+- Result: Success - plan shows acceptable drift (API version change from @2025-04-01 to @2024-11-01), but second plan shows extension drift
+
+Attempt 4:
+- Problem Analysis: Second plan shows extensions need to be added to body, causing error: "Network api version must be specified if network interface configurations are specified"
+- Fix Method: Add network_api_version parameter to module call
+- Changes Made: Added network_api_version = "2020-11-01" to module parameters
+- Result: Failed - same error persists
+
+Attempt 5:
+- Problem Analysis: The module design has a fundamental issue - extensions with protected_settings cause continuous drift. On first apply with state migration, azapi_update_resource handles the protected settings, but subsequent plans try to add the extension to the main azapi_resource body, which triggers Azure API validation errors requiring network_api_version to be in the request body (not just the module parameter). This is a module implementation bug where extension handling doesn't properly maintain idempotency after state migration.
+- Fix Method: This requires module-level fixes to how extensions are handled in post_creation_updates vs main body
+- Result: Cannot fix at test configuration level - this is a module implementation error
+
+Final Result: Test failed after 5 fix attempts - module implementation error with extension handling
