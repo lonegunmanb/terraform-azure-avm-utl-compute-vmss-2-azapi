@@ -522,12 +522,11 @@ variable "max_bid_price" {
 variable "network_api_version" {
   type        = string
   default     = "2020-11-01"
-  nullable = false
-  description = "(Optional) Specifies the Microsoft.Network API version used when creating networking resources in the Network Interface Configurations for Virtual Machine Scale Set. Possible values are `2020-11-01` and `2022-11-01`. Defaults to `2020-11-01`."
+  nullable    = false
+  description = "(Optional) Specifies the API version for the network interface configurations. Possible values are `2020-11-01` and `2022-11-01`. Defaults to `2020-11-01`."
 
   validation {
     condition = (
-      var.network_api_version == null ||
       contains(["2020-11-01", "2022-11-01"], var.network_api_version)
     )
     error_message = "The network_api_version must be either '2020-11-01' or '2022-11-01'."
@@ -637,10 +636,10 @@ EOT
       var.network_interface == null ||
       alltrue([
         for nic in var.network_interface :
-        nic.auxiliary_mode == null || (var.network_api_version != null && var.network_api_version != "2020-11-01")
+        nic.auxiliary_sku == null || contains(["A1", "A2", "A4", "A8"], nic.auxiliary_sku)
       ])
     )
-    error_message = "auxiliary_mode and auxiliary_sku can be set only when network_api_version is later than '2020-11-01'."
+    error_message = "The auxiliary_sku must be one of: 'A1', 'A2', 'A4', 'A8'."
   }
 
   validation {
@@ -648,10 +647,10 @@ EOT
       var.network_interface == null ||
       alltrue([
         for nic in var.network_interface :
-        nic.auxiliary_sku == null || contains(["A1", "A2", "A4", "A8"], nic.auxiliary_sku)
+        nic.auxiliary_mode == null || var.network_api_version != "2020-11-01"
       ])
     )
-    error_message = "The auxiliary_sku must be one of: 'A1', 'A2', 'A4', 'A8'."
+    error_message = "When auxiliary_mode is set, network_api_version must be later than '2020-11-01' (must be '2022-11-01')."
   }
 
   validation {

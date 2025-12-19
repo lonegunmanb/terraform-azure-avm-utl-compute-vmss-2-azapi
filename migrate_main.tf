@@ -52,20 +52,15 @@ locals {
   ) ? coalesce(local.normalized_license_type, "trigger") : null
 
   # Task #13: network_api_version - DiffSuppressFunc handling
-  existing_network_api_version = data.azapi_resource.existing.exists ? try(data.azapi_resource.existing.output.properties.virtualMachineProfile.networkProfile.networkApiVersion, "") : ""
-  new_network_api_version = coalesce(
-    var.network_api_version,
-    "2020-11-01"
-  )
+  existing_network_api_version = data.azapi_resource.existing.exists ? try(data.azapi_resource.existing.output.properties.virtualMachineProfile.networkProfile.networkApiVersion, null) : null
+  desired_network_api_version  = var.network_api_version
   network_api_version_should_suppress = (
     var.sku_name == null &&
-    local.existing_network_api_version == "" &&
-    local.new_network_api_version == "2020-11-01"
+    (local.existing_network_api_version == null || local.existing_network_api_version == "") &&
+    var.network_api_version == "2020-11-01"
   )
-  network_api_version_update_trigger = (
-    !local.network_api_version_should_suppress &&
-    local.existing_network_api_version != local.new_network_api_version
-  ) ? local.new_network_api_version : null
+  effective_network_api_version = local.network_api_version_should_suppress ? coalesce(local.existing_network_api_version, local.desired_network_api_version) : local.desired_network_api_version
+
 
   # Task #15: proximity_placement_group_id - DiffSuppressFunc handling (case-insensitive)
   existing_proximity_placement_group_id = data.azapi_resource.existing.exists ? try(data.azapi_resource.existing.output.properties.proximityPlacementGroup.id, null) : null
@@ -284,10 +279,14 @@ locals {
               priority = var.priority
             },
             var.network_interface != null || var.sku_name != null ? {
-              networkProfile = var.network_interface != null ? {
-                networkInterfaceConfigurations = [
-                  for nic in var.network_interface : {
-                    name = nic.name # Task #61
+              networkProfile = merge(
+                {
+                  networkApiVersion = local.effective_network_api_version # Task #13
+                },
+                var.network_interface != null ? {
+                  networkInterfaceConfigurations = [
+                    for nic in var.network_interface : {
+                      name = nic.name # Task #61
                     properties = merge(
                       nic.auxiliary_mode != null ? {
                         auxiliaryMode = nic.auxiliary_mode
@@ -398,6 +397,7 @@ locals {
                   }
                 ]
               } : {}
+              )
             } : {},
             var.boot_diagnostics != null ? {
               diagnosticsProfile = {
@@ -719,23 +719,18 @@ locals {
               } : {}
             )
           } : {},
-          var.extension != null && length(local.extension_protected_settings_map) > 0 ? {
-            extensionProfile = {
-              extensions = [
-                for ext in var.extension : {
-                  name = ext.name
-                  properties = lookup(local.extension_protected_settings_map, ext.name, null) != null ? {
-                    protectedSettings = local.extension_protected_settings_map[ext.name]
-                  } : {}
-                }
-              ]
-            }
-          } : {},
-          var.network_interface != null || var.sku_name != null ? {
-            networkProfile = {
-              networkApiVersion = local.new_network_api_version
-            }
-          } : {}
+          # var.extension != null && length(local.extension_protected_settings_map) > 0 ? {
+          #   extensionProfile = {
+          #     extensions = [
+          #       for ext in var.extension : {
+          #         name = ext.name
+          #         properties = lookup(local.extension_protected_settings_map, ext.name, null) != null ? {
+          #           protectedSettings = local.extension_protected_settings_map[ext.name]
+          #         } : {}
+          #       }
+          #     ]
+          #   }
+          # } : {}
         )
       } : {}
     )
@@ -747,7 +742,6 @@ locals {
     "properties.virtualMachineProfile.osProfile.adminPassword"                                  = var.os_profile != null && var.os_profile.linux_configuration != null ? try(tostring(var.os_profile_linux_configuration_admin_password_version), "null") : var.os_profile != null && var.os_profile.windows_configuration != null ? try(tostring(var.os_profile_windows_configuration_admin_password_version), "null") : "null"
     "properties.virtualMachineProfile.userData"                                                 = try(tostring(var.user_data_base64_version), "null")
     "properties.virtualMachineProfile.licenseType"                                              = "null"
-    "properties.virtualMachineProfile.networkProfile.networkApiVersion"                         = "null"
     "properties.virtualMachineProfile.extensionProfile.protectedSettings"                       = try(tostring(var.extension_protected_settings_version), "null")
     "properties.virtualMachineProfile.osProfile.windowsConfiguration.additionalUnattendContent" = try(tostring(var.os_profile_windows_configuration_additional_unattend_content_content_version), "null")
   }
@@ -780,11 +774,6 @@ locals {
             virtualMachineProfile = merge(
               local.normalized_license_type != null ? {
                 licenseType = local.normalized_license_type
-              } : {},
-              var.network_interface != null || var.sku_name != null ? {
-                networkProfile = {
-                  networkApiVersion = local.new_network_api_version
-                }
               } : {}
             )
           }
@@ -793,7 +782,6 @@ locals {
       replace_triggers_external_values = {
         proximity_placement_group_id = local.proximity_placement_group_id_update_trigger
         license_type                 = local.license_type_update_trigger
-        network_api_version          = local.network_api_version_update_trigger
       }
       locks = local.locks
     }

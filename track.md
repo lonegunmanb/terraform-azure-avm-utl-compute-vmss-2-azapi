@@ -54,7 +54,7 @@ func resourceOrchestratedVirtualMachineScaleSetCreate(d *pluginsdk.ResourceData,
 | 10 | instances | Argument | No | ✅ Completed | [10.instances.md](10.instances.md) |
 | 11 | license_type | Argument | No | ✅ Completed | [11.license_type.md](11.license_type.md) |
 | 12 | max_bid_price | Argument | No | ✅ Completed | [12.max_bid_price.md](12.max_bid_price.md) |
-| 13 | network_api_version | Argument | No | ✅ Completed | [13.network_api_version.md](13.network_api_version.md) |
+| 13 | network_api_version | Argument | No | Pending for check | [13.network_api_version.md](13.network_api_version.md) |
 | 14 | priority | Argument | No | ✅ Completed | [14.priority.md](14.priority.md) |
 | 15 | proximity_placement_group_id | Argument | No | ✅ Completed | [15.proximity_placement_group_id.md](15.proximity_placement_group_id.md) |
 | 16 | single_placement_group | Argument | No | ✅ Completed | [16.single_placement_group.md](16.single_placement_group.md) |

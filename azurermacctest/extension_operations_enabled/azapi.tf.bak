@@ -113,6 +113,10 @@ resource "azapi_resource" "this" {
       update = timeouts.value.update
     }
   }
+
+  lifecycle {
+    ignore_changes = [body]
+  }
 }
 
 resource "azapi_update_resource" "update0" {

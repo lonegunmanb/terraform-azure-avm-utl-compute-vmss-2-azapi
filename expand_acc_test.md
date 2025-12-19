@@ -301,7 +301,7 @@ resource "azapi_resource" "this" {
          sensitive_body = try(module.vmss_replicator.post_creation_updates[0].sensitive_body, null)
          depends_on     = [azapi_resource.this]
          lifecycle {
-           ignore_changes = [all]
+           ignore_changes = all
          }
        }
        
@@ -313,7 +313,7 @@ resource "azapi_resource" "this" {
          sensitive_body = try(module.vmss_replicator.post_creation_updates[1].sensitive_body, null)
          depends_on     = [azapi_update_resource.update0]
          lifecycle {
-           ignore_changes = [all]
+           ignore_changes = all
          }
        }
        ```
