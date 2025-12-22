@@ -47,7 +47,7 @@ Build `locals` in Replicator Module (`migrate_*` files) for `azapi_resource` bod
 - Did I add hidden fields that belong to `__check_*_hidden_fields__` tasks?
 - Did I add fields from other tasks?
 - Remove any content that belongs to other tasks immediately.
-**Files:** `migrate/` has: `main.tf` (NO modify), `variables.tf` (modify when documented: default/ephemeral/validation/etc.) | `migrate_main.tf`, `migrate_variables.tf`, `migrate_outputs.tf`, `migrate_validation.tf` (edit) | `track.md`
+**Files:** All generated code must be put in `migrate_xxx.tf` files in the **root folder**: `migrate_main.tf`, `migrate_variables.tf`, `migrate_outputs.tf`, `migrate_validation.tf` (edit these). Root folder also has: `main.tf` (NO modify), `variables.tf` (modify when documented: default/ephemeral/validation/etc.), `track.md`.
 
 **Workflow:** After completing a task, update its status in `track.md` to `Pending for check`. The coordinator will then delegate verification to a checker agent.
 
