@@ -719,18 +719,52 @@ locals {
               } : {}
             )
           } : {},
-          # var.extension != null && length(local.extension_protected_settings_map) > 0 ? {
-          #   extensionProfile = {
-          #     extensions = [
-          #       for ext in var.extension : {
-          #         name = ext.name
-          #         properties = lookup(local.extension_protected_settings_map, ext.name, null) != null ? {
-          #           protectedSettings = local.extension_protected_settings_map[ext.name]
-          #         } : {}
-          #       }
-          #     ]
-          #   }
-          # } : {}
+           (var.extension != null || var.extensions_time_budget != null) && length(local.extension_protected_settings_map) > 0 ? {
+              extensionProfile = merge(
+                var.extension != null ? {
+                  extensions = [
+                    for ext in var.extension : {
+                      name = ext.name
+                      properties = merge(
+                        {
+                          publisher               = ext.publisher
+                          type                    = ext.type
+                          typeHandlerVersion      = ext.type_handler_version
+                          autoUpgradeMinorVersion = ext.auto_upgrade_minor_version_enabled
+                        },
+                        ext.extensions_to_provision_after_vm_creation != null ? {
+                          provisionAfterExtensions = ext.extensions_to_provision_after_vm_creation
+                        } : {},
+                        {
+                          suppressFailures = ext.failure_suppression_enabled
+                        },
+                        ext.force_extension_execution_on_change != null ? {
+                          forceUpdateTag = ext.force_extension_execution_on_change
+                        } : {},
+                        ext.settings != null && ext.settings != "" ? {
+                          settings = jsondecode(ext.settings)
+                        } : {},
+                        # protectedSettings = ... # Task #52
+                        ext.protected_settings_from_key_vault != null ? {
+                          protectedSettingsFromKeyVault = {
+                            secretUrl = ext.protected_settings_from_key_vault.secret_url
+                            sourceVault = {
+                              id = ext.protected_settings_from_key_vault.source_vault_id
+                            }
+                          }
+                        } : {},
+                        lookup(local.extension_protected_settings_map, ext.name, null) != null ? {
+                          protectedSettings = local.extension_protected_settings_map[ext.name]
+                        } : {},
+                      )
+                    }
+                  ]
+                } : {},
+                var.extensions_time_budget != null ? {
+                  extensionsTimeBudget = var.extensions_time_budget
+                } : {}
+              )
+            } : {},
         )
       } : {}
     )
